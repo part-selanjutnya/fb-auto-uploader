@@ -12,9 +12,9 @@ Tonton selanjutnya☝️
 #AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"""
 
 def download_video_yt_dlp(url, output_path="temp_video.mp4"):
-    print(f"Mengunduh video dari: {url}")
+    print(f"Mengunduh video via API: {url}")
     
-    # 1. Coba gunakan Cobalt API (Sangat ampuh untuk Snack Video, TikTok, IG, YT)
+    # 1. Menggunakan Cobalt API
     try:
         api_url = "https://api.cobalt.tools/api/json"
         headers = {
@@ -39,18 +39,11 @@ def download_video_yt_dlp(url, output_path="temp_video.mp4"):
     except Exception as e:
         print(f"Peringatan API: {e}. Mengalihkan ke yt-dlp...")
 
-    # 2. Fallback menggunakan yt-dlp jika API gagal
-    command = [
-        "yt-dlp",
-        "-o", output_path,
-        "-f", "b[ext=mp4]/b",
-        "--no-playlist",
-        url
-    ]
+    # 2. Fallback ke yt-dlp
+    command = ["yt-dlp", "-o", output_path, "-f", "b[ext=mp4]/b", "--no-playlist", url]
     subprocess.run(command, check=True)
-    print("Berhasil mengunduh video via yt-dlp!")
     return output_path
-
+    
 def upload_to_facebook_page(page_id, page_token, video_path):
     url = f"https://graph.facebook.com/v26.0/{page_id}/videos"
     payload = {
