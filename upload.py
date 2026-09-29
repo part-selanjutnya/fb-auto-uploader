@@ -5,8 +5,13 @@ import requests
 def download_youtube_video(youtube_url, output_path='temp_video.mp4'):
     print(f"Mengunduh video dari YouTube via API: {youtube_url}...")
     
-    # Memanggil API Cobalt untuk mendapatkan link MP4 langsung
-    api_url = "https://api.cobalt.tools"
+    # Menggunakan instance publik alternatif tanpa persyaratan JWT
+    instances = [
+        "https://co.wuk.sh",
+        "https://cobalt-api.kwi.im",
+        "https://api.cobalt.red"
+    ]
+    
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json"
@@ -16,12 +21,21 @@ def download_youtube_video(youtube_url, output_path='temp_video.mp4'):
         "videoQuality": "720"
     }
     
-    response = requests.post(api_url, json=payload, headers=headers)
-    data = response.json()
-    
-    video_download_url = data.get("url")
+    video_download_url = None
+    for instance in instances:
+        try:
+            print(f"Mencoba API endpoint: {instance}...")
+            response = requests.post(instance, json=payload, headers=headers, timeout=15)
+            data = response.json()
+            if data.get("url"):
+                video_download_url = data.get("url")
+                break
+        except Exception as e:
+            print(f"Endpoint {instance} gagal: {e}")
+            continue
+
     if not video_download_url:
-        raise RuntimeError(f"Gagal mendapatkan link unduhan dari API: {data}")
+        raise RuntimeError("Gagal mendapatkan link unduhan dari seluruh API instance yang dicoba.")
         
     print("Link MP4 berhasil didapatkan, mengunduh file...")
     video_data = requests.get(video_download_url, stream=True)
@@ -80,7 +94,7 @@ def main():
                             if chunk:
                                 f_out.write(chunk)
                 else:
-                    # 2. Unduh dari YouTube Shorts via API
+                    # 2. Unduh dari YouTube Shorts via API Alternatif
                     download_youtube_video(video_url, temp_file)
 
                 # Unggah ke seluruh halaman Facebook
