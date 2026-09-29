@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import requests
 import subprocess
 import sys
@@ -13,8 +14,18 @@ except ImportError:
 
 def download_from_google_drive(url, output_path='temp_video.mp4'):
     print(f"Mengunduh file video dari Google Drive: {url}...")
-    # gdown.download mendukung link Google Drive versi biasa maupun versi direct
-    gdown.download(url, output_path, quiet=False, fuzzy=True)
+    
+    # Ekstrak File ID dari URL Google Drive
+    file_id = None
+    match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
+    if match:
+        file_id = match.group(1)
+    
+    # Unduh berdasarkan ID berkas atau URL langsung
+    if file_id:
+        gdown.download(id=file_id, output=output_path, quiet=False)
+    else:
+        gdown.download(url, output_path, quiet=False)
     
     if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
         raise RuntimeError("Gagal mengunduh file video dari Google Drive. Periksa kembali izin akses link (harus 'Anyone with link').")
