@@ -14,39 +14,53 @@ Tonton selanjutnya☝️
 def download_video_via_api(url, output_path="temp_video.mp4"):
     print(f"Mengunduh video dari: {url}")
     
-    # 1. Menggunakan yt-dlp dengan spoofing Android Player Client (Sangat ampuh menembus bot YouTube)
+    # Resolusi shortlink jika berupa vt.tiktok.com atau s.snackvideo.com
+    session = requests.Session()
     try:
-        print("Mencoba unduh menggunakan yt-dlp Android client...")
+        res_head = session.head(url, allow_redirects=True, timeout=15)
+        clean_url = res_head.url
+    except Exception:
+        clean_url = url
+    print(f"URL target teresolusi: {clean_url}")
+
+    # 1. Unduh via TikWM API (Khusus TikTok - Tanpa Watermark)
+    if "tiktok.com" in clean_url or "tiktok.com" in url:
+        try:
+            print("Mengunduh via TikWM API...")
+            api_url = "https://www.tikwm.com/api/"
+            payload = {"url": clean_url, "hd": 1}
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            }
+            res = requests.post(api_url, data=payload, headers=headers, timeout=20).json()
+            
+            video_url = res.get("data", {}).get("play")
+            if video_url:
+                if not video_url.startswith("http"):
+                    video_url = f"https://www.tikwm.com{video_url}"
+                video_bytes = requests.get(video_url, timeout=90).content
+                with open(output_path, "wb") as f:
+                    f.write(video_bytes)
+                print("Berhasil mengunduh video TikTok tanpa watermark!")
+                return output_path
+        except Exception as e:
+            print(f"TikWM API gagal: {e}. Mengalihkan ke fallback...")
+
+    # 2. Fallback Universal via yt-dlp (Untuk platform lain)
+    try:
+        print("Mencoba fallback via yt-dlp...")
         command = [
             "yt-dlp",
             "-o", output_path,
             "-f", "b[ext=mp4]/b",
-            "--extractor-args", "youtube:player_client=android",
             "--no-playlist",
-            url
+            clean_url
         ]
         subprocess.run(command, check=True)
-        print("Berhasil mengunduh video!")
+        print("Berhasil mengunduh video via yt-dlp!")
         return output_path
     except Exception as e:
-        print(f"Peringatan yt-dlp gagal: {e}. Mencoba Piped API...")
-
-    # 2. Alternative via Piped API untuk YouTube Shorts
-    if "youtube.com" in url or "youtu.be" in url:
-        try:
-            video_id = url.split("shorts/")[-1].split("?")[0].split("/")[0]
-            piped_api = f"https://pipedapi.kavin.rocks/streams/{video_id}"
-            res = requests.get(piped_api, timeout=20).json()
-            
-            video_stream = next((item["url"] for item in res.get("videoStreams", []) if "mp4" in item.get("mimeType", "")), None)
-            if video_stream:
-                video_bytes = requests.get(video_stream, timeout=90).content
-                with open(output_path, "wb") as f:
-                    f.write(video_bytes)
-                print("Berhasil mengunduh via Piped API!")
-                return output_path
-        except Exception as err:
-            print(f"Piped API gagal: {err}")
+        print(f"yt-dlp gagal: {e}")
 
     raise Exception("Gagal mengunduh video dari semua metode yang tersedia.")
 
@@ -64,12 +78,13 @@ def upload_to_facebook_page(page_id, page_token, video_path):
 
 def main():
     if not os.path.exists(LINKS_FILE):
-        print("File links.txt tidak ditemukan.")
+        print(f"Error: File {LINKS_FILE} tidak ditemukan.")
         return
 
     with open(LINKS_FILE, 'r', encoding='utf-8') as f:
         lines = [line.strip() for line in f.readlines() if line.strip()]
 
+    # Cari link pertama yang belum selesai (tidak diawali #DONE)
     target_index = -1
     target_url = ""
     for idx, line in enumerate(lines):
@@ -83,32 +98,38 @@ def main():
         return
 
     if not FB_PAGES_DATA:
-        print("Error: Secret FB_PAGES_DATA tidak ditemukan.")
+        print("Error: Secret FB_PAGES_DATA tidak ditemukan di environment variable.")
         return
 
-    pages = json.loads(FB_PAGES_DATA)
+    try:
+        pages = json.loads(FB_PAGES_DATA)
+    except Exception as e:
+        print(f"Error: Gagal melakukan parse JSON pada FB_PAGES_DATA: {e}")
+        return
+
     video_file = "temp_video.mp4"
 
     try:
-        # Unduh video
+        # 1. Download video
         download_video_via_api(target_url, video_file)
 
-        # Upload ke 10 Facebook Pages
+        # 2. Upload ke seluruh Facebook Pages yang terdaftar
         for page in pages:
             res = upload_to_facebook_page(page['id'], page['token'], video_file)
-            print(f"Hasil {page['name']}: {res}")
+            print(f"Hasil Upload [{page.get('name', page['id'])}]: {res}")
 
-        # Tandai status #DONE
+        # 3. Tandai link yang berhasil diunggah dengan #DONE
         lines[target_index] = f"#DONE {target_url}"
         with open(LINKS_FILE, 'w', encoding='utf-8') as f:
             f.write("\n".join(lines) + "\n")
 
-        print("Berhasil mengunggah video ke semua halaman!")
+        print("Proses selesai! Video berhasil diposting dan links.txt diperbarui.")
 
     except Exception as e:
         print(f"Gagal memproses video: {e}")
 
     finally:
+        # 4. Bersihkan file video temporary
         if os.path.exists(video_file):
             os.remove(video_file)
 
