@@ -9,7 +9,14 @@ def download_youtube_video(youtube_url, output_path='temp_video.mp4'):
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
         'outtmpl': output_path,
         'quiet': False,
-        'overwrites': True
+        'overwrites': True,
+        'nocheckcertificate': True,
+        # Bypass deteksi bot YouTube dengan menyamar sebagai client Android/iOS/mweb
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'mweb']
+            }
+        }
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([youtube_url])
@@ -30,14 +37,12 @@ def upload_video_to_page(page_id, page_token, file_path, title, description):
 def main():
     pages_json = os.environ.get('FB_PAGES_DATA')
     if not pages_json:
-        print("Error: FB_PAGES_DATA tidak ditemukan di secrets!")
-        return
+        raise ValueError("Error: Secret 'FB_PAGES_DATA' tidak ditemukan atau kosong!")
 
     pages = json.loads(pages_json)
 
     if not os.path.exists('videos.json'):
-        print("Error: videos.json tidak ditemukan!")
-        return
+        raise FileNotFoundError("Error: File 'videos.json' tidak ditemukan!")
 
     with open('videos.json', 'r', encoding='utf-8') as f:
         videos = json.load(f)
@@ -49,14 +54,27 @@ def main():
             title = video.get('title', '')
             description = video.get('description', '')
 
+            print("==========================================")
             print(f"Memproses video: {title}")
+            print(f"URL: {video_url}")
+            print("==========================================")
             
             temp_file = 'temp_video.mp4'
             try:
-                # Unduh otomatis dari YouTube
-                download_youtube_video(video_url, temp_file)
+                # 1. Jika URL berupa link langsung file MP4
+                if video_url.endswith('.mp4') or ('http' in video_url and not ('youtube.com' in video_url or 'youtu.be' in video_url)):
+                    print("Mengunduh langsung dari URL MP4...")
+                    r = requests.get(video_url, stream=True)
+                    with open(temp_file, 'wb') as f_out:
+                        for chunk in r.iter_content(chunk_size=1024*1024):
+                            if chunk:
+                                f_out.write(chunk)
+                else:
+                    # 2. Unduh dari YouTube Shorts
+                    download_youtube_video(video_url, temp_file)
 
                 # Unggah ke seluruh halaman Facebook
+                success_count = 0
                 for page in pages:
                     print(f"Mengunggah ke halaman: {page['name']} ({page['id']})...")
                     res = upload_video_to_page(
@@ -68,27 +86,30 @@ def main():
                     )
                     
                     if 'id' in res:
-                        print(f"-> Sukses! Video ID: {res['id']}")
+                        print(f" -> Sukses! Video ID: {res['id']}")
+                        success_count += 1
                     else:
-                        print(f"-> Gagal: {res}")
+                        print(f" -> Gagal unggah ke {page['name']}: {json.dumps(res)}")
 
-                # Hapus file sementara setelah selesai
                 if os.path.exists(temp_file):
                     os.remove(temp_file)
 
-                video['status'] = 'completed'
-                updated = True
-                break  # Memproses 1 video per siklus jadwal
+                if success_count > 0:
+                    video['status'] = 'completed'
+                    updated = True
+                    break
+                else:
+                    raise RuntimeError("Gagal mengunggah ke halaman Facebook. Periksa token/izin halaman Anda.")
 
             except Exception as e:
-                print(f"Error saat memproses video: {e}")
                 if os.path.exists(temp_file):
                     os.remove(temp_file)
+                raise RuntimeError(f"Gagal memproses video: {e}")
 
     if updated:
         with open('videos.json', 'w', encoding='utf-8') as f:
             json.dump(videos, f, indent=2, ensure_ascii=False)
-        print("videos.json berhasil diperbarui.")
+        print("videos.json berhasil diperbarui menjadi completed.")
 
 if __name__ == '__main__':
     main()
