@@ -1,118 +1,91 @@
 import os
 import json
-import re
-import requests
 import subprocess
-import sys
+import requests
 
-# Memastikan gdown terinstall
-try:
-    import gdown
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown"])
-    import gdown
+# File konfigurasi
+LINKS_FILE = "links.txt"
+FB_PAGES_DATA = os.environ.get("FB_PAGES_DATA")
 
-def download_from_google_drive(url, output_path='temp_video.mp4'):
-    print(f"Mengunduh file video dari Google Drive: {url}...")
-    
-    # Ekstrak File ID dari URL Google Drive
-    file_id = None
-    match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
-    if match:
-        file_id = match.group(1)
-    
-    # Unduh berdasarkan ID berkas atau URL langsung
-    if file_id:
-        gdown.download(id=file_id, output=output_path, quiet=False)
-    else:
-        gdown.download(url, output_path, quiet=False)
-    
-    if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
-        raise RuntimeError("Gagal mengunduh file video dari Google Drive. Periksa kembali izin akses link (harus 'Anyone with link').")
-    
-    print("Unduhan berhasil.")
+DEFAULT_CAPTION = """https://part-selanjutnya.github.io/part-selanjutnya/
+Tonton selanjutnya☝️
+#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"""
+
+def download_video_yt_dlp(url, output_path="temp_video.mp4"):
+    print(f"Mengunduh video dari: {url}")
+    command = [
+        "yt-dlp",
+        "-o", output_path,
+        "-f", "b[ext=mp4]/b",  # Ambil format mp4 terbaik
+        "--no-playlist",
+        url
+    ]
+    subprocess.run(command, check=True)
     return output_path
 
-def upload_video_to_page(page_id, page_token, file_path, title, description):
-    # Endpoint khusus pengunggahan video Facebook Graph API
-    url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
+def upload_to_facebook_page(page_id, page_token, video_path):
+    url = f"https://graph.facebook.com/v26.0/{page_id}/videos"
     payload = {
-        'title': title,
-        'description': description,
+        'description': DEFAULT_CAPTION,
         'access_token': page_token
     }
-    with open(file_path, 'rb') as f:
-        files = {'source': f}
+    with open(video_path, 'rb') as video_file:
+        files = {'source': video_file}
+        print(f"Mengunggah ke Halaman ID: {page_id}...")
         response = requests.post(url, data=payload, files=files)
-    return response.json()
+        return response.json()
 
 def main():
-    pages_json = os.environ.get('FB_PAGES_DATA')
-    if not pages_json:
-        raise ValueError("Error: Secret 'FB_PAGES_DATA' tidak ditemukan atau kosong!")
+    if not os.path.exists(LINKS_FILE):
+        print("File links.txt tidak ditemukan.")
+        return
 
-    pages = json.loads(pages_json)
+    with open(LINKS_FILE, 'r', encoding='utf-8') as f:
+        lines = [line.strip() for line in f.readlines() if line.strip()]
 
-    if not os.path.exists('videos.json'):
-        raise FileNotFoundError("Error: File 'videos.json' tidak ditemukan!")
+    # Cari link pertama yang belum selesai (tidak diawali #DONE)
+    target_index = -1
+    target_url = ""
+    for idx, line in enumerate(lines):
+        if not line.startswith("#DONE"):
+            target_index = idx
+            target_url = line
+            break
 
-    with open('videos.json', 'r', encoding='utf-8') as f:
-        videos = json.load(f)
+    if target_index == -1 or not target_url:
+        print("Semua video di links.txt sudah selesai diposting!")
+        return
 
-    updated = False
-    for video in videos:
-        if video.get('status') == 'pending':
-            video_url = video.get('url')
-            title = video.get('title', '')
-            description = video.get('description', '')
+    if not FB_PAGES_DATA:
+        print("Error: Secret FB_PAGES_DATA tidak ditemukan.")
+        return
 
-            print("==========================================")
-            print(f"Memproses video: {title}")
-            print(f"URL: {video_url}")
-            print("==========================================")
-            
-            temp_file = 'temp_video.mp4'
-            try:
-                # 1. Unduh dari Google Drive
-                download_from_google_drive(video_url, temp_file)
+    pages = json.loads(FB_PAGES_DATA)
+    video_file = "temp_video.mp4"
 
-                # 2. Unggah file ke seluruh halaman Facebook
-                success_count = 0
-                for page in pages:
-                    print(f"Mengunggah ke halaman: {page['name']} ({page['id']})...")
-                    res = upload_video_to_page(
-                        page['id'],
-                        page['token'],
-                        temp_file,
-                        title,
-                        description
-                    )
-                    
-                    if 'id' in res:
-                        print(f" -> Sukses! Video ID: {res['id']}")
-                        success_count += 1
-                    else:
-                        print(f" -> Gagal unggah ke {page['name']}: {json.dumps(res)}")
+    try:
+        # 1. Download video secara temporary
+        download_video_yt_dlp(target_url, video_file)
 
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
+        # 2. Upload ke seluruh 10 Facebook Pages
+        for page in pages:
+            res = upload_to_facebook_page(page['id'], page['token'], video_file)
+            print(f"Hasil {page['name']}: {res}")
 
-                if success_count > 0:
-                    video['status'] = 'completed'
-                    updated = True
-                    break
-                else:
-                    raise RuntimeError("Gagal mengunggah ke halaman Facebook. Periksa token/izin halaman Anda.")
+        # 3. Tandai link yang sudah sukses diunggah
+        lines[target_index] = f"#DONE {target_url}"
+        with open(LINKS_FILE, 'w', encoding='utf-8') as f:
+            f.write("\n".join(lines) + "\n")
 
-            except Exception as e:
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
-                raise RuntimeError(f"Gagal memproses video: {e}")
+        print("Berhasil mengunggah video ke semua halaman!")
 
-    if updated:
-        with open('videos.json', 'w', encoding='utf-8') as f:
-            json.dump(videos, f, indent=2, ensure_ascii=False)
-        print("videos.json berhasil diperbarui menjadi completed.")
+    except Exception as e:
+        print(f"Gagal memproses video: {e}")
 
-if __name__ == '__main__':
+    finally:
+        # 4. Hapus file video temporary agar runner tetap bersih
+        if os.path.exists(video_file):
+            os.remove(video_file)
+
+if __name__ == "__main__":
     main()
