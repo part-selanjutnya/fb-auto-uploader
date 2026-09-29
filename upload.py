@@ -1,25 +1,35 @@
 import os
 import json
 import requests
-import yt_dlp
 
 def download_youtube_video(youtube_url, output_path='temp_video.mp4'):
-    print(f"Mengunduh video dari YouTube: {youtube_url}...")
-    ydl_opts = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-        'outtmpl': output_path,
-        'quiet': False,
-        'overwrites': True,
-        'nocheckcertificate': True,
-        # Bypass deteksi bot YouTube dengan menyamar sebagai client Android/iOS/mweb
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android', 'ios', 'mweb']
-            }
-        }
+    print(f"Mengunduh video dari YouTube via API: {youtube_url}...")
+    
+    # Memanggil API Cobalt untuk mendapatkan link MP4 langsung
+    api_url = "https://api.cobalt.tools"
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
     }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([youtube_url])
+    payload = {
+        "url": youtube_url,
+        "videoQuality": "720"
+    }
+    
+    response = requests.post(api_url, json=payload, headers=headers)
+    data = response.json()
+    
+    video_download_url = data.get("url")
+    if not video_download_url:
+        raise RuntimeError(f"Gagal mendapatkan link unduhan dari API: {data}")
+        
+    print("Link MP4 berhasil didapatkan, mengunduh file...")
+    video_data = requests.get(video_download_url, stream=True)
+    with open(output_path, 'wb') as f:
+        for chunk in video_data.iter_content(chunk_size=1024*1024):
+            if chunk:
+                f.write(chunk)
+                
     return output_path
 
 def upload_video_to_page(page_id, page_token, file_path, title, description):
@@ -61,7 +71,7 @@ def main():
             
             temp_file = 'temp_video.mp4'
             try:
-                # 1. Jika URL berupa link langsung file MP4
+                # 1. Jika URL berupa link MP4 langsung
                 if video_url.endswith('.mp4') or ('http' in video_url and not ('youtube.com' in video_url or 'youtu.be' in video_url)):
                     print("Mengunduh langsung dari URL MP4...")
                     r = requests.get(video_url, stream=True)
@@ -70,7 +80,7 @@ def main():
                             if chunk:
                                 f_out.write(chunk)
                 else:
-                    # 2. Unduh dari YouTube Shorts
+                    # 2. Unduh dari YouTube Shorts via API
                     download_youtube_video(video_url, temp_file)
 
                 # Unggah ke seluruh halaman Facebook
