@@ -10,42 +10,65 @@ DEFAULT_CAPTION = """https://part-selanjutnya.github.io/part-selanjutnya/
 Tonton selanjutnya☝️
 #AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"""
 
-def download_video_via_cobalt(url, output_path="temp_video.mp4"):
-    print(f"Mengunduh video via Cobalt API: {url}")
+def download_video_via_api(url, output_path="temp_video.mp4"):
+    print(f"Mengunduh video dari: {url}")
     
-    api_url = "https://api.cobalt.tools/api/json"
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-    }
-    payload = {
-        "url": url,
-        "videoQuality": "720"
-    }
-    
-    response = requests.post(api_url, json=payload, headers=headers, timeout=30)
-    data = response.json()
-    
-    if "url" in data:
-        video_download_url = data["url"]
-        print("Mendapatkan direct link MP4, mengunduh berkas...")
-        video_bytes = requests.get(video_download_url, timeout=120).content
-        with open(output_path, "wb") as f:
-            f.write(video_bytes)
-        print("Berhasil mengunduh video!")
-        return output_path
-    elif "picker" in data:
-        # Jika respon berupa list media
-        video_download_url = data["picker"][0]["url"]
-        video_bytes = requests.get(video_download_url, timeout=120).content
-        with open(output_path, "wb") as f:
-            f.write(video_bytes)
-        print("Berhasil mengunduh video dari picker!")
-        return output_path
-    else:
-        raise Exception(f"Cobalt API Error: {data}")
+    # 1. Coba Menggunakan API Cobalt v10 / Instance Publik Terbaru
+    try:
+        api_url = "https://co.wuk.sh/api/json"  # Instance resmi Cobalt v10
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "url": url,
+            "vQuality": "720"
+        }
+        res = requests.post(api_url, json=payload, headers=headers, timeout=20)
+        data = res.json()
+        
+        dl_url = data.get("url") or (data.get("picker")[0]["url"] if "picker" in data else None)
+        if dl_url:
+            video_bytes = requests.get(dl_url, timeout=90).content
+            with open(output_path, "wb") as f:
+                f.write(video_bytes)
+            print("Berhasil mengunduh via Instance Cobalt!")
+            return output_path
+    except Exception as e:
+        print(f"Cobalt Instance gagal: {e}")
 
+    # 2. Alternative: Gunakan Invidious / Piped API untuk YouTube Shorts
+    if "youtube.com" in url or "youtu.be" in url:
+        try:
+            # Ekstrak Video ID
+            video_id = url.split("shorts/")[-1].split("?")[0].split("/")[0]
+            piped_api = f"https://pipedapi.kavin.rocks/streams/{video_id}"
+            res = requests.get(piped_api, timeout=20).json()
+            
+            # Cari stream MP4
+            video_stream = next((item["url"] for item in res.get("videoStreams", []) if item.get("container") == "m4a" or "mp4" in item.get("mimeType", "")), None)
+            if video_stream:
+                video_bytes = requests.get(video_stream, timeout=90).content
+                with open(output_path, "wb") as f:
+                    f.write(video_bytes)
+                print("Berhasil mengunduh via Piped API!")
+                return output_path
+        except Exception as e:
+            print(f"Piped API gagal: {e}")
+
+    # 3. Fallback: Gunakan yt-dlp dengan Player Client khusus
+    print("Mencoba fallback via yt-dlp dengan Android client...")
+    command = [
+        "yt-dlp",
+        "-o", output_path,
+        "-f", "b[ext=mp4]/b",
+        "--extractor-args", "youtube:player_client=android",
+        "--no-playlist",
+        url
+    ]
+    subprocess.run(command, check=True)
+    print("Berhasil mengunduh via yt-dlp Android client!")
+    return output_path
 def upload_to_facebook_page(page_id, page_token, video_path):
     url = f"https://graph.facebook.com/v26.0/{page_id}/videos"
     payload = {
