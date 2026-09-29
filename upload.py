@@ -14,39 +14,80 @@ Tonton selanjutnya☝️
 def download_video_via_api(url, output_path="temp_video.mp4"):
     print(f"Mengunduh video dari: {url}")
     
-    # Resolusi shortlink jika berupa vt.tiktok.com atau s.snackvideo.com
+    # Resolusi shortlink vt.tiktok.com
     session = requests.Session()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
     try:
-        res_head = session.head(url, allow_redirects=True, timeout=15)
+        res_head = session.get(url, headers=headers, allow_redirects=True, timeout=15)
         clean_url = res_head.url
     except Exception:
         clean_url = url
     print(f"URL target teresolusi: {clean_url}")
 
-    # 1. Unduh via TikWM API (Khusus TikTok - Tanpa Watermark)
-    if "tiktok.com" in clean_url or "tiktok.com" in url:
-        try:
-            print("Mengunduh via TikWM API...")
-            api_url = "https://www.tikwm.com/api/"
-            payload = {"url": clean_url, "hd": 1}
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-            }
-            res = requests.post(api_url, data=payload, headers=headers, timeout=20).json()
-            
-            video_url = res.get("data", {}).get("play")
+    # Metode 1: TikWM API dengan GET + custom headers
+    try:
+        print("Mengunduh via TikWM API (Method 1)...")
+        api_url = f"https://www.tikwm.com/api/?url={clean_url}&count=12&cursor=0&web=1&hd=1"
+        res = session.get(api_url, headers=headers, timeout=20)
+        if res.status_code == 200 and "json" in res.headers.get("Content-Type", ""):
+            data = res.json()
+            video_url = data.get("data", {}).get("play")
             if video_url:
                 if not video_url.startswith("http"):
                     video_url = f"https://www.tikwm.com{video_url}"
-                video_bytes = requests.get(video_url, timeout=90).content
+                video_bytes = session.get(video_url, headers=headers, timeout=90).content
                 with open(output_path, "wb") as f:
                     f.write(video_bytes)
-                print("Berhasil mengunduh video TikTok tanpa watermark!")
+                print("Berhasil mengunduh video via TikWM!")
                 return output_path
-        except Exception as e:
-            print(f"TikWM API gagal: {e}. Mengalihkan ke fallback...")
+    except Exception as e:
+        print(f"TikWM Method 1 gagal: {e}")
 
-    # 2. Fallback Universal via yt-dlp (Untuk platform lain)
+    # Metode 2: Tiklydown API (Alternative Anti-bot)
+    try:
+        print("Mengunduh via Tiklydown API (Method 2)...")
+        api_url = f"https://api.tiklydown.eu.org/api/download?url={clean_url}"
+        res = session.get(api_url, headers=headers, timeout=20)
+        if res.status_code == 200:
+            data = res.json()
+            video_url = data.get("video", {}).get("noWatermark") or data.get("video", {}).get("watermark")
+            if video_url:
+                video_bytes = session.get(video_url, headers=headers, timeout=90).content
+                with open(output_path, "wb") as f:
+                    f.write(video_bytes)
+                print("Berhasil mengunduh video via Tiklydown!")
+                return output_path
+    except Exception as e:
+        print(f"Tiklydown Method 2 gagal: {e}")
+
+    # Metode 3: Cobalt API
+    try:
+        print("Mengunduh via Cobalt API (Method 3)...")
+        api_url = "https://api.cobalt.tools/api/json"
+        payload = {
+            "url": clean_url,
+            "videoQuality": "max"
+        }
+        headers_cobalt = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+        res = requests.post(api_url, json=payload, headers=headers_cobalt, timeout=20)
+        if res.status_code == 200:
+            data = res.json()
+            video_url = data.get("url")
+            if video_url:
+                video_bytes = session.get(video_url, timeout=90).content
+                with open(output_path, "wb") as f:
+                    f.write(video_bytes)
+                print("Berhasil mengunduh video via Cobalt API!")
+                return output_path
+    except Exception as e:
+        print(f"Cobalt Method 3 gagal: {e}")
+
+    # Fallback Terakhir: yt-dlp
     try:
         print("Mencoba fallback via yt-dlp...")
         command = [
