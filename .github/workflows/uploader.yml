@@ -1,13 +1,10 @@
-name: Facebook Auto Uploader
+name: Auto Direct Upload Facebook Reels
 
 on:
   schedule:
-    # Berjalan 10 kali sehari (04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00, 22:00 WIB)
-    - cron: '0 1,3,5,7,9,11,13,15,21,23 * * *'
-  workflow_dispatch: # Tombol pemicu manual
-
-permissions:
-  contents: write
+    # Eksekusi setiap 2 jam (04:00 - 22:00 WIB)
+    - cron: '0 21,23,1,3,5,7,9,11,13,15 * * *'
+  workflow_dispatch:
 
 jobs:
   upload:
@@ -16,10 +13,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.10'
 
       - name: Install Dependencies
         run: |
@@ -31,7 +28,10 @@ jobs:
           FB_PAGES_DATA: ${{ secrets.FB_PAGES_DATA }}
         run: python upload.py
 
-      - name: Commit and Push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Auto-update status video setelah unggah"
+      - name: Commit & Push Updated links.txt
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add links.txt
+          git commit -m "Update links.txt status" || exit 0
+          git push
