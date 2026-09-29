@@ -13,14 +13,42 @@ Tonton selanjutnya☝️
 
 def download_video_yt_dlp(url, output_path="temp_video.mp4"):
     print(f"Mengunduh video dari: {url}")
+    
+    # 1. Coba gunakan Cobalt API (Sangat ampuh untuk Snack Video, TikTok, IG, YT)
+    try:
+        api_url = "https://api.cobalt.tools/api/json"
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "url": url,
+            "videoQuality": "720"
+        }
+        
+        response = requests.post(api_url, json=payload, headers=headers, timeout=30)
+        data = response.json()
+        
+        if "url" in data:
+            video_url = data["url"]
+            video_bytes = requests.get(video_url, timeout=60).content
+            with open(output_path, "wb") as f:
+                f.write(video_bytes)
+            print("Berhasil mengunduh video via API!")
+            return output_path
+    except Exception as e:
+        print(f"Peringatan API: {e}. Mengalihkan ke yt-dlp...")
+
+    # 2. Fallback menggunakan yt-dlp jika API gagal
     command = [
         "yt-dlp",
         "-o", output_path,
-        "-f", "b[ext=mp4]/b",  # Ambil format mp4 terbaik
+        "-f", "b[ext=mp4]/b",
         "--no-playlist",
         url
     ]
     subprocess.run(command, check=True)
+    print("Berhasil mengunduh video via yt-dlp!")
     return output_path
 
 def upload_to_facebook_page(page_id, page_token, video_path):
