@@ -2,8 +2,12 @@ import os
 import json
 import subprocess
 import requests
+import urllib3
 
-# File konfigurasi
+# Matikan peringatan SSL Insecure Warning
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Konfigurasi File & Secret
 LINKS_FILE = "links.txt"
 FB_PAGES_DATA = os.environ.get("FB_PAGES_DATA")
 
@@ -16,9 +20,12 @@ def download_video_via_api(url, output_path="temp_video.mp4"):
     
     # Resolusi shortlink vt.tiktok.com
     session = requests.Session()
+    session.verify = False  # Bypass SSL Certificate verification error
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
+        "Referer": "https://www.tikwm.com/"
     }
+    
     try:
         res_head = session.get(url, headers=headers, allow_redirects=True, timeout=15)
         clean_url = res_head.url
@@ -26,14 +33,21 @@ def download_video_via_api(url, output_path="temp_video.mp4"):
         clean_url = url
     print(f"URL target teresolusi: {clean_url}")
 
-    # Metode 1: TikWM API dengan GET + custom headers
+    # Metode 1: TikWM POST API (Form Payload)
     try:
-        print("Mengunduh via TikWM API (Method 1)...")
-        api_url = f"https://www.tikwm.com/api/?url={clean_url}&count=12&cursor=0&web=1&hd=1"
-        res = session.get(api_url, headers=headers, timeout=20)
-        if res.status_code == 200 and "json" in res.headers.get("Content-Type", ""):
+        print("Mengunduh via TikWM POST API (Method 1)...")
+        api_url = "https://www.tikwm.com/api/"
+        payload = {
+            "url": clean_url,
+            "count": 12,
+            "cursor": 0,
+            "web": 1,
+            "hd": 1
+        }
+        res = session.post(api_url, data=payload, headers=headers, timeout=20)
+        if res.status_code == 200:
             data = res.json()
-            video_url = data.get("data", {}).get("play")
+            video_url = data.get("data", {}).get("play") or data.get("data", {}).get("wmplay")
             if video_url:
                 if not video_url.startswith("http"):
                     video_url = f"https://www.tikwm.com{video_url}"
@@ -45,7 +59,7 @@ def download_video_via_api(url, output_path="temp_video.mp4"):
     except Exception as e:
         print(f"TikWM Method 1 gagal: {e}")
 
-    # Metode 2: Tiklydown API (Alternative Anti-bot)
+    # Metode 2: Tiklydown API (Bypass SSL)
     try:
         print("Mengunduh via Tiklydown API (Method 2)...")
         api_url = f"https://api.tiklydown.eu.org/api/download?url={clean_url}"
@@ -62,46 +76,29 @@ def download_video_via_api(url, output_path="temp_video.mp4"):
     except Exception as e:
         print(f"Tiklydown Method 2 gagal: {e}")
 
-    # Metode 3: Cobalt API
+    # Metode 3: SSSTik API / Extractor
     try:
-        print("Mengunduh via Cobalt API (Method 3)...")
-        api_url = "https://api.cobalt.tools/api/json"
+        print("Mengunduh via SSSTik API (Method 3)...")
+        ssstik_url = "https://ssstik.io/abc?url=dl"
         payload = {
-            "url": clean_url,
-            "videoQuality": "max"
+            "id": clean_url,
+            "locale": "en",
+            "tt": "S3R3Y2E1"
         }
-        headers_cobalt = {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        }
-        res = requests.post(api_url, json=payload, headers=headers_cobalt, timeout=20)
-        if res.status_code == 200:
-            data = res.json()
-            video_url = data.get("url")
-            if video_url:
-                video_bytes = session.get(video_url, timeout=90).content
+        res = session.post(ssstik_url, data=payload, headers=headers, timeout=20)
+        if res.status_code == 200 and "download" in res.text:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(res.text, "html.parser")
+            download_link = soup.find("a", {"class": "download_link"})
+            if download_link and download_link.get("href"):
+                dl_url = download_link["href"]
+                video_bytes = session.get(dl_url, headers=headers, timeout=90).content
                 with open(output_path, "wb") as f:
                     f.write(video_bytes)
-                print("Berhasil mengunduh video via Cobalt API!")
+                print("Berhasil mengunduh video via SSSTik!")
                 return output_path
     except Exception as e:
-        print(f"Cobalt Method 3 gagal: {e}")
-
-    # Fallback Terakhir: yt-dlp
-    try:
-        print("Mencoba fallback via yt-dlp...")
-        command = [
-            "yt-dlp",
-            "-o", output_path,
-            "-f", "b[ext=mp4]/b",
-            "--no-playlist",
-            clean_url
-        ]
-        subprocess.run(command, check=True)
-        print("Berhasil mengunduh video via yt-dlp!")
-        return output_path
-    except Exception as e:
-        print(f"yt-dlp gagal: {e}")
+        print(f"SSSTik Method 3 gagal: {e}")
 
     raise Exception("Gagal mengunduh video dari semua metode yang tersedia.")
 
@@ -125,7 +122,7 @@ def main():
     with open(LINKS_FILE, 'r', encoding='utf-8') as f:
         lines = [line.strip() for line in f.readlines() if line.strip()]
 
-    # Cari link pertama yang belum selesai (tidak diawali #DONE)
+    # Cari link pertama yang belum diproses (tidak diawali #DONE)
     target_index = -1
     target_url = ""
     for idx, line in enumerate(lines):
@@ -145,7 +142,7 @@ def main():
     try:
         pages = json.loads(FB_PAGES_DATA)
     except Exception as e:
-        print(f"Error: Gagal melakukan parse JSON pada FB_PAGES_DATA: {e}")
+        print(f"Error: Gagal parse JSON FB_PAGES_DATA: {e}")
         return
 
     video_file = "temp_video.mp4"
@@ -159,7 +156,7 @@ def main():
             res = upload_to_facebook_page(page['id'], page['token'], video_file)
             print(f"Hasil Upload [{page.get('name', page['id'])}]: {res}")
 
-        # 3. Tandai link yang berhasil diunggah dengan #DONE
+        # 3. Tandai link dengan #DONE setelah sukses diposting
         lines[target_index] = f"#DONE {target_url}"
         with open(LINKS_FILE, 'w', encoding='utf-8') as f:
             f.write("\n".join(lines) + "\n")
@@ -170,7 +167,7 @@ def main():
         print(f"Gagal memproses video: {e}")
 
     finally:
-        # 4. Bersihkan file video temporary
+        # 4. Bersihkan berkas sementara
         if os.path.exists(video_file):
             os.remove(video_file)
 
