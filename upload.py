@@ -4,7 +4,13 @@ import requests
 
 def download_direct_mp4(url, output_path='temp_video.mp4'):
     print(f"Mengunduh file MP4 dari: {url}...")
-    res = requests.get(url, stream=True)
+    
+    # Penyamaran sebagai peramban Chrome agar koneksi tidak diputus oleh Catbox/Cloudflare
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    res = requests.get(url, headers=headers, stream=True, timeout=60)
     res.raise_for_status()
     with open(output_path, 'wb') as f:
         for chunk in res.iter_content(chunk_size=1024*1024):
