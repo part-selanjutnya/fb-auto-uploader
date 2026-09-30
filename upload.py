@@ -8,11 +8,20 @@ def download_video(url, output_path="temp_video.mp4"):
     """Mengunduh file video dari URL publik atau TikTok/Reels link."""
     print(f"Mengunduh video dari: {url}")
     try:
-        response = requests.get(url, stream=True, timeout=30)
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/115.0.0.0 Safari/537.36"
+            )
+        }
+        response = requests.get(
+            url, headers=headers, stream=True, timeout=30
+        )
         response.raise_for_status()
 
         with open(output_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
+            for chunk in response.iter_content(chunk_size=1024 * 1024):
                 if chunk:
                     f.write(chunk)
 
@@ -24,13 +33,13 @@ def download_video(url, output_path="temp_video.mp4"):
 
 
 def upload_reels_to_facebook(
-    page_id, page_token, video_path, caption="Automated Reels Video"
+    page_name, page_id, page_token, video_path, caption="Automated Reels"
 ):
-    """Mengunggah video ke Facebook Reels dan menunggu proses encoding selesai."""
-    print(f"\nMengunggah REELS ke Halaman ID: {page_id}")
+    """Mengunggah video ke Facebook Reels menggunakan 3-Step Resumable Upload API."""
+    print(f"\nMengunggah REELS ke Halaman: {page_name} ({page_id})")
 
-    # 1. Inisialisasi Sesi Upload
-    init_url = f"https://graph.facebook.com/v20.0/{page_id}/video_reels"
+    # Step 1: Inisialisasi Sesi Upload
+    init_url = f"https://graph.facebook.com/v26.0/{page_id}/video_reels"
     init_payload = {
         "upload_phase": "start",
         "access_token": page_token,
@@ -39,13 +48,13 @@ def upload_reels_to_facebook(
     try:
         init_res = requests.post(init_url, data=init_payload).json()
         if "video_id" not in init_res or "upload_url" not in init_res:
-            print(f"Gagal Inisialisasi: {init_res}")
+            print(f"Gagal Inisialisasi pada {page_name}: {init_res}")
             return None
 
         video_id = init_res["video_id"]
         upload_url = init_res["upload_url"]
 
-        # 2. Upload File Video (Binary)
+        # Step 2: Upload Binary Video
         file_size = os.path.getsize(video_path)
         headers = {
             "Authorization": f"OAuth {page_token}",
@@ -54,12 +63,13 @@ def upload_reels_to_facebook(
         }
 
         with open(video_path, "rb") as video_file:
-            upload_res = requests.post(
-                upload_url, headers=headers, data=video_file
-            ).json()
+            requests.post(upload_url, headers=headers, data=video_file)
 
-        # 3. Publish Reels
-        publish_url = f"https://graph.facebook.com/v20.0/{page_id}/video_reels"
+        # Jeda sejenak untuk pemrosesan file di server Meta
+        time.sleep(5)
+
+        # Step 3: Finish & Publish
+        publish_url = f"https://graph.facebook.com/v26.0/{page_id}/video_reels"
         publish_payload = {
             "upload_phase": "finish",
             "video_id": video_id,
@@ -69,45 +79,22 @@ def upload_reels_to_facebook(
         }
 
         finish_res = requests.post(publish_url, data=publish_payload).json()
-        print(f"Hasil Upload REELS ke Halaman ID {page_id}: {finish_res}")
+        print(f"Hasil Upload REELS {page_name}: {finish_res}")
 
-        # 4. Pengecekan Status Pemrosesan Video di Server Facebook
-        print("Menunggu proses pemrosesan video di server Facebook...")
-        status_url = f"https://graph.facebook.com/v20.0/{video_id}?fields=status&access_token={page_token}"
-
-        max_retries = 12  # Cek hingga 2 menit (12 x 10 detik)
-        for i in range(max_retries):
-            time.sleep(10)
-            status_res = requests.get(status_url).json()
-            video_status = (
-                status_res.get("status", {}).get("video_status", "").lower()
-            )
-
-            print(
-                f"[{i+1}/{max_retries}] Status Pemrosesan Video ({video_id}): {video_status}"
-            )
-
-            if video_status in ["ready", "published"]:
-                print(f"Video SELESAI diproses dan terbit: {video_id}")
-                return video_id
-            elif video_status == "error":
-                print(f"Facebook gagal memproses video: {status_res}")
-                return None
-
-        print(
-            f"Video masih dalam antrean pemrosesan Facebook (ID: {video_id})."
-        )
-        return video_id
+        if finish_res.get("success") or "id" in finish_res:
+            post_id = finish_res.get("id", video_id)
+            return f"{page_name}: https://www.facebook.com/reel/{post_id}"
+        else:
+            return f"{page_name}: https://www.facebook.com/reel/{video_id}"
 
     except Exception as e:
-        print(f"Terjadi kesalahan saat unggah: {e}")
+        print(f"Terjadi kesalahan saat unggah ke {page_name}: {e}")
         return None
 
 
 def main():
     input_file = "input_link.txt"
 
-    # Cek keberadaan dan isi input_link.txt
     if not os.path.exists(input_file):
         print(f"File {input_file} tidak ditemukan!")
         return
@@ -119,7 +106,6 @@ def main():
         print(f"URL Video tidak ditemukan di {input_file}")
         return
 
-    # Mengambil Secret/Environment FB_PAGES_DATA
     fb_pages_json = os.environ.get("FB_PAGES_DATA")
     if not fb_pages_json:
         print("Environment variable FB_PAGES_DATA tidak ditemukan!")
@@ -131,24 +117,35 @@ def main():
         print(f"Gagal memuat JSON dari FB_PAGES_DATA: {e}")
         return
 
-    # Proses Setiap URL
     for target_url in urls:
         temp_video_path = "temp_video.mp4"
         downloaded = download_video(target_url, temp_video_path)
 
         if downloaded and os.path.exists(temp_video_path):
-            # Unggah ke semua halaman Facebook yang terkonfigurasi
+            results = [target_url]
+
             for page in pages:
-                page_id = page.get("page_id")
-                page_token = page.get("access_token")
-                caption = page.get("caption", "Automated Reels")
+                page_name = page.get("name", "Unknown Page")
+                # Mendukung pembacaan kunci 'id' maupun 'page_id'
+                page_id = page.get("id") or page.get("page_id")
+                # Mendukung pembacaan kunci 'token' maupun 'access_token'
+                page_token = page.get("token") or page.get("access_token")
 
                 if page_id and page_token:
-                    upload_reels_to_facebook(
-                        page_id, page_token, temp_video_path, caption
+                    res_link = upload_reels_to_facebook(
+                        page_name,
+                        page_id,
+                        page_token,
+                        temp_video_path,
+                        caption=f"Reels Video {page_name}",
                     )
+                    if res_link:
+                        results.append(res_link)
 
-            # Hapus file sementara setelah selesai diproses
+            # Simpan atau update ke links.txt
+            with open("links.txt", "w") as f:
+                f.write("\n".join(results) + "\n")
+
             if os.path.exists(temp_video_path):
                 os.remove(temp_video_path)
 
