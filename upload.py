@@ -1,128 +1,150 @@
-import os
 import json
+import os
+import time
 import requests
-import urllib3
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-LINKS_FILE = "links.txt"
-FB_PAGES_DATA = os.environ.get("FB_PAGES_DATA")
-
-DEFAULT_CAPTION = """https://part-selanjutnya.github.io/part-selanjutnya/
-Tonton selanjutnya☝️
-#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"""
-
-def download_video_via_api(url, output_path="temp_video.mp4"):
-    print(f"Mengunduh video dari: {url}")
-    session = requests.Session()
-    session.verify = False
+def download_video(video_url, output_path="temp_video.mp4"):
+    """Mengunduh video dari URL (misal: TikTok/Direct Link) dan menyimpannya secara lokal."""
+    print(f"Mengunduh video dari: {video_url}")
     headers = {
-        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-        "Referer": "https://www.tikwm.com/"
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/115.0.0.0 Safari/537.36"
+        )
     }
-    try:
-        res_head = session.get(url, headers=headers, allow_redirects=True, timeout=15)
-        clean_url = res_head.url
-    except Exception:
-        clean_url = url
+    response = requests.get(video_url, headers=headers, stream=True)
+    if response.status_code == 200:
+        with open(output_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=1024 * 1024):
+                if chunk:
+                    f.write(chunk)
+        print("Berhasil mengunduh video")
+        return output_path
+    else:
+        print(f"Gagal mengunduh video. Status code: {response.status_code}")
+        return None
 
-    # TikWM POST API
-    try:
-        api_url = "https://www.tikwm.com/api/"
-        payload = {"url": clean_url, "count": 12, "cursor": 0, "web": 1, "hd": 1}
-        res = session.post(api_url, data=payload, headers=headers, timeout=20)
-        if res.status_code == 200:
-            data = res.json()
-            video_url = data.get("data", {}).get("play") or data.get("data", {}).get("wmplay")
-            if video_url:
-                if not video_url.startswith("http"):
-                    video_url = f"https://www.tikwm.com{video_url}"
-                video_bytes = session.get(video_url, headers=headers, timeout=90).content
-                with open(output_path, "wb") as f:
-                    f.write(video_bytes)
-                print("Berhasil mengunduh video!")
-                return output_path
-    except Exception as e:
-        print(f"Gagal mengunduh: {e}")
 
-    raise Exception("Gagal mengunduh video dari API.")
+def upload_reels_to_facebook(
+    page_id, page_token, video_path, caption="Automated Reels Video"
+):
+    """Mengunggah video ke Facebook Reels menggunakan 3-Step Resumable Upload API."""
+    print(f"Mengunggah REELS ke Halaman ID: {page_id}")
 
-def upload_as_facebook_reel(page_id, page_token, video_path):
-    print(f"Mengunggah REELS ke Halaman ID: {page_id}...")
-    
-    # Step 1: Inisialisasi Upload Session Reels
-    init_url = f"https://graph.facebook.com/v26.0/{page_id}/video_reels"
+    # Step 1: Start Upload Session (Inisialisasi)
+    init_url = f"https://graph.facebook.com/v20.0/{page_id}/video_reels"
     init_payload = {
-        'upload_phase': 'start',
-        'access_token': page_token
+        "upload_phase": "start",
+        "access_token": page_token,
     }
+
     init_res = requests.post(init_url, data=init_payload).json()
-    video_id = init_res.get('video_id')
-    upload_url = init_res.get('upload_url')
 
-    if not video_id or not upload_url:
-        print(f"Gagal inisialisasi Reels untuk {page_id}: {init_res}")
-        return init_res
+    if "video_id" not in init_res or "upload_url" not in init_res:
+        print(f"Hasil Upload REELS ke Halaman ID: {page_id} ***error: {init_res}***")
+        return None
 
-    # Step 2: Upload File Video ke Ruang Beralamat
-    with open(video_path, 'rb') as f:
-        video_data = f.read()
-    
-    upload_headers = {
-        'Authorization': f'OAuth {page_token}',
-        'offset': '0',
-        'file_size': str(len(video_data))
+    video_id = init_res["video_id"]
+    upload_url = init_res["upload_url"]
+
+    # Step 2: Upload File Binary Video ke upload_url
+    file_size = os.path.getsize(video_path)
+    headers = {
+        "Authorization": f"OAuth {page_token}",
+        "offset": "0",
+        "file_size": str(file_size),
     }
-    upload_res = requests.post(upload_url, headers=upload_headers, data=video_data)
 
-    # Step 3: Publikasikan Video sebagai REELS
+    with open(video_path, "rb") as video_file:
+        upload_res = requests.post(
+            upload_url, headers=headers, data=video_file
+        ).json()
+
+    # Step 3: Finish Upload & Publish
+    # Memberikan jeda waktu (sleep) agar server Facebook selesai memproses encoding video
+    time.sleep(10)
+
+    publish_url = f"https://graph.facebook.com/v20.0/{page_id}/video_reels"
     publish_payload = {
-        'upload_phase': 'finish',
-        'video_state': 'PUBLISHED',
-        'description': DEFAULT_CAPTION,
-        'access_token': page_token
+        "upload_phase": "finish",
+        "video_id": video_id,
+        "video_state": "PUBLISHED",
+        "description": caption,
+        "access_token": page_token,
     }
-    final_res = requests.post(init_url, data=publish_payload).json()
-    return final_res
+
+    finish_res = requests.post(publish_url, data=publish_payload).json()
+    print(
+        f"Hasil Upload REELS ke Halaman ID: {page_id} ***response: {finish_res}***"
+    )
+
+    if finish_res.get("success") or "id" in finish_res:
+        post_id = finish_res.get("id", video_id)
+        return f"https://www.facebook.com/reel/{post_id}"
+    else:
+        return None
+
 
 def main():
-    if not os.path.exists(LINKS_FILE):
+    # Ambil JSON FB Pages dari GitHub Secrets / Environment Variable
+    fb_pages_json = os.environ.get("FB_PAGES_DATA")
+    if not fb_pages_json:
+        print("Error: Environment variable FB_PAGES_DATA tidak ditemukan.")
         return
-
-    with open(LINKS_FILE, 'r', encoding='utf-8') as f:
-        lines = [line.strip() for line in f.readlines() if line.strip()]
-
-    target_index = -1
-    target_url = ""
-    for idx, line in enumerate(lines):
-        if not line.startswith("#DONE"):
-            target_index = idx
-            target_url = line
-            break
-
-    if target_index == -1 or not target_url or not FB_PAGES_DATA:
-        return
-
-    pages = json.loads(FB_PAGES_DATA)
-    video_file = "temp_video.mp4"
 
     try:
-        download_video_via_api(target_url, video_file)
-
-        for page in pages:
-            res = upload_as_facebook_reel(page['id'], page['token'], video_file)
-            print(f"Hasil Upload REELS [{page.get('name', page['id'])}]: {res}")
-
-        lines[target_index] = f"#DONE {target_url}"
-        with open(LINKS_FILE, 'w', encoding='utf-8') as f:
-            f.write("\n".join(lines) + "\n")
-
+        pages = json.loads(fb_pages_json)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error parsing FB_PAGES_DATA JSON: {e}")
+        return
 
-    finally:
-        if os.path.exists(video_file):
-            os.remove(video_file)
+    # Baca URL video dari file input (misal: input_link.txt atau url hardcoded)
+    video_url = ""
+    if os.path.exists("input_link.txt"):
+        with open("input_link.txt", "r") as f:
+            video_url = f.read().strip()
+
+    if not video_url:
+        print("URL Video tidak ditemukan di input_link.txt")
+        return
+
+    # Download file video
+    local_video_file = download_video(video_url, "video_to_upload.mp4")
+    if not local_video_file:
+        return
+
+    uploaded_links = []
+
+    # Iterasi upload ke seluruh Halaman
+    for page in pages:
+        page_name = page.get("name", "Unknown")
+        page_id = page.get("id")
+        token = page.get("token")
+
+        if not page_id or not token:
+            print(f"Data Halaman {page_name} tidak lengkap, dilewati.")
+            continue
+
+        reel_url = upload_reels_to_facebook(
+            page_id,
+            token,
+            local_video_file,
+            caption=f"Video Reels {page_name}",
+        )
+        if reel_url:
+            uploaded_links.append(f"{page_name}: {reel_url}")
+
+    # Simpan hasil link yang berhasil diunggah ke file links.txt
+    if uploaded_links:
+        with open("links.txt", "a") as f:
+            f.write("\n".join(uploaded_links) + "\n")
+
+    # Bersihkan file video sementara
+    if os.path.exists(local_video_file):
+        os.remove(local_video_file)
+
 
 if __name__ == "__main__":
     main()
