@@ -3,7 +3,7 @@ name: Facebook Auto Uploader
 on:
   schedule:
     # Berjalan 10 kali sehari (04:00, 06:00, 08:00, 10:00, 12:00, 14:00, 16:00, 18:00, 20:00, 22:00 WIB)
-    - cron: '0 1,3,5,7,9,11,13,15,21,23 * * *'
+    - cron: '0 21,23,1,3,5,7,9,11,13,15 * * *'
   workflow_dispatch: # Tombol pemicu manual
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.10'
 
       - name: Install Dependencies
         run: |
