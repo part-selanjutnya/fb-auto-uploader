@@ -5,7 +5,7 @@ import subprocess
 import sys
 import requests
 
-# Memastikan gdown terinstall
+# Memastikan modul gdown terinstall
 try:
     import gdown
 except ImportError:
@@ -107,7 +107,6 @@ def main():
             title = video.get("title", "")
             description = video.get("description", "")
 
-            # Gabungkan title dan description untuk caption Reels jika diperlukan
             caption = (
                 f"{description}"
                 if description
@@ -127,28 +126,25 @@ def main():
                 # 2. Unggah sebagai Reels ke seluruh halaman Facebook
                 success_count = 0
                 for page in pages:
-                    print(
-                        f"Mengunggah ke halaman: {page.get('name', 'Halaman')} ({page.get('id') or page.get('page_id')})..."
-                    )
+                    page_name = page.get("name", "Halaman")
                     page_id = page.get("id") or page.get("page_id")
                     page_token = page.get("token") or page.get("access_token")
+
+                    print(f"Mengunggah ke halaman: {page_name} ({page_id})...")
 
                     res = upload_reels_to_page(
                         page_id, page_token, temp_file, caption
                     )
 
-                    if res.get("success") or "x-fb-trace-id" in res:
-                        print(f" -> Sukses terunggah sebagai Reels!")
-                        success_count += 1
-                    elif "video_id" in res:
-                        print(
-                            f" -> Sukses terunggah! Video ID: {res.get('video_id')}"
-                        )
+                    if (
+                        res.get("success")
+                        or "x-fb-trace-id" in res
+                        or "video_id" in res
+                    ):
+                        print(" -> Sukses terunggah sebagai Reels!")
                         success_count += 1
                     else:
-                        print(
-                            f" -> Respon Upload: {json.dumps(res)}"
-                        )
+                        print(f" -> Respon Upload: {json.dumps(res)}")
 
                 if os.path.exists(temp_file):
                     os.remove(temp_file)
