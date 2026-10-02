@@ -1,10 +1,7 @@
 name: Facebook Auto Uploader
 
 on:
-  schedule:
-    # Setel tes untuk jam 07:47 WIB (00:47 UTC)
-    - cron: '47 0 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # Dipicu oleh cron-job.org via API / Manual dari tab Actions
 
 permissions:
   contents: write
