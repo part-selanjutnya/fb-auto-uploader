@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Moderasi & Laporan Copyright</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #1877f2; font-size: 24px; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        .stats { display: flex; gap: 15px; margin-bottom: 20px; }
+        .card { flex: 1; background: #e7f3ff; padding: 15px; border-radius: 6px; border-left: 4px solid #1877f2; }
+        .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #555; }
+        .card p { margin: 0; font-size: 18px; font-weight: bold; color: #1877f2; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #f8f9fa; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .no-data { text-align: center; color: #777; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Moderasi Fanpage</h1>
+        <div class="stats">
+            <div class="card">
+                <h3>Terakhir Dicek</h3>
+                <p id="last-check">-</p>
+            </div>
+            <div class="card">
+                <h3>Total Video Dihapus (Copyright)</h3>
+                <p id="total-deleted">0</p>
+            </div>
+        </div>
+
+        <h2>Riwayat Pembersihan Video</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Waktu</th>
+                    <th>Nama Fanpage</th>
+                    <th>Judul Video</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="log-table-body">
+                <tr><td colspan="4" class="no-data">Memuat data laporan...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        fetch('report.json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('last-check').textContent = data.last_check || 'Belum pernah';
+                document.getElementById('total-deleted').textContent = data.total_deleted || 0;
+
+                const tbody = document.getElementById('log-table-body');
+                tbody.innerHTML = '';
+
+                if (data.logs && data.logs.length > 0) {
+                    data.logs.forEach(log => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${log.time}</td>
+                            <td><strong>${log.page}</strong></td>
+                            <td>${log.title}</td>
+                            <td><span style="color: red;">${log.status}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" class="no-data">Belum ada pelanggaran yang ditemukan. Aman!</td></tr>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('log-table-body').innerHTML = '<tr><td colspan="4" class="no-data">Belum ada file report.json atau laporan kosong.</td></tr>';
+            });
+    </script>
+</body>
+</html>
