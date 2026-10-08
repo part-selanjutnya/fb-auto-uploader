@@ -1,5 +1,5 @@
 {
-    "last_check": "2026-10-08 05:14:40",
+    "last_check": "08 Oct 2026, 13:40:20 WIB",
     "total_deleted": 132,
     "logs": [
         {
@@ -876,108 +876,110 @@
     "pages_status": [
         {
             "name": "Kopi Nusantara",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Masa kini",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Alur sbb",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Ritme Video",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Lokasari Pride",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Part selanjutnya",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Lihat selengkapnya",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Cuplik Drama",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Lanjut Part 2",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Pengak",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Cleomenes",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Linda Haubrich",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Alur GMS",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Sempurna",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Sapu Jagat",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Kumbo Sanken",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Gunung Sahari",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Sedap Malam",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Laskar Pagi",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "O T A K U Reel",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Storymu",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         }
-    ]
+    ],
+    "total_warnings": 0,
+    "violations": []
 }
