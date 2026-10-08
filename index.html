@@ -3,85 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Moderasi Fanpage</title>
+    <title>Dashboard Kontrol Fanpage</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 10px; }
         .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { color: #1877f2; font-size: 20px; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-top: 0; }
-        h2 { font-size: 16px; color: #333; margin-top: 25px; margin-bottom: 10px; }
-        .stats { display: flex; gap: 10px; margin-bottom: 15px; }
-        .card { flex: 1; background: #e7f3ff; padding: 12px; border-radius: 8px; border-left: 4px solid #1877f2; }
-        .card h3 { margin: 0 0 5px 0; font-size: 12px; color: #555; }
-        .card p { margin: 0; font-size: 15px; font-weight: bold; color: #1877f2; }
+        h1 { color: #1877f2; font-size: 18px; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-top: 0; }
         
+        /* Menu Bar Navigasi */
+        .menu-bar { display: flex; gap: 8px; margin: 15px 0; background: #e7f3ff; padding: 6px; border-radius: 8px; }
+        .menu-btn { flex: 1; padding: 10px; text-align: center; background: white; border: none; border-radius: 6px; font-weight: bold; font-size: 13px; color: #1877f2; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .menu-btn.active { background: #1877f2; color: white; }
+
+        .stats { display: flex; gap: 10px; margin-bottom: 15px; }
+        .card { flex: 1; background: #f8f9fa; padding: 10px; border-radius: 8px; border-left: 4px solid #1877f2; }
+        .card h3 { margin: 0 0 3px 0; font-size: 11px; color: #555; }
+        .card p { margin: 0; font-size: 14px; font-weight: bold; color: #1877f2; }
+
+        .section-view { display: none; }
+        .section-view.active { display: block; }
+
+        /* Tabel & Tampilan Kartu Anti-Potong */
         .table-container { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 13px; }
-        th, td { border: 1px solid #e1e4e8; padding: 8px; text-align: left; vertical-align: middle; }
+        th, td { border: 1px solid #e1e4e8; padding: 10px; text-align: left; vertical-align: top; word-break: break-word; overflow-wrap: break-word; }
         th { background-color: #f6f8fa; font-weight: 600; }
         tr:nth-child(even) { background-color: #fafbfc; }
-        
-        .thumb-img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: #ddd; display: block; }
+
+        /* Card Khusus Pelanggaran agar teks dan tombol sangat nyaman di HP */
+        .violation-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border-left: 5px solid #dc3545; }
+        .violation-time { font-size: 12px; font-weight: bold; color: #d9534f; margin-bottom: 4px; display: block; }
+        .violation-page { font-size: 14px; font-weight: bold; color: #1877f2; margin-bottom: 6px; display: block; }
+        .violation-text { font-size: 13px; color: #333; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 10px; line-height: 1.4; word-break: break-word; }
+
         .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
         .badge-success { background-color: #d4edda; color: #155724; }
         .badge-danger { background-color: #f8d7da; color: #721c24; }
         .badge-warning { background-color: #fff3cd; color: #856404; }
-        .no-data { text-align: center; color: #777; padding: 15px; font-size: 13px; }
+
+        .btn-group { display: flex; gap: 8px; }
+        .btn { flex: 1; padding: 8px 12px; font-size: 12px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; text-align: center; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-primary { background-color: #1877f2; color: white; }
+        .no-data { text-align: center; color: #777; padding: 20px; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard Fanpage</h1>
+        <h1>Dashboard Kontrol & Moderasi</h1>
+        
         <div class="stats">
             <div class="card">
                 <h3>Terakhir Dicek</h3>
-                <p id="last-check">-</p>
+                <p id="last-check" style="font-size: 12px;">-</p>
             </div>
             <div class="card">
-                <h3>Total Dihapus</h3>
-                <p id="total-deleted">0</p>
+                <h3>Total Peringatan</h3>
+                <p id="total-warnings">0</p>
             </div>
         </div>
 
-        <h2>Status 21 Fanpage</h2>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 40px;">No</th>
-                        <th>Nama Fanpage</th>
-                        <th style="width: 110px;">Status</th>
-                    </tr>
-                </thead>
-                <tbody id="pages-table-body">
-                    <tr><td colspan="3" class="no-data">Memuat status...</td></tr>
-                </tbody>
-            </table>
+        <!-- Menu Bar Navigasi -->
+        <div class="menu-bar">
+            <button class="menu-btn active" onclick="switchTab('tab-violations', this)">⚠️ Video Bermasalah</button>
+            <button class="menu-btn" onclick="switchTab('tab-pages', this)">📊 Status 21 Fanpage</button>
         </div>
 
-        <h2>Riwayat Penghapusan Video</h2>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">Thumb</th>
-                        <th>Waktu / Page / Judul</th>
-                        <th style="width: 90px;">Status</th>
-                    </tr>
-                </thead>
-                <tbody id="log-table-body">
-                    <tr><td colspan="3" class="no-data">Belum ada riwayat pelanggaran.</td></tr>
-                </tbody>
-            </table>
+        <!-- Tab 1: Video Bermasalah (Default) -->
+        <div id="tab-violations" class="section-view active">
+            <h2 style="font-size: 15px; margin-top: 10px;">Daftar Video Terdeteksi Copyright / Masalah</h2>
+            <div id="violations-container">
+                <div class="no-data">Memuat data video bermasalah...</div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Status 21 Fanpage -->
+        <div id="tab-pages" class="section-view">
+            <h2 style="font-size: 15px; margin-top: 10px;">Status Kesehatan Seluruh Fanpage</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35px;">No</th>
+                            <th>Nama Fanpage</th>
+                            <th style="width: 130px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pages-table-body">
+                        <tr><td colspan="3" class="no-data">Memuat status...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
         fetch('report.json')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('last-check').textContent = data.last_check || '-';
-                document.getElementById('total-deleted').textContent = data.total_deleted || 0;
+                document.getElementById('total-warnings').textContent = data.total_warnings || 0;
 
+                // Render Halaman Status Fanpage
                 const pagesBody = document.getElementById('pages-table-body');
                 pagesBody.innerHTML = '';
                 if (data.pages_status && data.pages_status.length > 0) {
@@ -102,30 +131,72 @@
                     pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada data.</td></tr>';
                 }
 
-                const logBody = document.getElementById('log-table-body');
-                logBody.innerHTML = '';
-                if (data.logs && data.logs.length > 0) {
-                    data.logs.forEach(log => {
-                        let thumbHtml = log.thumbnail ? `<img src="${log.thumbnail}" class="thumb-img" alt="Thumb">` : `<div style="font-size:10px; color:#999; text-align:center;">No Image</div>`;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${thumbHtml}</td>
-                            <td>
-                                <small style="color:#666;">${log.time} — <strong>${log.page}</strong></small><br>
-                                <span style="font-size: 12px;">${log.title}</span>
-                            </td>
-                            <td><span style="color: red; font-size: 11px; font-weight: bold;">${log.status}</span></td>
+                // Render Video Bermasalah (Menggunakan Card View agar teks utuh & tidak terpotong)
+                const violContainer = document.getElementById('violations-container');
+                violContainer.innerHTML = '';
+                if (data.violations && data.violations.length > 0) {
+                    data.violations.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'violation-card';
+                        card.innerHTML = `
+                            <span class="violation-time">🕒 Waktu Upload: ${item.upload_time}</span>
+                            <span class="violation-page">📌 Fanpage: ${item.page_name}</span>
+                            <div class="violation-text"><strong>Judul/Deskripsi:</strong><br>${item.title}</div>
+                            <div class="btn-group">
+                                <button class="btn btn-primary" onclick="editCaption('${item.video_id}', '${item.page_token}')">✏️ Edit Caption</button>
+                                <button class="btn btn-danger" onclick="deleteVideo('${item.video_id}', '${item.page_token}')">🗑️ Hapus Video</button>
+                            </div>
                         `;
-                        logBody.appendChild(tr);
+                        violContainer.appendChild(card);
                     });
                 } else {
-                    logBody.innerHTML = '<tr><td colspan="3" class="no-data">Semua halaman aman!</td></tr>';
+                    violContainer.innerHTML = '<div class="no-data">✅ Semua halaman aman! Tidak ada video bermasalah.</div>';
                 }
             })
             .catch(error => {
+                document.getElementById('violations-container').innerHTML = '<div class="no-data">Menunggu pembaruan skrip / laporan kosong.</div>';
                 document.getElementById('pages-table-body').innerHTML = '<tr><td colspan="3" class="no-data">Menunggu pembaruan skrip...</td></tr>';
-                document.getElementById('log-table-body').innerHTML = '<tr><td colspan="3" class="no-data">Menunggu pembaruan skrip...</td></tr>';
             });
+
+        function deleteVideo(videoId, token) {
+            if (confirm("Yakin ingin menghapus video ini dari Fanpage?")) {
+                fetch(`https://graph.facebook.com/v26.0/${videoId}?access_token=${token}`, { method: 'DELETE' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Video berhasil dihapus!");
+                            location.reload();
+                        } else {
+                            alert("Gagal menghapus video: " + JSON.stringify(data));
+                        }
+                    })
+                    .catch(err => alert("Terjadi kesalahan koneksi."));
+            }
+        }
+
+        function editCaption(videoId, token) {
+            let newCaption = prompt("Masukkan caption / deskripsi baru untuk video ini:");
+            if (newCaption !== null) {
+                let formData = new URLSearchParams();
+                formData.append('description', newCaption);
+                formData.append('access_token', token);
+
+                fetch(`https://graph.facebook.com/v26.0/${videoId}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Caption berhasil diperbarui!");
+                        location.reload();
+                    } else {
+                        alert("Gagal memperbarui caption: " + JSON.stringify(data));
+                    }
+                })
+                .catch(err => alert("Terjadi kesalahan koneksi."));
+            }
+        }
     </script>
 </body>
 </html>
