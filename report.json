@@ -1,5 +1,5 @@
 {
-    "last_check": "2026-10-08 01:53:32",
+    "last_check": "2026-10-08 02:21:15",
     "total_deleted": 67,
     "logs": [
         {
@@ -351,125 +351,6 @@
             "video_id": "3122418827966567",
             "title": "Tanpa Judul",
             "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:00",
-            "page": "Kumbo Sanken",
-            "video_id": "1394852169463976",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:05",
-            "page": "Gunung Sahari",
-            "video_id": "1419141780411041",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:10",
-            "page": "Gunung Sahari",
-            "video_id": "1573975964765776",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:14",
-            "page": "Gunung Sahari",
-            "video_id": "3828162510715378",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:19",
-            "page": "Sedap Malam",
-            "video_id": "1107403078545140",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:24",
-            "page": "Sedap Malam",
-            "video_id": "1256180810026754",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:29",
-            "page": "Sedap Malam",
-            "video_id": "1073220438673192",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:34",
-            "page": "Laskar Pagi",
-            "video_id": "1528612425699283",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:39",
-            "page": "Laskar Pagi",
-            "video_id": "1414816523412444",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:43",
-            "page": "Laskar Pagi",
-            "video_id": "1443738591193615",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:48",
-            "page": "O T A K U Reel",
-            "video_id": "2027284141250149",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:54",
-            "page": "O T A K U Reel",
-            "video_id": "2061579281073175",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:52:59",
-            "page": "O T A K U Reel",
-            "video_id": "1673230821024688",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:53:03",
-            "page": "O T A K U Reel",
-            "video_id": "28306820062303338",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:53:07",
-            "page": "O T A K U Reel",
-            "video_id": "28002826392747454",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:53:10",
-            "page": "O T A K U Reel",
-            "video_id": "3957905457851615",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
-        },
-        {
-            "time": "2026-10-08 01:53:14",
-            "page": "O T A K U Reel",
-            "video_id": "3175491952647151",
-            "title": "Tanpa Judul",
-            "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
         }
     ],
     "pages_status": [
@@ -525,48 +406,48 @@
         },
         {
             "name": "Cleomenes",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Linda Haubrich",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Alur GMS",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Sempurna",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Sapu Jagat",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Kumbo Sanken",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Gunung Sahari",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Sedap Malam",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "Laskar Pagi",
-            "status": "Terdeteksi Pelanggaran/Copyright",
-            "badge": "danger"
+            "status": "Aman",
+            "badge": "success"
         },
         {
             "name": "O T A K U Reel",
