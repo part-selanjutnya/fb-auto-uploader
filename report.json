@@ -1,7 +1,527 @@
 {
-    "last_check": "2026-10-08 02:21:15",
-    "total_deleted": 67,
+    "last_check": "2026-10-08 05:14:40",
+    "total_deleted": 132,
     "logs": [
+        {
+            "time": "2026-10-08 05:07:45",
+            "page": "Kopi Nusantara",
+            "video_id": "1594016962397419",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:07:49",
+            "page": "Kopi Nusantara",
+            "video_id": "1719356116857830",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:07:54",
+            "page": "Kopi Nusantara",
+            "video_id": "1628338895324563",
+            "title": "https://part-selanjutnya.github.io/Pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:07:57",
+            "page": "Kopi Nusantara",
+            "video_id": "1636888638114666",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:06",
+            "page": "Kopi Nusantara",
+            "video_id": "1143228661702406",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:09",
+            "page": "Kopi Nusantara",
+            "video_id": "1401917014892836",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:14",
+            "page": "Kopi Nusantara",
+            "video_id": "1088099830595456",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:18",
+            "page": "Kopi Nusantara",
+            "video_id": "949676654388592",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:22",
+            "page": "Kopi Nusantara",
+            "video_id": "2080418625926826",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:26",
+            "page": "Kopi Nusantara",
+            "video_id": "1029282473459130",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:30",
+            "page": "Kopi Nusantara",
+            "video_id": "1098227779594977",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:34",
+            "page": "Kopi Nusantara",
+            "video_id": "4015324085428680",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:38",
+            "page": "Kopi Nusantara",
+            "video_id": "1406002831067803",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:42",
+            "page": "Kopi Nusantara",
+            "video_id": "1104931442393888",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:46",
+            "page": "Kopi Nusantara",
+            "video_id": "1754898909075732",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:50",
+            "page": "Kopi Nusantara",
+            "video_id": "1119746400997865",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:54",
+            "page": "Kopi Nusantara",
+            "video_id": "2133887350888399",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:08:57",
+            "page": "Kopi Nusantara",
+            "video_id": "2893248701032719",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:02",
+            "page": "Kopi Nusantara",
+            "video_id": "4384389188491364",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:06",
+            "page": "Kopi Nusantara",
+            "video_id": "3205978406280046",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:11",
+            "page": "Kopi Nusantara",
+            "video_id": "1286705273580946",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:16",
+            "page": "Kopi Nusantara",
+            "video_id": "28354471777586082",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:19",
+            "page": "Kopi Nusantara",
+            "video_id": "2048777475839992",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:24",
+            "page": "Kopi Nusantara",
+            "video_id": "1089442173870607",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:28",
+            "page": "Kopi Nusantara",
+            "video_id": "1082314297735784",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:34",
+            "page": "Masa kini",
+            "video_id": "1415423417395202",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:38",
+            "page": "Masa kini",
+            "video_id": "1094877559804263",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:42",
+            "page": "Masa kini",
+            "video_id": "2913039845710610",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:47",
+            "page": "Masa kini",
+            "video_id": "2103420763880980",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:51",
+            "page": "Masa kini",
+            "video_id": "1837353837435379",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:55",
+            "page": "Masa kini",
+            "video_id": "1412258533677213",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:09:59",
+            "page": "Masa kini",
+            "video_id": "1475489111150554",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:10:04",
+            "page": "Masa kini",
+            "video_id": "1093543483600244",
+            "title": "https://part-selanjutnya.github.io/pa...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:07",
+            "page": "Cleomenes",
+            "video_id": "1698519031708525",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:11",
+            "page": "Cleomenes",
+            "video_id": "29723022197305608",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:17",
+            "page": "Linda Haubrich",
+            "video_id": "1141443285112994",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:21",
+            "page": "Linda Haubrich",
+            "video_id": "4624746927807486",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:26",
+            "page": "Alur GMS",
+            "video_id": "1983782885621896",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:30",
+            "page": "Alur GMS",
+            "video_id": "28740162018978323",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:36",
+            "page": "Sempurna",
+            "video_id": "1074933375532027",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:39",
+            "page": "Sempurna",
+            "video_id": "1973473406667718",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:44",
+            "page": "Sapu Jagat",
+            "video_id": "2266333797558214",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:48",
+            "page": "Sapu Jagat",
+            "video_id": "958019176825869",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:53",
+            "page": "Kumbo Sanken",
+            "video_id": "1118468614012813",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:12:57",
+            "page": "Kumbo Sanken",
+            "video_id": "1077853338187202",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:02",
+            "page": "Gunung Sahari",
+            "video_id": "1807103650710737",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:06",
+            "page": "Gunung Sahari",
+            "video_id": "1031185899973591",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:11",
+            "page": "Sedap Malam",
+            "video_id": "1871340597363450",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:17",
+            "page": "Sedap Malam",
+            "video_id": "1414466994221861",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:22",
+            "page": "Laskar Pagi",
+            "video_id": "2171424297105835",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:26",
+            "page": "Laskar Pagi",
+            "video_id": "1719032905835464",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:33",
+            "page": "O T A K U Reel",
+            "video_id": "1591543742770434",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:37",
+            "page": "O T A K U Reel",
+            "video_id": "918456154478920",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:42",
+            "page": "O T A K U Reel",
+            "video_id": "2858372141192718",
+            "title": "Tonton selanjutnya\ud83d\udc47\nhttps://s.shopee....",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:46",
+            "page": "O T A K U Reel",
+            "video_id": "1761951554689274",
+            "title": "Tonton selanjutnya\ud83d\udc47\nhttps://s.shopee....",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:51",
+            "page": "O T A K U Reel",
+            "video_id": "1618895522939706",
+            "title": "Tonton selanjutnya\ud83d\udc47\nhttps://s.shopee....",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:13:56",
+            "page": "O T A K U Reel",
+            "video_id": "1071834808775165",
+            "title": "Tonton selanjutnya\ud83d\udc47\nhttps://s.shopee....",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:00",
+            "page": "O T A K U Reel",
+            "video_id": "966431865975700",
+            "title": "Ikan asin + kangkung seharga 2 Juta?!...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:05",
+            "page": "Storymu",
+            "video_id": "1400740255326591",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:09",
+            "page": "Storymu",
+            "video_id": "1001836902939921",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:14",
+            "page": "Storymu",
+            "video_id": "961323669745839",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:18",
+            "page": "Storymu",
+            "video_id": "1683479683296415",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:22",
+            "page": "Storymu",
+            "video_id": "1133196972506900",
+            "title": "https://part-selanjutnya.github.io/Kl...",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:27",
+            "page": "Storymu",
+            "video_id": "4375003409478359",
+            "title": "Tonton selanjutnya\ud83d\udc47\nhttps://s.shopee....",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
+        {
+            "time": "2026-10-08 05:14:31",
+            "page": "Storymu",
+            "video_id": "2275801156549804",
+            "title": "Tonton selanjutnya\ud83d\udc47\nhttps://s.shopee....",
+            "thumbnail": "",
+            "status": "Berhasil Dihapus (Copyright)"
+        },
         {
             "time": "2026-10-08 01:45:52",
             "page": "Kopi Nusantara",
@@ -406,48 +926,48 @@
         },
         {
             "name": "Cleomenes",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Linda Haubrich",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Alur GMS",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Sempurna",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Sapu Jagat",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Kumbo Sanken",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Gunung Sahari",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Sedap Malam",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "Laskar Pagi",
-            "status": "Aman",
-            "badge": "success"
+            "status": "Terdeteksi Pelanggaran/Copyright",
+            "badge": "danger"
         },
         {
             "name": "O T A K U Reel",
