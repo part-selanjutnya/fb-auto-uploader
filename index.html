@@ -3,79 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Moderasi & Status Fanpage</title>
+    <title>Dashboard Moderasi Fanpage</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { color: #1877f2; font-size: 24px; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-top: 0; }
-        h2 { font-size: 18px; color: #333; margin-top: 30px; }
-        .stats { display: flex; gap: 15px; margin-bottom: 20px; }
-        .card { flex: 1; background: #e7f3ff; padding: 15px; border-radius: 6px; border-left: 4px solid #1877f2; }
-        .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #555; }
-        .card p { margin: 0; font-size: 18px; font-weight: bold; color: #1877f2; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-        th { background-color: #f8f9fa; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 10px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #1877f2; font-size: 20px; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-top: 0; }
+        h2 { font-size: 16px; color: #333; margin-top: 25px; margin-bottom: 10px; }
+        .stats { display: flex; gap: 10px; margin-bottom: 15px; }
+        .card { flex: 1; background: #e7f3ff; padding: 12px; border-radius: 8px; border-left: 4px solid #1877f2; }
+        .card h3 { margin: 0 0 5px 0; font-size: 12px; color: #555; }
+        .card p { margin: 0; font-size: 15px; font-weight: bold; color: #1877f2; }
+        
+        .table-container { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 13px; }
+        th, td { border: 1px solid #e1e4e8; padding: 8px; text-align: left; vertical-align: middle; }
+        th { background-color: #f6f8fa; font-weight: 600; }
+        tr:nth-child(even) { background-color: #fafbfc; }
+        
+        .thumb-img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: #ddd; display: block; }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
         .badge-success { background-color: #d4edda; color: #155724; }
         .badge-danger { background-color: #f8d7da; color: #721c24; }
         .badge-warning { background-color: #fff3cd; color: #856404; }
-        .no-data { text-align: center; color: #777; padding: 20px; }
+        .no-data { text-align: center; color: #777; padding: 15px; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard Utama & Moderasi Fanpage</h1>
+        <h1>Dashboard Fanpage</h1>
         <div class="stats">
             <div class="card">
                 <h3>Terakhir Dicek</h3>
                 <p id="last-check">-</p>
             </div>
             <div class="card">
-                <h3>Total Video Dibersihkan</h3>
+                <h3>Total Dihapus</h3>
                 <p id="total-deleted">0</p>
             </div>
         </div>
 
-        <h2>Status Kesehatan 21 Fanpage Anda</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Nama Fanpage</th>
-                    <th>Status Halaman</th>
-                </tr>
-            </thead>
-            <tbody id="pages-table-body">
-                <tr><td colspan="3" class="no-data">Memuat status halaman...</td></tr>
-            </tbody>
-        </table>
+        <h2>Status 21 Fanpage</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">No</th>
+                        <th>Nama Fanpage</th>
+                        <th style="width: 110px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="pages-table-body">
+                    <tr><td colspan="3" class="no-data">Memuat status...</td></tr>
+                </tbody>
+            </table>
+        </div>
 
-        <h2>Riwayat Pembersihan Video (Copyright / Pelanggaran)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Waktu</th>
-                    <th>Nama Fanpage</th>
-                    <th>Judul Video</th>
-                    <th>Status Tindakan</th>
-                </tr>
-            </thead>
-            <tbody id="log-table-body">
-                <tr><td colspan="4" class="no-data">Memuat data riwayat...</td></tr>
-            </tbody>
-        </table>
+        <h2>Riwayat Penghapusan Video</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Thumb</th>
+                        <th>Waktu / Page / Judul</th>
+                        <th style="width: 90px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="log-table-body">
+                    <tr><td colspan="3" class="no-data">Belum ada riwayat pelanggaran.</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         fetch('report.json')
             .then(response => response.json())
             .then(data => {
-                document.getElementById('last-check').textContent = data.last_check || 'Belum pernah';
+                document.getElementById('last-check').textContent = data.last_check || '-';
                 document.getElementById('total-deleted').textContent = data.total_deleted || 0;
 
-                // Render Tabel Status Halaman
                 const pagesBody = document.getElementById('pages-table-body');
                 pagesBody.innerHTML = '';
                 if (data.pages_status && data.pages_status.length > 0) {
@@ -93,30 +99,32 @@
                         pagesBody.appendChild(tr);
                     });
                 } else {
-                    pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada data status halaman.</td></tr>';
+                    pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada data.</td></tr>';
                 }
 
-                // Render Tabel Riwayat Log Penghapusan
                 const logBody = document.getElementById('log-table-body');
                 logBody.innerHTML = '';
                 if (data.logs && data.logs.length > 0) {
                     data.logs.forEach(log => {
+                        let thumbHtml = log.thumbnail ? `<img src="${log.thumbnail}" class="thumb-img" alt="Thumb">` : `<div style="font-size:10px; color:#999; text-align:center;">No Image</div>`;
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td>${log.time}</td>
-                            <td><strong>${log.page}</strong></td>
-                            <td>${log.title}</td>
-                            <td><span style="color: red; font-weight: bold;">${log.status}</span></td>
+                            <td>${thumbHtml}</td>
+                            <td>
+                                <small style="color:#666;">${log.time} — <strong>${log.page}</strong></small><br>
+                                <span style="font-size: 12px;">${log.title}</span>
+                            </td>
+                            <td><span style="color: red; font-size: 11px; font-weight: bold;">${log.status}</span></td>
                         `;
                         logBody.appendChild(tr);
                     });
                 } else {
-                    logBody.innerHTML = '<tr><td colspan="4" class="no-data">Belum ada pelanggaran yang ditemukan. Semua halaman aman!</td></tr>';
+                    logBody.innerHTML = '<tr><td colspan="3" class="no-data">Semua halaman aman!</td></tr>';
                 }
             })
             .catch(error => {
-                document.getElementById('pages-table-body').innerHTML = '<tr><td colspan="3" class="no-data">Menunggu eksekusi skrip pertama kali...</td></tr>';
-                document.getElementById('log-table-body').innerHTML = '<tr><td colspan="4" class="no-data">Menunggu eksekusi skrip pertama kali...</td></tr>';
+                document.getElementById('pages-table-body').innerHTML = '<tr><td colspan="3" class="no-data">Menunggu pembaruan skrip...</td></tr>';
+                document.getElementById('log-table-body').innerHTML = '<tr><td colspan="3" class="no-data">Menunggu pembaruan skrip...</td></tr>';
             });
     </script>
 </body>
