@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Moderasi & Laporan Copyright</title>
+    <title>Dashboard Moderasi & Status Fanpage</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #1877f2; font-size: 24px; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #1877f2; font-size: 24px; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; margin-top: 0; }
+        h2 { font-size: 18px; color: #333; margin-top: 30px; }
         .stats { display: flex; gap: 15px; margin-bottom: 20px; }
         .card { flex: 1; background: #e7f3ff; padding: 15px; border-radius: 6px; border-left: 4px solid #1877f2; }
         .card h3 { margin: 0 0 5px 0; font-size: 14px; color: #555; }
@@ -16,35 +17,53 @@
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
         th { background-color: #f8f9fa; }
         tr:nth-child(even) { background-color: #f9f9f9; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .badge-success { background-color: #d4edda; color: #155724; }
+        .badge-danger { background-color: #f8d7da; color: #721c24; }
+        .badge-warning { background-color: #fff3cd; color: #856404; }
         .no-data { text-align: center; color: #777; padding: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard Moderasi Fanpage</h1>
+        <h1>Dashboard Utama & Moderasi Fanpage</h1>
         <div class="stats">
             <div class="card">
                 <h3>Terakhir Dicek</h3>
                 <p id="last-check">-</p>
             </div>
             <div class="card">
-                <h3>Total Video Dihapus (Copyright)</h3>
+                <h3>Total Video Dibersihkan</h3>
                 <p id="total-deleted">0</p>
             </div>
         </div>
 
-        <h2>Riwayat Pembersihan Video</h2>
+        <h2>Status Kesehatan 21 Fanpage Anda</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Fanpage</th>
+                    <th>Status Halaman</th>
+                </tr>
+            </thead>
+            <tbody id="pages-table-body">
+                <tr><td colspan="3" class="no-data">Memuat status halaman...</td></tr>
+            </tbody>
+        </table>
+
+        <h2>Riwayat Pembersihan Video (Copyright / Pelanggaran)</h2>
         <table>
             <thead>
                 <tr>
                     <th>Waktu</th>
                     <th>Nama Fanpage</th>
                     <th>Judul Video</th>
-                    <th>Status</th>
+                    <th>Status Tindakan</th>
                 </tr>
             </thead>
             <tbody id="log-table-body">
-                <tr><td colspan="4" class="no-data">Memuat data laporan...</td></tr>
+                <tr><td colspan="4" class="no-data">Memuat data riwayat...</td></tr>
             </tbody>
         </table>
     </div>
@@ -56,9 +75,30 @@
                 document.getElementById('last-check').textContent = data.last_check || 'Belum pernah';
                 document.getElementById('total-deleted').textContent = data.total_deleted || 0;
 
-                const tbody = document.getElementById('log-table-body');
-                tbody.innerHTML = '';
+                // Render Tabel Status Halaman
+                const pagesBody = document.getElementById('pages-table-body');
+                pagesBody.innerHTML = '';
+                if (data.pages_status && data.pages_status.length > 0) {
+                    data.pages_status.forEach((page, index) => {
+                        let badgeClass = 'badge-success';
+                        if (page.badge === 'danger') badgeClass = 'badge-danger';
+                        if (page.badge === 'warning') badgeClass = 'badge-warning';
 
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td><strong>${page.name}</strong></td>
+                            <td><span class="badge ${badgeClass}">${page.status}</span></td>
+                        `;
+                        pagesBody.appendChild(tr);
+                    });
+                } else {
+                    pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada data status halaman.</td></tr>';
+                }
+
+                // Render Tabel Riwayat Log Penghapusan
+                const logBody = document.getElementById('log-table-body');
+                logBody.innerHTML = '';
                 if (data.logs && data.logs.length > 0) {
                     data.logs.forEach(log => {
                         const tr = document.createElement('tr');
@@ -66,16 +106,17 @@
                             <td>${log.time}</td>
                             <td><strong>${log.page}</strong></td>
                             <td>${log.title}</td>
-                            <td><span style="color: red;">${log.status}</span></td>
+                            <td><span style="color: red; font-weight: bold;">${log.status}</span></td>
                         `;
-                        tbody.appendChild(tr);
+                        logBody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" class="no-data">Belum ada pelanggaran yang ditemukan. Aman!</td></tr>';
+                    logBody.innerHTML = '<tr><td colspan="4" class="no-data">Belum ada pelanggaran yang ditemukan. Semua halaman aman!</td></tr>';
                 }
             })
             .catch(error => {
-                document.getElementById('log-table-body').innerHTML = '<tr><td colspan="4" class="no-data">Belum ada file report.json atau laporan kosong.</td></tr>';
+                document.getElementById('pages-table-body').innerHTML = '<tr><td colspan="3" class="no-data">Menunggu eksekusi skrip pertama kali...</td></tr>';
+                document.getElementById('log-table-body').innerHTML = '<tr><td colspan="4" class="no-data">Menunggu eksekusi skrip pertama kali...</td></tr>';
             });
     </script>
 </body>
