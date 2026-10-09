@@ -2,7 +2,8 @@ name: Facebook Auto Uploader
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Berjalan otomatis setiap 2 jam sekali
+    # Berjalan otomatis pukul 04, 06, 08, 10, 12, 14, 16, 18, 20, 22 WIB
+    - cron: '0 4,6,8,10,12,14,16,18,20,22 * * *'
   workflow_dispatch:
   repository_dispatch:
     types: [instant_upload]
