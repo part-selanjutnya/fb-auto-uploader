@@ -9,8 +9,7 @@
         .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         h1 { color: #1877f2; font-size: 18px; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-top: 0; }
         
-        /* Menu Bar Navigasi Responsif */
-        .menu-bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 15px 0; background: #e7f3ff; padding: 6px; border-radius: 8px; }
+        .menu-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 15px 0; background: #e7f3ff; padding: 6px; border-radius: 8px; }
         .menu-btn { padding: 9px; text-align: center; background: white; border: none; border-radius: 6px; font-weight: bold; font-size: 12px; color: #1877f2; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .menu-btn.active { background: #1877f2; color: white; }
 
@@ -22,7 +21,6 @@
         .section-view { display: none; }
         .section-view.active { display: block; }
 
-        /* Form Input & Generator */
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #333; }
         .form-control { width: 100%; padding: 8px; font-size: 13px; border: 1px solid #ccd0d5; border-radius: 6px; box-sizing: border-box; }
@@ -31,7 +29,6 @@
         .checkbox-box { max-height: 110px; overflow-y: auto; background: white; padding: 6px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 12px; }
         .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
 
-        /* Tabel & Tampilan Kartu */
         .table-container { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 13px; }
         th, td { border: 1px solid #e1e4e8; padding: 10px; text-align: left; vertical-align: top; word-break: break-word; overflow-wrap: break-word; }
@@ -72,12 +69,12 @@
             </div>
         </div>
 
-        <!-- Menu Bar Navigasi -->
-        <div class="menu-bar">
-            <button class="menu-btn active" onclick="switchTab('tab-violations', this)">⚠️ Video Masalah</button>
-            <button class="menu-btn" onclick="switchTab('tab-queue', this)">📋 Antrean Pending</button>
+        <div class="menu-bar" style="grid-template-columns: repeat(3, 1fr);">
+            <button class="menu-btn active" onclick="switchTab('tab-violations', this)">⚠️ Masalah</button>
+            <button class="menu-btn" onclick="switchTab('tab-queue', this)">📋 Antrean</button>
             <button class="menu-btn" onclick="switchTab('tab-add', this)">➕ Tambah Link</button>
-            <button class="menu-btn" onclick="switchTab('tab-pages', this)">📊 Status Fanpage</button>
+            <button class="menu-btn" onclick="switchTab('tab-addpage', this)">➕ Tambah FP</button>
+            <button class="menu-btn" onclick="switchTab('tab-pages', this)" style="grid-column: span 2;">📊 Status Fanpage</button>
         </div>
 
         <!-- Tab 1: Video Bermasalah -->
@@ -88,13 +85,13 @@
             </div>
         </div>
 
-        <!-- Tab 2: Antrean Pending & Upload Instan -->
+        <!-- Tab 2: Antrean Pending -->
         <div id="tab-queue" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Daftar Video Menunggu Upload (Pending)</h2>
             
             <div style="background: #e7f3ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
                 <h3 style="font-size: 13px; color: #1877f2; margin-top: 0;">⚡ Upload Instan (Tanpa Jadwal Cron)</h3>
-                <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan, lalu klik tombol di bawah untuk langsung mengunggah video teratas sekarang juga.</p>
+                <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan, lalu klik tombol untuk langsung mengunggah video teratas.</p>
                 
                 <div style="margin-bottom: 8px;">
                     <label style="font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px;">Pilih Fanpage Tujuan:</label>
@@ -111,17 +108,15 @@
             </div>
         </div>
 
-        <!-- Tab 3: Tambah Link & Simpan Otomatis ke GitHub -->
+        <!-- Tab 3: Tambah Link -->
         <div id="tab-add" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Tambah & Simpan Antrean Baru</h2>
-            <p style="font-size: 12px; color: #666;">Pilih akun, jam cron, masukkan link, lalu klik simpan agar langsung masuk ke antrean GitHub tanpa buka GitHub.</p>
             
             <div class="form-group">
                 <label>Nomor Part (ID):</label>
                 <input type="number" id="input-id" class="form-control" value="12">
             </div>
             
-            <!-- Pilihan Akun Fanpage di Tab Tambah Link -->
             <div class="form-group">
                 <label>Pilih Akun Fanpage Tujuan:</label>
                 <div id="add-page-checkboxes" class="checkbox-box">
@@ -129,13 +124,10 @@
                 </div>
             </div>
 
-            <!-- Pilihan Jam Cron Sesuai Jadwal -->
             <div class="form-group">
                 <label>Pilih Slot Jam Penjadwalan Cron:</label>
                 <div class="checkbox-box">
-                    <div class="checkbox-grid" id="cron-hours-container">
-                        <!-- Dibuat otomatis oleh JS -->
-                    </div>
+                    <div class="checkbox-grid" id="cron-hours-container"></div>
                 </div>
             </div>
 
@@ -154,10 +146,28 @@ Tonton selanjutnya☝️
 #AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels</textarea>
             </div>
             
-            <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 13px;" onclick="saveToGitHub()">💾 Simpan Otomatis ke Antrean GitHub</button>
+            <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 13px;" onclick="saveToGitHub('videos.json', 'Add Part')">💾 Simpan Otomatis ke Antrean GitHub</button>
         </div>
 
-        <!-- Tab 4: Status Fanpage -->
+        <!-- Tab 4: Tambah Fanpage Baru Otomatis -->
+        <div id="tab-addpage" class="section-view">
+            <h2 style="font-size: 15px; margin-top: 10px;">Tambah Fanpage Baru Otomatis</h2>
+            <p style="font-size: 12px; color: #666;">Masukkan token mentah, sistem akan mendeteksi ID dan langsung menyimpannya ke sistem.</p>
+            
+            <div class="form-group">
+                <label>Nama Fanpage Baru:</label>
+                <input type="text" id="new-fp-name" class="form-control" placeholder="Contoh: Bioskop Malam">
+            </div>
+            
+            <div class="form-group">
+                <label>Token Akses Mentah (User / Page Token):</label>
+                <textarea id="new-fp-raw-token" class="form-control" placeholder="Tempel token mentah Facebook di sini..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="addNewFanpage()">✨ Proses & Tambahkan Fanpage Baru</button>
+        </div>
+
+        <!-- Tab 5: Status Fanpage -->
         <div id="tab-pages" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Status Kesehatan Seluruh Fanpage</h2>
             <div class="table-container">
@@ -191,14 +201,10 @@ Tonton selanjutnya☝️
             let matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
             if (matchD) fileId = matchD[1];
             else if (matchId) fileId = matchId[1];
-
-            if (fileId) {
-                return `https://drive.google.com/uc?export=download&id=${fileId}&usp=sharing`;
-            }
+            if (fileId) return `https://drive.google.com/uc?export=download&id=${fileId}&usp=sharing`;
             return url;
         }
 
-        // Render pilihan jam cron [4,6,8,10,12,14,16,18,20,22]
         const cronHours = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
         const cronContainer = document.getElementById('cron-hours-container');
         cronHours.forEach(hour => {
@@ -207,68 +213,35 @@ Tonton selanjutnya☝️
             cronContainer.appendChild(div);
         });
 
-        // Fungsi Menyimpan Langsung ke GitHub via API
-        async function saveToGitHub() {
-            let id = parseInt(document.getElementById('input-id').value) || 1;
-            let rawUrl = document.getElementById('input-url').value.trim();
-            let title = document.getElementById('input-title').value.trim();
-            let desc = document.getElementById('input-desc').value;
-
-            let selectedPages = [];
-            document.querySelectorAll('.add-page-select:checked').forEach(cb => {
-                selectedPages.push(cb.value);
-            });
-
-            let selectedHours = [];
-            document.querySelectorAll('.cron-hour-select:checked').forEach(cb => {
-                selectedHours.push(parseInt(cb.value));
-            });
-
-            if (!rawUrl) {
-                alert("Harap masukkan link Google Drive terlebih dahulu!");
-                return;
-            }
-
-            let token = prompt("Masukkan GitHub Personal Access Token (PAT) Anda untuk menyimpan ke GitHub:");
+        // Fungsi Universal untuk Menyimpan File ke GitHub via API
+        async function saveToGitHub(filename, messagePrefix, customObject = null, successMsg = "Berhasil disimpan!") {
+            let token = prompt("Masukkan GitHub Personal Access Token (PAT):");
             if (!token) return;
-
-            let formattedUrl = convertDriveUrl(rawUrl);
-
-            let newVideoObj = {
-                "id": id,
-                "url": formattedUrl,
-                "title": title,
-                "description": desc,
-                "target_pages": selectedPages.length > 0 ? selectedPages : ["Semua"],
-                "schedule_hours": selectedHours,
-                "status": "pending"
-            };
 
             let owner = "part-selanjutnya";
             let repo = "fb-auto-uploader";
-            let path = "videos.json";
-            let apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            let apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`;
 
             try {
-                // 1. Ambil isi file videos.json yang ada saat ini di GitHub
                 let getRes = await fetch(apiUrl, {
                     headers: { "Authorization": `Bearer ${token}`, "Accept": "vnd.github+json" }
                 });
 
                 if (!getRes.ok) {
-                    alert("Gagal membaca videos.json dari GitHub. Periksa kembali token PAT Anda.");
+                    alert("Gagal mengakses file repository. Periksa token PAT Anda.");
                     return;
                 }
 
                 let fileData = await getRes.json();
-                let sha = fileData.sha;
                 let currentContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
 
-                // 2. Masukkan video baru ke dalam array antrean
-                currentContent.push(newVideoObj);
+                if (filename === 'videos.json') {
+                    currentContent.push(customObject);
+                } else if (filename === 'pages.json') {
+                    currentContent.push(customObject);
+                }
 
-                // 3. Update file videos.json di GitHub secara otomatis
-                let updatedContentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(currentContent, null, 4))));
+                let updatedBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(currentContent, null, 4))));
 
                 let putRes = await fetch(apiUrl, {
                     method: 'PUT',
@@ -278,206 +251,205 @@ Tonton selanjutnya☝️
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        "message": `Add Part ${id} via Web Dashboard`,
-                        "content": updatedContentBase64,
-                        "sha": sha
+                        "message": `${messagePrefix} via Web Dashboard`,
+                        "content": updatedBase64,
+                        "sha": fileData.sha
                     })
                 });
 
                 if (putRes.ok) {
-                    alert("✅ Berhasil! Video baru telah ditambahkan ke antrean GitHub secara otomatis.");
-                    // Reset form ID berikutnya
-                    document.getElementById('input-id').value = id + 1;
-                    document.getElementById('input-title').value = `Part ${id + 1}`;
-                    document.getElementById('input-url').value = '';
+                    alert("✅ " + successMsg);
+                    location.reload();
                 } else {
-                    let errJson = await putRes.json();
-                    alert("Gagal menyimpan ke GitHub: " + (errJson.message || 'Unknown error'));
+                    alert("Gagal menyimpan ke GitHub.");
                 }
-
             } catch (err) {
-                alert("Terjadi kesalahan koneksi saat mengirim data ke GitHub.");
-                console.error(err);
+                alert("Terjadi kesalahan koneksi.");
             }
         }
 
-        fetch('report.json')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('last-check').textContent = data.last_check || '-';
-                document.getElementById('total-warnings').textContent = data.total_warnings || 0;
+        function saveToGitHub() {
+            let id = parseInt(document.getElementById('input-id').value) || 1;
+            let rawUrl = document.getElementById('input-url').value.trim();
+            let title = document.getElementById('input-title').value.trim();
+            let desc = document.getElementById('input-desc').value;
 
-                const pagesBody = document.getElementById('pages-table-body');
-                pagesBody.innerHTML = '';
-                const checkboxContainer = document.getElementById('page-checkboxes');
-                checkboxContainer.innerHTML = '';
-                const addPageContainer = document.getElementById('add-page-checkboxes');
-                addPageContainer.innerHTML = '';
+            let selectedPages = [];
+            document.querySelectorAll('.add-page-select:checked').forEach(cb => { selectedPages.push(cb.value); });
 
-                if (data.pages_status && data.pages_status.length > 0) {
-                    data.pages_status.forEach((page, index) => {
-                        let badgeClass = 'badge-success';
-                        if (page.badge === 'danger') badgeClass = 'badge-danger';
-                        if (page.badge === 'warning') badgeClass = 'badge-warning';
+            let selectedHours = [];
+            document.querySelectorAll('.cron-hour-select:checked').forEach(cb => { selectedHours.push(parseInt(cb.value)); });
 
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${index + 1}</td>
-                            <td><strong>${page.name}</strong></td>
-                            <td><span class="badge ${badgeClass}">${page.status}</span></td>
-                        `;
-                        pagesBody.appendChild(tr);
+            if (!rawUrl) { alert("Masukkan link Google Drive!"); return; }
 
-                        // Checkbox untuk Upload Instan
-                        let div1 = document.createElement('div');
-                        div1.style.marginBottom = '4px';
-                        div1.innerHTML = `<label><input type="checkbox" class="page-select" value="${page.name}" checked> ${page.name}</label>`;
-                        checkboxContainer.appendChild(div1);
+            let newVideoObj = {
+                "id": id,
+                "url": convertDriveUrl(rawUrl),
+                "title": title,
+                "description": desc,
+                "target_pages": selectedPages.length > 0 ? selectedPages : ["Semua"],
+                "schedule_hours": selectedHours,
+                "status": "pending"
+            };
 
-                        // Checkbox untuk Tab Tambah Link
-                        let div2 = document.createElement('div');
-                        div2.style.marginBottom = '4px';
-                        div2.innerHTML = `<label><input type="checkbox" class="add-page-select" value="${page.name}" checked> ${page.name}</label>`;
-                        addPageContainer.appendChild(div2);
-                    });
+            saveToGitHubCustom('videos.json', `Add Part ${id}`, newVideoObj, "Video berhasil ditambahkan ke antrean!");
+        }
+
+        async function saveToGitHubCustom(filename, messagePrefix, customObject, successMsg) {
+            let token = prompt("Masukkan GitHub Personal Access Token (PAT):");
+            if (!token) return;
+
+            let owner = "part-selanjutnya";
+            let repo = "fb-auto-uploader";
+            let apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`;
+
+            try {
+                let getRes = await fetch(apiUrl, {
+                    headers: { "Authorization": `Bearer ${token}`, "Accept": "vnd.github+json" }
+                });
+                let fileData = await getRes.json();
+                let currentContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
+                currentContent.push(customObject);
+
+                let updatedBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(currentContent, null, 4))));
+                let putRes = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: { "Authorization": `Bearer ${token}`, "Accept": "vnd.github+json", "Content-Type": "application/json" },
+                    body: JSON.stringify({ "message": messagePrefix, "content": updatedBase64, "sha": fileData.sha })
+                });
+
+                if (putRes.ok) {
+                    alert("✅ " + successMsg);
+                    location.reload();
+                } else { alert("Gagal menyimpan."); }
+            } catch (err) { alert("Terjadi kesalahan."); }
+        }
+
+        // Fungsi Tambah Fanpage Otomatis
+        async function addNewFanpage() {
+            let fpName = document.getElementById('new-fp-name').value.trim();
+            let rawToken = document.getElementById('new-fp-raw-token').value.trim();
+
+            if (!fpName || !rawToken) {
+                alert("Nama Fanpage dan Token wajib diisi!");
+                return;
+            }
+
+            alert("Menghubungi Facebook Graph API untuk mendeteksi ID Halaman...");
+
+            try {
+                let meRes = await fetch(`https://graph.facebook.com/v26.0/me/accounts?access_token=${rawToken}`);
+                let meData = await meRes.json();
+
+                let pageId = "";
+                let pageToken = rawToken;
+
+                if (meData.data && meData.data.length > 0) {
+                    let found = meData.data.find(p => p.name.toLowerCase().includes(fpName.toLowerCase())) || meData.data[0];
+                    pageId = found.id;
+                    pageToken = found.access_token;
                 } else {
-                    pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada data.</td></tr>';
-                    checkboxContainer.innerHTML = '<span style="color: #777;">Tidak ada fanpage ditemukan.</span>';
-                    addPageContainer.innerHTML = '<span style="color: #777;">Tidak ada fanpage ditemukan.</span>';
+                    let testRes = await fetch(`https://graph.facebook.com/v26.0/me?access_token=${rawToken}`);
+                    let testData = await testRes.json();
+                    if (testData.id) { pageId = testData.id; }
+                    else { alert("Gagal mendeteksi Fanpage dari token."); return; }
                 }
 
-                const violContainer = document.getElementById('violations-container');
-                violContainer.innerHTML = '';
-                if (data.violations && data.violations.length > 0) {
-                    data.violations.forEach(item => {
-                        const card = document.createElement('div');
-                        card.className = 'violation-card';
-                        card.innerHTML = `
-                            <span class="violation-time">🕒 Upload: ${item.upload_time}</span>
-                            <span class="violation-page">📌 Fanpage: ${item.page_name}</span>
-                            <div class="violation-text"><strong>Judul/Deskripsi:</strong><br>${item.title}</div>
-                            <div class="btn-group">
-                                <button class="btn btn-primary" onclick="editCaption('${item.video_id}', '${item.page_token}')">✏️ Edit Caption</button>
-                                <button class="btn btn-danger" onclick="deleteVideo('${item.video_id}', '${item.page_token}')">🗑️ Hapus</button>
-                            </div>
-                        `;
-                        violContainer.appendChild(card);
-                    });
-                } else {
-                    violContainer.innerHTML = '<div class="no-data">✅ Semua halaman aman! Tidak ada video bermasalah.</div>';
-                }
-            })
-            .catch(error => {
-                document.getElementById('violations-container').innerHTML = '<div class="no-data">Menunggu pembaruan skrip...</div>';
-            });
+                let newPageObj = { "name": fpName, "id": pageId, "token": pageToken };
+                saveToGitHubCustom('pages.json', `Add Fanpage ${fpName}`, newPageObj, "Fanpage baru berhasil ditambahkan secara otomatis!");
+
+            } catch (err) {
+                alert("Gagal menghubungi API Facebook.");
+            }
+        }
+
+        // Fetch Status & Checkboxes dari pages.json dan report.json
+        Promise.all([
+            fetch('report.json').then(res => res.json()).catch(() => ({})),
+            fetch('pages.json').then(res => res.json()).catch(() => ([]))
+        ]).then(([reportData, pagesList]) => {
+            document.getElementById('last-check').textContent = reportData.last_check || '-';
+            document.getElementById('total-warnings').textContent = reportData.total_warnings || 0;
+
+            const pagesBody = document.getElementById('pages-table-body');
+            pagesBody.innerHTML = '';
+            const checkboxContainer = document.getElementById('page-checkboxes');
+            checkboxContainer.innerHTML = '';
+            const addPageContainer = document.getElementById('add-page-checkboxes');
+            addPageContainer.innerHTML = '';
+
+            if (pagesList && pagesList.length > 0) {
+                pagesList.forEach((page, index) => {
+                    let statusObj = reportData.pages_status ? reportData.pages_status.find(p => p.name === page.name) : null;
+                    let statusText = statusObj ? statusObj.status : "Aktif / Siap";
+                    let badgeClass = statusObj && statusObj.badge === 'danger' ? 'badge-danger' : 'badge-success';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${index + 1}</td><td><strong>${page.name}</strong></td><td><span class="badge ${badgeClass}">${statusText}</span></td>`;
+                    pagesBody.appendChild(tr);
+
+                    let div1 = document.createElement('div');
+                    div1.style.marginBottom = '4px';
+                    div1.innerHTML = `<label><input type="checkbox" class="page-select" value="${page.name}" checked> ${page.name}</label>`;
+                    checkboxContainer.appendChild(div1);
+
+                    let div2 = document.createElement('div');
+                    div2.style.marginBottom = '4px';
+                    div2.innerHTML = `<label><input type="checkbox" class="add-page-select" value="${page.name}" checked> ${page.name}</label>`;
+                    addPageContainer.appendChild(div2);
+                });
+            } else {
+                pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada Fanpage di pages.json.</td></tr>';
+            }
+
+            const violContainer = document.getElementById('violations-container');
+            violContainer.innerHTML = '';
+            if (reportData.violations && reportData.violations.length > 0) {
+                reportData.violations.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'violation-card';
+                    card.innerHTML = `<span class="violation-time">🕒 ${item.upload_time}</span><span class="violation-page">📌 ${item.page_name}</span><div class="violation-text">${item.title}</div>`;
+                    violContainer.appendChild(card);
+                });
+            } else {
+                violContainer.innerHTML = '<div class="no-data">✅ Semua halaman aman!</div>';
+            }
+        });
 
         fetch('videos.json')
             .then(res => res.json())
             .then(videos => {
                 const queueContainer = document.getElementById('queue-container');
                 queueContainer.innerHTML = '';
-                
                 let pendingVideos = videos.filter(v => v.status === 'pending');
                 
                 if (pendingVideos.length > 0) {
                     pendingVideos.forEach(v => {
                         let card = document.createElement('div');
                         card.className = 'queue-card';
-                        card.innerHTML = `
-                            <span style="font-size: 12px; font-weight: bold; color: #1877f2;">ID Part: ${v.id} - ${v.title}</span>
-                            <div style="font-size: 11px; color: #555; margin-top: 4px; word-break: break-all;">Link: ${v.url}</div>
-                            <div class="violation-text" style="margin-top: 6px; font-size: 11px;">${v.description}</div>
-                            <span class="badge badge-warning" style="margin-top: 4px;">Status: Pending (Menunggu Upload)</span>
-                        `;
+                        card.innerHTML = `<span style="font-size: 12px; font-weight: bold; color: #1877f2;">ID Part: ${v.id} - ${v.title}</span><div style="font-size: 11px; color: #555; margin-top: 4px;">Link: ${v.url}</div><span class="badge badge-warning" style="margin-top: 4px;">Status: Pending</span>`;
                         queueContainer.appendChild(card);
                     });
                 } else {
-                    queueContainer.innerHTML = '<div class="no-data">🎉 Semua antrean video sudah selesai diunggah (Completed)!</div>';
+                    queueContainer.innerHTML = '<div class="no-data">🎉 Semua antrean video selesai!</div>';
                 }
-            })
-            .catch(err => {
-                document.getElementById('queue-container').innerHTML = '<div class="no-data">Gagal memuat antrean videos.json.</div>';
-            });
+            }).catch(() => {});
 
         function triggerInstantUpload() {
             let selectedPages = [];
-            document.querySelectorAll('.page-select:checked').forEach(cb => {
-                selectedPages.push(cb.value);
-            });
-
-            if (selectedPages.length === 0) {
-                alert("Pilih minimal satu Fanpage tujuan!");
-                return;
-            }
-
-            let token = prompt("Masukkan GitHub Personal Access Token (PAT) Anda untuk otorisasi instan:");
+            document.querySelectorAll('.page-select:checked').forEach(cb => { selectedPages.push(cb.value); });
+            if (selectedPages.length === 0) { alert("Pilih minimal satu Fanpage!"); return; }
+            let token = prompt("Masukkan GitHub Personal Access Token (PAT):");
             if (!token) return;
 
-            let owner = "part-selanjutnya"; 
-            let repo = "fb-auto-uploader";   
-
-            fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
+            fetch(`https://api.github.com/repos/part-selanjutnya/fb-auto-uploader/dispatches`, {
                 method: 'POST',
-                headers: {
-                    "Accept": "vnd.github+json",
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "event_type": "instant_upload",
-                    "client_payload": { "target_pages": selectedPages }
-                })
-            })
-            .then(response => {
-                if (response.ok || response.status === 204) {
-                    alert("Perintah upload instan berhasil dikirim ke GitHub! Proses upload akan segera berjalan.");
-                } else {
-                    alert("Gagal memicu GitHub Action. Pastikan Token PAT Anda benar dan memiliki izin repo.");
-                }
-            })
-            .catch(err => {
-                alert("Terjadi kesalahan koneksi ke API GitHub.");
+                headers: { "Accept": "vnd.github+json", "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ "event_type": "instant_upload", "client_payload": { "target_pages": selectedPages } })
+            }).then(res => {
+                if (res.ok || res.status === 204) alert("Perintah upload instan dikirim ke GitHub!");
+                else alert("Gagal memicu GitHub Action.");
             });
-        }
-
-        function deleteVideo(videoId, token) {
-            if (confirm("Yakin ingin menghapus video ini dari Fanpage?")) {
-                fetch(`https://graph.facebook.com/v26.0/${videoId}?access_token=${token}`, { method: 'DELETE' })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert("Video berhasil dihapus!");
-                            location.reload();
-                        } else {
-                            alert("Gagal menghapus video: " + JSON.stringify(data));
-                        }
-                    })
-                    .catch(err => alert("Terjadi kesalahan koneksi."));
-            }
-        }
-
-        function editCaption(videoId, token) {
-            let newCaption = prompt("Masukkan caption / deskripsi baru untuk video ini:");
-            if (newCaption !== null) {
-                let formData = new URLSearchParams();
-                formData.append('description', newCaption);
-                formData.append('access_token', token);
-
-                fetch(`https://graph.facebook.com/v26.0/${videoId}`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Caption berhasil diperbarui!");
-                        location.reload();
-                    } else {
-                        alert("Gagal memperbarui caption: " + JSON.stringify(data));
-                    }
-                })
-                .catch(err => alert("Terjadi kesalahan koneksi."));
-            }
         }
     </script>
 </body>
