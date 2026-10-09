@@ -53,7 +53,6 @@ if os.path.exists(output_filename):
 
 try:
     print("Mengunduh file video dari Google Drive...")
-    # Menggunakan gdown tanpa argumen fuzzy agar kompatibel dengan versi terbaru
     gdown.download(video_url, output_filename, quiet=False)
 except Exception as e:
     print(f"Gagal mengunduh video: {e}")
@@ -65,9 +64,10 @@ if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
 
 print("Unduhan berhasil.")
 
-# Mengunggah video ke setiap Fanpage yang terdaftar
+file_size = os.path.getsize(output_filename)
 success_upload_count = 0
 
+# Mengunggah video menggunakan metode 3 tahap (Start -> Transfer -> Finish) ke setiap Fanpage
 for page in pages_data:
     page_token = page.get('token')
     page_id = page.get('id')
@@ -77,27 +77,56 @@ for page in pages_data:
         continue
         
     print(f"Mengunggah Reels ke halaman: {page_name} ({page_id})...")
-    
-    upload_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
+    video_graph_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
     
     try:
+        # --- TAHAP 1: START ---
+        start_payload = {
+            'access_token': page_token,
+            'upload_phase': 'start',
+            'file_size': file_size
+        }
+        start_res = requests.post(video_graph_url, data=start_payload).json()
+        
+        if 'upload_session_id' not in start_res:
+            print(f"-> Gagal di Tahap Start untuk {page_name}: {start_res}")
+            continue
+            
+        upload_session_id = start_res['upload_session_id']
+        start_offset = int(start_res.get('start_offset', 0))
+        end_offset = int(start_res.get('end_offset', file_size))
+        
+        # --- TAHAP 2: TRANSFER ---
         with open(output_filename, 'rb') as video_file:
-            files = {'source': video_file}
-            data = {
-                'access_token': page_token,
-                'description': f"{video_title}\n\n{video_desc}",
-                'upload_phase': 'start'
-            }
+            video_file.seek(start_offset)
+            chunk_data = video_file.read(end_offset - start_offset)
             
-            # Memulai sesi upload Reels ke Meta Graph API
-            response = requests.post(upload_url, data=data, files=files)
-            res_json = response.json()
+        transfer_payload = {
+            'access_token': page_token,
+            'upload_phase': 'transfer',
+            'upload_session_id': upload_session_id,
+            'start_offset': start_offset
+        }
+        files = {'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}
+        
+        transfer_res = requests.post(video_graph_url, data=transfer_payload, files=files).json()
+        
+        # --- TAHAP 3: FINISH ---
+        finish_payload = {
+            'access_token': page_token,
+            'upload_phase': 'finish',
+            'upload_session_id': upload_session_id,
+            'description': f"{video_title}\n\n{video_desc}",
+            'publishing_phase': 'post'
+        }
+        finish_res = requests.post(video_graph_url, data=finish_payload).json()
+        
+        if finish_res.get('success') or finish_res.get('id'):
+            print(f"-> Sukses terunggah sebagai Reels ke {page_name}!")
+            success_upload_count += 1
+        else:
+            print(f"-> Gagal di Tahap Finish untuk {page_name}: {finish_res}")
             
-            if 'success' in res_json or res_json.get('id'):
-                print(f"-> Sukses terunggah sebagai Reels ke {page_name}!")
-                success_upload_count += 1
-            else:
-                print(f"-> Gagal mengunggah ke {page_name}: {res_json}")
     except Exception as e:
         print(f"-> Terjadi error saat mengunggah ke {page_name}: {e}")
 
