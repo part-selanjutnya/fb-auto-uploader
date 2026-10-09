@@ -8,16 +8,20 @@ import gdown
 current_hour = (datetime.datetime.utcnow() + datetime.timedelta(hours=7)).hour
 print(f"Jam sistem saat ini (WIB): {current_hour}:00")
 
-# Memuat data Fanpage dari Environment GitHub Secrets
-pages_data_env = os.environ.get('FB_PAGES_DATA', '[]')
-try:
-    all_pages = json.loads(pages_data_env)
-except Exception as e:
-    print(f"Error memuat FB_PAGES_DATA: {e}")
-    all_pages = []
+# Memuat data Fanpage dari file pages.json
+pages_file = 'pages.json'
+all_pages = []
+
+if os.path.exists(pages_file):
+    try:
+        with open(pages_file, 'r') as f:
+            all_pages = json.load(f)
+    except Exception as e:
+        print(f"Error memuat pages.json: {e}")
+else:
+    print("File pages.json tidak ditemukan!")
 
 videos_file = 'videos.json'
-
 if not os.path.exists(videos_file):
     print("File videos.json tidak ditemukan!")
     exit(0)
@@ -49,10 +53,8 @@ target_index = -1
 
 for index, video in enumerate(videos):
     if video.get('status') == 'pending':
-        # Jika berjalan via cron otomatis (bukan instant upload), validasi jam tayangnya
         if not is_instant_upload:
             schedule_hours = video.get('schedule_hours', [])
-            # Jika ada pengaturan jam dan jam sekarang tidak ada dalam daftar, lewati
             if schedule_hours and current_hour not in schedule_hours:
                 print(f"Video ID {video.get('id')} dilewati (Dijadwalkan jam {schedule_hours}, sekarang jam {current_hour}).")
                 continue
