@@ -37,7 +37,6 @@ for page in pages_data:
     is_page_troubled = False
     trouble_reason = "Aman"
 
-    # Mengambil fields lengkap tanpa pemotongan teks judul/deskripsi
     videos_url = f"https://graph.facebook.com/v26.0/{page_id}/videos?fields=id,title,description,status,copyright_check_status,created_time,picture&access_token={page_token}"
     try:
         response = requests.get(videos_url).json()
@@ -52,10 +51,8 @@ for page in pages_data:
     if 'data' in response:
         for video in response['data']:
             video_id = video.get('id')
-            # Mengambil judul/deskripsi secara penuh (tanpa dibatasi panjangnya agar informasi utuh)
             full_title = video.get('title') or video.get('description') or f"Video ID: {video_id}"
             
-            # Format Tanggal dan Jam Upload lengkap
             raw_time = video.get('created_time', '')
             formatted_time = raw_time
             try:
@@ -74,7 +71,6 @@ for page in pages_data:
             video_status = detail_res.get('status', {}).get('video_status', '').lower()
             video_thumb = detail_res.get('picture', '') or video.get('picture', '')
             
-            # Deteksi pelanggaran tanpa menghapus otomatis
             if status_check in ['rejected', 'block', 'infringement'] or video_status in ['error', 'expired', 'processing_failed']:
                 is_page_troubled = True
                 trouble_reason = "Perlu Perhatian (Copyright/Error)"
