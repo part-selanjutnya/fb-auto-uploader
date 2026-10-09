@@ -1,7 +1,12 @@
 import os
 import json
 import requests
+import datetime
 import gdown
+
+# Mendapatkan jam saat ini dalam waktu Indonesia (WIB / UTC+7)
+current_hour = (datetime.datetime.utcnow() + datetime.timedelta(hours=7)).hour
+print(f"Jam sistem saat ini (WIB): {current_hour}:00")
 
 # Memuat data Fanpage dari Environment GitHub Secrets
 pages_data_env = os.environ.get('FB_PAGES_DATA', '[]')
@@ -10,27 +15,6 @@ try:
 except Exception as e:
     print(f"Error memuat FB_PAGES_DATA: {e}")
     all_pages = []
-
-# Mendapatkan target halaman yang dipilih dari payload event (jika dipicu via instant upload)
-target_pages_input = []
-event_path = os.environ.get('GITHUB_EVENT_PATH')
-if event_path and os.path.exists(event_path):
-    try:
-        with open(event_path, 'r') as f:
-            event_data = json.load(f)
-            # Mengambil dari client_payload jika ada
-            target_pages_input = event_data.get('client_payload', {}).get('target_pages', [])
-    except Exception as e:
-        print(f"Error membaca event payload: {e}")
-
-# Jika berjalan via cron/manual biasa tanpa pilihan spesifik, gunakan semua halaman. 
-# Jika dari instant upload, filter hanya halaman yang dicentang.
-if target_pages_input:
-    pages_data = [p for p in all_pages if p.get('name') in target_pages_input]
-    print(f"Mode Upload Instan - Target Fanpage: {target_pages_input}")
-else:
-    pages_data = all_pages
-    print("Mode Otomatis / Manual Workflow - Semua Fanpage diproses.")
 
 videos_file = 'videos.json'
 
@@ -45,26 +29,60 @@ except Exception as e:
     print(f"Error membaca videos.json: {e}")
     exit(0)
 
+# Cek apakah ini dipicu via Instant Upload (Manual dari Web)
+target_pages_input = []
+is_instant_upload = False
+event_path = os.environ.get('GITHUB_EVENT_PATH')
+if event_path and os.path.exists(event_path):
+    try:
+        with open(event_path, 'r') as f:
+            event_data = json.load(f)
+            target_pages_input = event_data.get('client_payload', {}).get('target_pages', [])
+            if target_pages_input:
+                is_instant_upload = True
+    except Exception as e:
+        print(f"Error membaca event payload: {e}")
+
 # Cari video pertama yang berstatus 'pending'
 target_video = None
 target_index = -1
 
 for index, video in enumerate(videos):
     if video.get('status') == 'pending':
+        # Jika berjalan via cron otomatis (bukan instant upload), validasi jam tayangnya
+        if not is_instant_upload:
+            schedule_hours = video.get('schedule_hours', [])
+            # Jika ada pengaturan jam dan jam sekarang tidak ada dalam daftar, lewati
+            if schedule_hours and current_hour not in schedule_hours:
+                print(f"Video ID {video.get('id')} dilewati (Dijadwalkan jam {schedule_hours}, sekarang jam {current_hour}).")
+                continue
+        
         target_video = video
         target_index = index
         break
 
 if not target_video:
-    print("Tidak ada video dengan status 'pending' di dalam antrean.")
+    print("Tidak ada video pending yang cocok dengan jadwal jam saat ini.")
     exit(0)
 
 video_id_db = target_video.get('id')
 video_url = target_video.get('url')
 video_title = target_video.get('title', 'Video Reels')
 video_desc = target_video.get('description', '')
+video_targets = target_video.get('target_pages', ["Semua"])
 
 print(f"Memproses video ID: {video_id_db} - {video_title}")
+
+# Menentukan Fanpage tujuan
+if is_instant_upload:
+    pages_data = [p for p in all_pages if p.get('name') in target_pages_input]
+    print(f"Mode Upload Instan - Target Fanpage: {target_pages_input}")
+elif video_targets and "Semua" not in video_targets:
+    pages_data = [p for p in all_pages if p.get('name') in video_targets]
+    print(f"Mode Jadwal Cron - Target Spesifik: {video_targets}")
+else:
+    pages_data = all_pages
+    print("Mode Otomatis - Semua Fanpage diproses.")
 
 # Mengunduh video dari Google Drive
 output_filename = 'temp_video.mp4'
@@ -85,7 +103,7 @@ if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
 file_size = os.path.getsize(output_filename)
 success_upload_count = 0
 
-# Mengunggah video menggunakan metode 3 tahap ke Fanpage yang difilter
+# Mengunggah video menggunakan metode 3 tahap ke Fanpage tujuan
 for page in pages_data:
     page_token = page.get('token')
     page_id = page.get('id')
@@ -143,7 +161,7 @@ for page in pages_data:
     except Exception as e:
         print(f"-> Terjadi error saat mengunggah ke {page_name}: {e}")
 
-# Ubah status di videos.json jika berhasil diunggah ke target yang dipilih
+# Ubah status di videos.json jika berhasil
 if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
     try:
