@@ -85,9 +85,25 @@
             </div>
         </div>
 
-        <!-- Tab 2: Antrean Pending -->
+        <!-- Tab 2: Antrean Pending & Upload Instan -->
         <div id="tab-queue" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Daftar Video Menunggu Upload (Pending)</h2>
+            
+            <!-- Panel Kontrol Upload Instan -->
+            <div style="background: #e7f3ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
+                <h3 style="font-size: 13px; color: #1877f2; margin-top: 0;">⚡ Upload Instan (Tanpa Jadwal Cron)</h3>
+                <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan, lalu klik tombol di bawah untuk langsung mengunggah video teratas sekarang juga.</p>
+                
+                <div style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px;">Pilih Fanpage Tujuan:</label>
+                    <div id="page-checkboxes" style="max-height: 110px; overflow-y: auto; background: white; padding: 6px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 12px;">
+                        <span style="color: #777; font-size: 11px;">Memuat daftar halaman...</span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="triggerInstantUpload()">🚀 Upload Video Teratas Sekarang</button>
+            </div>
+
             <div id="queue-container">
                 <div class="no-data">Memuat antrean...</div>
             </div>
@@ -96,7 +112,7 @@
         <!-- Tab 3: Tambah Link & Generator JSON -->
         <div id="tab-add" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Generator Format Antrean Baru</h2>
-            <p style="font-size: 12px; color: #666;">Masukkan link Google Drive dan deskripsi di bawah ini. Sistem akan meramunya menjadi format JSON siap salin untuk ditempel ke file <code>videos.json</code>.</p>
+            <p style="font-size: 12px; color: #666;">Masukkan link Google Drive dan deskripsi di bawah ini untuk menghasilkan format JSON siap salin ke <code>videos.json</code>.</p>
             
             <div class="form-group">
                 <label>Nomor Part (ID):</label>
@@ -124,7 +140,7 @@ Tonton selanjutnya☝️
             </div>
         </div>
 
-        <!-- Tab 4: Status 21 Fanpage -->
+        <!-- Tab 4: Status Fanpage -->
         <div id="tab-pages" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Status Kesehatan Seluruh Fanpage</h2>
             <div class="table-container">
@@ -152,7 +168,6 @@ Tonton selanjutnya☝️
             btnElement.classList.add('active');
         }
 
-        // Fungsi Otomatis Mengubah Link Google Drive Biasa ke Format Download Langsung
         function convertDriveUrl(url) {
             let fileId = "";
             let matchD = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -190,24 +205,24 @@ Tonton selanjutnya☝️
             let jsonString = JSON.stringify(dataObj, null, 4);
             document.getElementById('output-json').value = jsonString;
 
-            // Salin otomatis ke clipboard HP
             navigator.clipboard.writeText(jsonString).then(() => {
-                alert("Format JSON berhasil dibuat dan disalin ke Clipboard! Anda tinggal menempelkannya ke videos.json.");
+                alert("Format JSON berhasil dibuat dan disalin ke Clipboard!");
             }).catch(err => {
                 alert("Berhasil dibuat, silakan salin teks JSON di bawah.");
             });
         }
 
-        // Memuat data dari report.json dan videos.json (jika diakses)
         fetch('report.json')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('last-check').textContent = data.last_check || '-';
                 document.getElementById('total-warnings').textContent = data.total_warnings || 0;
 
-                // Render Fanpage Status
                 const pagesBody = document.getElementById('pages-table-body');
                 pagesBody.innerHTML = '';
+                const checkboxContainer = document.getElementById('page-checkboxes');
+                checkboxContainer.innerHTML = '';
+
                 if (data.pages_status && data.pages_status.length > 0) {
                     data.pages_status.forEach((page, index) => {
                         let badgeClass = 'badge-success';
@@ -221,12 +236,17 @@ Tonton selanjutnya☝️
                             <td><span class="badge ${badgeClass}">${page.status}</span></td>
                         `;
                         pagesBody.appendChild(tr);
+
+                        let div = document.createElement('div');
+                        div.style.marginBottom = '4px';
+                        div.innerHTML = `<label><input type="checkbox" class="page-select" value="${page.name}" checked> ${page.name}</label>`;
+                        checkboxContainer.appendChild(div);
                     });
                 } else {
                     pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada data.</td></tr>';
+                    checkboxContainer.innerHTML = '<span style="color: #777;">Tidak ada fanpage ditemukan.</span>';
                 }
 
-                // Render Video Bermasalah
                 const violContainer = document.getElementById('violations-container');
                 violContainer.innerHTML = '';
                 if (data.violations && data.violations.length > 0) {
@@ -252,7 +272,6 @@ Tonton selanjutnya☝️
                 document.getElementById('violations-container').innerHTML = '<div class="no-data">Menunggu pembaruan skrip...</div>';
             });
 
-        // Mengambil data antrean dari videos.json untuk ditampilkan di Tab Antrean Pending
         fetch('videos.json')
             .then(res => res.json())
             .then(videos => {
@@ -280,6 +299,47 @@ Tonton selanjutnya☝️
             .catch(err => {
                 document.getElementById('queue-container').innerHTML = '<div class="no-data">Gagal memuat antrean videos.json.</div>';
             });
+
+        function triggerInstantUpload() {
+            let selectedPages = [];
+            document.querySelectorAll('.page-select:checked').forEach(cb => {
+                selectedPages.push(cb.value);
+            });
+
+            if (selectedPages.length === 0) {
+                alert("Pilih minimal satu Fanpage tujuan!");
+                return;
+            }
+
+            let token = prompt("Masukkan GitHub Personal Access Token (PAT) Anda untuk otorisasi instan:");
+            if (!token) return;
+
+            let owner = "part-selanjutnya"; 
+            let repo = "fb-auto-uploader";   
+
+            fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
+                method: 'POST',
+                headers: {
+                    "Accept": "vnd.github+json",
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "event_type": "instant_upload",
+                    "client_payload": { "target_pages": selectedPages }
+                })
+            })
+            .then(response => {
+                if (response.ok || response.status === 204) {
+                    alert("Perintah upload instan berhasil dikirim ke GitHub! Proses upload akan segera berjalan.");
+                } else {
+                    alert("Gagal memicu GitHub Action. Pastikan Token PAT Anda benar dan memiliki izin repo.");
+                }
+            })
+            .catch(err => {
+                alert("Terjadi kesalahan koneksi ke API GitHub.");
+            });
+        }
 
         function deleteVideo(videoId, token) {
             if (confirm("Yakin ingin menghapus video ini dari Fanpage?")) {
