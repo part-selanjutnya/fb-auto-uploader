@@ -46,11 +46,15 @@
         .badge-danger { background-color: #f8d7da; color: #721c24; }
         .badge-warning { background-color: #fff3cd; color: #856404; }
 
-        .btn-group { display: flex; gap: 8px; }
-        .btn { flex: 1; padding: 8px 12px; font-size: 12px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; text-align: center; }
-        .btn-danger { background-color: #dc3545; color: white; }
-        .btn-primary { background-color: #1877f2; color: white; }
-        .btn-success { background-color: #28a745; color: white; }
+        .btn { width: 100%; padding: 11px 12px; font-size: 13px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; text-align: center; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-primary { background-color: #1877f2; }
+        .btn-success { background-color: #28a745; }
+        .btn:disabled { background-color: #cccccc; cursor: not-allowed; opacity: 0.8; }
+
+        /* Spinner Loading Animasi */
+        .spinner { width: 14px; height: 14px; border: 2px solid #ffffff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .no-data { text-align: center; color: #777; padding: 20px; font-size: 13px; }
     </style>
 </head>
@@ -100,7 +104,7 @@
                     </div>
                 </div>
                 
-                <button class="btn btn-primary" style="width: 100%; format: 10px;" onclick="triggerInstantUpload()">🚀 Upload Video Teratas Sekarang</button>
+                <button id="btn-instant" class="btn btn-primary" onclick="triggerInstantUpload()">🚀 Upload Video Teratas Sekarang</button>
             </div>
 
             <div id="queue-container">
@@ -146,20 +150,20 @@ Tonton selanjutnya☝️
 #AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels</textarea>
             </div>
             
-            <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 13px;" onclick="saveVideoToGitHub()">💾 Simpan Otomatis ke Antrean GitHub</button>
+            <button id="btn-save-video" class="btn btn-success" onclick="saveVideoToGitHub()">💾 Simpan Otomatis ke Antrean GitHub</button>
         </div>
 
-        <!-- Tab 4: Tambah Fanpage Massal / Satuan Otomatis -->
+        <!-- Tab 4: Tambah Fanpage Massal -->
         <div id="tab-addpage" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Tambah Fanpage Massal / Satuan</h2>
-            <p style="font-size: 12px; color: #666;">Anda bisa menempelkan data JSON berisi banyak Fanpage sekaligus (seperti format yang Anda miliki) atau tempel token satuan.</p>
+            <p style="font-size: 12px; color: #666;">Tempelkan data JSON berisi banyak Fanpage sekaligus.</p>
             
             <div class="form-group">
-                <label>Tempel Format JSON Massal (atau Token Satuan):</label>
+                <label>Tempel Format JSON Massal:</label>
                 <textarea id="new-fp-json" class="form-control" placeholder='[&#10;  {&#10;    "id": "...",&#10;    "name": "Nama FP",&#10;    "token": "..."&#10;  }&#10;]'></textarea>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="addMultipleFanpages()">✨ Proses & Tambahkan Semua Fanpage</button>
+            <button id="btn-save-fp" class="btn btn-primary" onclick="addMultipleFanpages()">✨ Proses & Tambahkan Semua Fanpage</button>
         </div>
 
         <!-- Tab 5: Status Fanpage -->
@@ -232,49 +236,47 @@ Tonton selanjutnya☝️
                 "status": "pending"
             };
 
+            let btn = document.getElementById('btn-save-video');
+            setLoading(btn, true, "Menyimpan ke Antrean...");
+
             updateGitHubFile('videos.json', `Add Part ${id}`, (currentContent) => {
                 currentContent.push(newVideoObj);
                 return currentContent;
-            }, "Video berhasil ditambahkan ke antrean!");
+            }, "Video berhasil ditambahkan ke antrean!", btn);
         }
 
-        // Fungsi Tambah Fanpage Massal secara Otomatis via Dashboard Web
-        async function addMultipleFanpages() {
+        function addMultipleFanpages() {
             let rawInput = document.getElementById('new-fp-json').value.trim();
-            if (!rawInput) {
-                alert("Masukkan data JSON Fanpage terlebih dahulu!");
-                return;
-            }
+            if (!rawInput) { alert("Masukkan data JSON Fanpage terlebih dahulu!"); return; }
 
             let newPagesArray = [];
             try {
                 newPagesArray = JSON.parse(rawInput);
-                if (!Array.isArray(newPagesArray)) {
-                    newPagesArray = [newPagesArray]; // Jika format objek tunggal
-                }
+                if (!Array.isArray(newPagesArray)) { newPagesArray = [newPagesArray]; }
             } catch (e) {
-                alert("Format JSON tidak valid! Pastikan menyalin format dengan benar.");
+                alert("Format JSON tidak valid!");
                 return;
             }
 
+            let btn = document.getElementById('btn-save-fp');
+            setLoading(btn, true, "Menambahkan Fanpage...");
+
             updateGitHubFile('pages.json', `Add multiple Fanpages via Web`, (currentContent) => {
-                // Gabungkan dengan data lama tanpa duplikasi nama
                 newPagesArray.forEach(newPage => {
                     let index = currentContent.findIndex(p => p.name.toLowerCase() === newPage.name.toLowerCase());
-                    if (index >= 0) {
-                        currentContent[index] = newPage; // Update jika sudah ada
-                    } else {
-                        currentContent.push(newPage); // Tambah baru
-                    }
+                    if (index >= 0) { currentContent[index] = newPage; }
+                    else { currentContent.push(newPage); }
                 });
                 return currentContent;
-            }, "Semua Fanpage berhasil ditambahkan secara otomatis!");
+            }, "Semua Fanpage berhasil ditambahkan secara otomatis!", btn);
         }
 
-        // Fungsi Universal untuk Update File di GitHub API
-        async function updateGitHubFile(filename, commitMessage, modifyCallback, successMessage) {
+        async function updateGitHubFile(filename, commitMessage, modifyCallback, successMessage, btnElement) {
             let token = prompt("Masukkan GitHub Personal Access Token (PAT) Anda:");
-            if (!token) return;
+            if (!token) {
+                setLoading(btnElement, false);
+                return;
+            }
 
             let owner = "part-selanjutnya";
             let repo = "fb-auto-uploader";
@@ -286,16 +288,14 @@ Tonton selanjutnya☝️
                 });
 
                 if (!getRes.ok) {
-                    alert("Gagal mengakses file repository. Periksa token PAT Anda.");
+                    alert("Gagal mengakses repository. Periksa token PAT Anda.");
+                    setLoading(btnElement, false);
                     return;
                 }
 
                 let fileData = await getRes.json();
                 let currentContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
-
-                // Panggil callback untuk memodifikasi isi file
                 let updatedContent = modifyCallback(currentContent);
-
                 let updatedBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(updatedContent, null, 4))));
 
                 let putRes = await fetch(apiUrl, {
@@ -317,14 +317,28 @@ Tonton selanjutnya☝️
                     location.reload();
                 } else {
                     let errJson = await putRes.json();
-                    alert("Gagal menyimpan ke GitHub: " + (errJson.message || 'Error'));
+                    alert("Gagal menyimpan: " + (errJson.message || 'Error'));
+                    setLoading(btnElement, false);
                 }
             } catch (err) {
                 alert("Terjadi kesalahan koneksi: " + err.message);
+                setLoading(btnElement, false);
             }
         }
 
-        // Fetch Status & Checkboxes dari pages.json dan report.json
+        function setLoading(btn, isLoading, text = "Memproses...") {
+            if (isLoading) {
+                btn.disabled = true;
+                btn.dataset.originalText = btn.innerHTML;
+                btn.innerHTML = `<span class="spinner"></span> ${text}`;
+            } else {
+                btn.disabled = false;
+                if (btn.dataset.originalText) {
+                    btn.innerHTML = btn.dataset.originalText;
+                }
+            }
+        }
+
         Promise.all([
             fetch('report.json').then(res => res.json()).catch(() => ({})),
             fetch('pages.json').then(res => res.json()).catch(() => ([]))
@@ -403,13 +417,24 @@ Tonton selanjutnya☝️
             let token = prompt("Masukkan GitHub Personal Access Token (PAT):");
             if (!token) return;
 
+            let btn = document.getElementById('btn-instant');
+            setLoading(btn, true, "Mengirim Perintah Upload...");
+
             fetch(`https://api.github.com/repos/part-selanjutnya/fb-auto-uploader/dispatches`, {
                 method: 'POST',
                 headers: { "Accept": "vnd.github+json", "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ "event_type": "instant_upload", "client_payload": { "target_pages": selectedPages } })
             }).then(res => {
-                if (res.ok || res.status === 204) alert("Perintah upload instan dikirim ke GitHub!");
-                else alert("Gagal memicu GitHub Action.");
+                if (res.ok || res.status === 204) {
+                    alert("Perintah upload instan dikirim ke GitHub!");
+                    setLoading(btn, false);
+                } else {
+                    alert("Gagal memicu GitHub Action.");
+                    setLoading(btn, false);
+                }
+            }).catch(err => {
+                alert("Kesalahan koneksi.");
+                setLoading(btn, false);
             });
         }
     </script>
