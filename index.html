@@ -24,7 +24,7 @@
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #333; }
         .form-control { width: 100%; padding: 8px; font-size: 13px; border: 1px solid #ccd0d5; border-radius: 6px; box-sizing: border-box; }
-        textarea.form-control { resize: vertical; height: 90px; }
+        textarea.form-control { resize: vertical; height: 120px; font-family: monospace; font-size: 11px; }
         
         .checkbox-box { max-height: 110px; overflow-y: auto; background: white; padding: 6px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 12px; }
         .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
@@ -100,7 +100,7 @@
                     </div>
                 </div>
                 
-                <button class="btn btn-primary" style="width: 100%; padding: 10px;" onclick="triggerInstantUpload()">🚀 Upload Video Teratas Sekarang</button>
+                <button class="btn btn-primary" style="width: 100%; format: 10px;" onclick="triggerInstantUpload()">🚀 Upload Video Teratas Sekarang</button>
             </div>
 
             <div id="queue-container">
@@ -146,25 +146,20 @@ Tonton selanjutnya☝️
 #AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels</textarea>
             </div>
             
-            <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 13px;" onclick="saveToGitHub('videos.json', 'Add Part')">💾 Simpan Otomatis ke Antrean GitHub</button>
+            <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 13px;" onclick="saveVideoToGitHub()">💾 Simpan Otomatis ke Antrean GitHub</button>
         </div>
 
-        <!-- Tab 4: Tambah Fanpage Baru Otomatis -->
+        <!-- Tab 4: Tambah Fanpage Massal / Satuan Otomatis -->
         <div id="tab-addpage" class="section-view">
-            <h2 style="font-size: 15px; margin-top: 10px;">Tambah Fanpage Baru Otomatis</h2>
-            <p style="font-size: 12px; color: #666;">Masukkan token mentah, sistem akan mendeteksi ID dan langsung menyimpannya ke sistem.</p>
+            <h2 style="font-size: 15px; margin-top: 10px;">Tambah Fanpage Massal / Satuan</h2>
+            <p style="font-size: 12px; color: #666;">Anda bisa menempelkan data JSON berisi banyak Fanpage sekaligus (seperti format yang Anda miliki) atau tempel token satuan.</p>
             
             <div class="form-group">
-                <label>Nama Fanpage Baru:</label>
-                <input type="text" id="new-fp-name" class="form-control" placeholder="Contoh: Bioskop Malam">
-            </div>
-            
-            <div class="form-group">
-                <label>Token Akses Mentah (User / Page Token):</label>
-                <textarea id="new-fp-raw-token" class="form-control" placeholder="Tempel token mentah Facebook di sini..."></textarea>
+                <label>Tempel Format JSON Massal (atau Token Satuan):</label>
+                <textarea id="new-fp-json" class="form-control" placeholder='[&#10;  {&#10;    "id": "...",&#10;    "name": "Nama FP",&#10;    "token": "..."&#10;  }&#10;]'></textarea>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="addNewFanpage()">✨ Proses & Tambahkan Fanpage Baru</button>
+            <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 13px;" onclick="addMultipleFanpages()">✨ Proses & Tambahkan Semua Fanpage</button>
         </div>
 
         <!-- Tab 5: Status Fanpage -->
@@ -213,62 +208,7 @@ Tonton selanjutnya☝️
             cronContainer.appendChild(div);
         });
 
-        // Fungsi Universal untuk Menyimpan File ke GitHub via API
-        async function saveToGitHub(filename, messagePrefix, customObject = null, successMsg = "Berhasil disimpan!") {
-            let token = prompt("Masukkan GitHub Personal Access Token (PAT):");
-            if (!token) return;
-
-            let owner = "part-selanjutnya";
-            let repo = "fb-auto-uploader";
-            let apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`;
-
-            try {
-                let getRes = await fetch(apiUrl, {
-                    headers: { "Authorization": `Bearer ${token}`, "Accept": "vnd.github+json" }
-                });
-
-                if (!getRes.ok) {
-                    alert("Gagal mengakses file repository. Periksa token PAT Anda.");
-                    return;
-                }
-
-                let fileData = await getRes.json();
-                let currentContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
-
-                if (filename === 'videos.json') {
-                    currentContent.push(customObject);
-                } else if (filename === 'pages.json') {
-                    currentContent.push(customObject);
-                }
-
-                let updatedBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(currentContent, null, 4))));
-
-                let putRes = await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Accept": "vnd.github+json",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        "message": `${messagePrefix} via Web Dashboard`,
-                        "content": updatedBase64,
-                        "sha": fileData.sha
-                    })
-                });
-
-                if (putRes.ok) {
-                    alert("✅ " + successMsg);
-                    location.reload();
-                } else {
-                    alert("Gagal menyimpan ke GitHub.");
-                }
-            } catch (err) {
-                alert("Terjadi kesalahan koneksi.");
-            }
-        }
-
-        function saveToGitHub() {
+        function saveVideoToGitHub() {
             let id = parseInt(document.getElementById('input-id').value) || 1;
             let rawUrl = document.getElementById('input-url').value.trim();
             let title = document.getElementById('input-title').value.trim();
@@ -292,11 +232,48 @@ Tonton selanjutnya☝️
                 "status": "pending"
             };
 
-            saveToGitHubCustom('videos.json', `Add Part ${id}`, newVideoObj, "Video berhasil ditambahkan ke antrean!");
+            updateGitHubFile('videos.json', `Add Part ${id}`, (currentContent) => {
+                currentContent.push(newVideoObj);
+                return currentContent;
+            }, "Video berhasil ditambahkan ke antrean!");
         }
 
-        async function saveToGitHubCustom(filename, messagePrefix, customObject, successMsg) {
-            let token = prompt("Masukkan GitHub Personal Access Token (PAT):");
+        // Fungsi Tambah Fanpage Massal secara Otomatis via Dashboard Web
+        async function addMultipleFanpages() {
+            let rawInput = document.getElementById('new-fp-json').value.trim();
+            if (!rawInput) {
+                alert("Masukkan data JSON Fanpage terlebih dahulu!");
+                return;
+            }
+
+            let newPagesArray = [];
+            try {
+                newPagesArray = JSON.parse(rawInput);
+                if (!Array.isArray(newPagesArray)) {
+                    newPagesArray = [newPagesArray]; // Jika format objek tunggal
+                }
+            } catch (e) {
+                alert("Format JSON tidak valid! Pastikan menyalin format dengan benar.");
+                return;
+            }
+
+            updateGitHubFile('pages.json', `Add multiple Fanpages via Web`, (currentContent) => {
+                // Gabungkan dengan data lama tanpa duplikasi nama
+                newPagesArray.forEach(newPage => {
+                    let index = currentContent.findIndex(p => p.name.toLowerCase() === newPage.name.toLowerCase());
+                    if (index >= 0) {
+                        currentContent[index] = newPage; // Update jika sudah ada
+                    } else {
+                        currentContent.push(newPage); // Tambah baru
+                    }
+                });
+                return currentContent;
+            }, "Semua Fanpage berhasil ditambahkan secara otomatis!");
+        }
+
+        // Fungsi Universal untuk Update File di GitHub API
+        async function updateGitHubFile(filename, commitMessage, modifyCallback, successMessage) {
+            let token = prompt("Masukkan GitHub Personal Access Token (PAT) Anda:");
             if (!token) return;
 
             let owner = "part-selanjutnya";
@@ -307,59 +284,43 @@ Tonton selanjutnya☝️
                 let getRes = await fetch(apiUrl, {
                     headers: { "Authorization": `Bearer ${token}`, "Accept": "vnd.github+json" }
                 });
+
+                if (!getRes.ok) {
+                    alert("Gagal mengakses file repository. Periksa token PAT Anda.");
+                    return;
+                }
+
                 let fileData = await getRes.json();
                 let currentContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
-                currentContent.push(customObject);
 
-                let updatedBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(currentContent, null, 4))));
+                // Panggil callback untuk memodifikasi isi file
+                let updatedContent = modifyCallback(currentContent);
+
+                let updatedBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(updatedContent, null, 4))));
+
                 let putRes = await fetch(apiUrl, {
                     method: 'PUT',
-                    headers: { "Authorization": `Bearer ${token}`, "Accept": "vnd.github+json", "Content-Type": "application/json" },
-                    body: JSON.stringify({ "message": messagePrefix, "content": updatedBase64, "sha": fileData.sha })
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Accept": "vnd.github+json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "message": commitMessage,
+                        "content": updatedBase64,
+                        "sha": fileData.sha
+                    })
                 });
 
                 if (putRes.ok) {
-                    alert("✅ " + successMsg);
+                    alert("✅ " + successMessage);
                     location.reload();
-                } else { alert("Gagal menyimpan."); }
-            } catch (err) { alert("Terjadi kesalahan."); }
-        }
-
-        // Fungsi Tambah Fanpage Otomatis
-        async function addNewFanpage() {
-            let fpName = document.getElementById('new-fp-name').value.trim();
-            let rawToken = document.getElementById('new-fp-raw-token').value.trim();
-
-            if (!fpName || !rawToken) {
-                alert("Nama Fanpage dan Token wajib diisi!");
-                return;
-            }
-
-            alert("Menghubungi Facebook Graph API untuk mendeteksi ID Halaman...");
-
-            try {
-                let meRes = await fetch(`https://graph.facebook.com/v26.0/me/accounts?access_token=${rawToken}`);
-                let meData = await meRes.json();
-
-                let pageId = "";
-                let pageToken = rawToken;
-
-                if (meData.data && meData.data.length > 0) {
-                    let found = meData.data.find(p => p.name.toLowerCase().includes(fpName.toLowerCase())) || meData.data[0];
-                    pageId = found.id;
-                    pageToken = found.access_token;
                 } else {
-                    let testRes = await fetch(`https://graph.facebook.com/v26.0/me?access_token=${rawToken}`);
-                    let testData = await testRes.json();
-                    if (testData.id) { pageId = testData.id; }
-                    else { alert("Gagal mendeteksi Fanpage dari token."); return; }
+                    let errJson = await putRes.json();
+                    alert("Gagal menyimpan ke GitHub: " + (errJson.message || 'Error'));
                 }
-
-                let newPageObj = { "name": fpName, "id": pageId, "token": pageToken };
-                saveToGitHubCustom('pages.json', `Add Fanpage ${fpName}`, newPageObj, "Fanpage baru berhasil ditambahkan secara otomatis!");
-
             } catch (err) {
-                alert("Gagal menghubungi API Facebook.");
+                alert("Terjadi kesalahan koneksi: " + err.message);
             }
         }
 
