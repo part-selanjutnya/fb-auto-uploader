@@ -1,174 +1,120 @@
-import json
 import os
-import re
-import subprocess
-import sys
+import json
 import requests
+import gdown
 
-# Memastikan modul gdown terinstall
+# Memuat data Fanpage dari Environment GitHub Secrets
+pages_data_env = os.environ.get('FB_PAGES_DATA', '[]')
 try:
-    import gdown
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown"])
-    import gdown
+    pages_data = json.loads(pages_data_env)
+except Exception as e:
+    print(f"Error memuat FB_PAGES_DATA: {e}")
+    pages_data = []
 
+videos_file = 'videos.json'
 
-def download_from_google_drive(url, output_path="temp_video.mp4"):
-    print(f"Mengunduh file video dari Google Drive: {url}...")
+if not os.path.exists(videos_file):
+    print("File videos.json tidak ditemukan!")
+    exit(0)
 
-    # Ekstrak File ID dari berbagai format URL Google Drive
-    file_id = None
-    match_d = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
-    match_id = re.search(r"id=([a-zA-Z0-9_-]+)", url)
-
-    if match_d:
-        file_id = match_d.group(1)
-    elif match_id:
-        file_id = match_id.group(1)
-
-    # Unduh menggunakan ID atau URL langsung via gdown
-    if file_id:
-        gdown.download(id=file_id, output=output_path, quiet=False)
-    else:
-        gdown.download(url, output_path, quiet=False)
-
-    if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
-        raise RuntimeError(
-            "Gagal mengunduh file video dari Google Drive. Periksa kembali izin akses link (harus 'Anyone with link')."
-        )
-
-    print("Unduhan berhasil.")
-    return output_path
-
-
-def upload_reels_to_page(page_id, page_token, file_path, caption):
-    """Mengunggah video khusus ke Facebook Reels menggunakan 3-Step Resumable Upload API."""
-    print(f"Mengunggah Reels ke halaman ID: {page_id}...")
-
-    # Step 1: Inisialisasi Upload Session Reels
-    init_url = f"https://graph.facebook.com/v20.0/{page_id}/video_reels"
-    init_payload = {
-        "upload_phase": "start",
-        "access_token": page_token,
-    }
-
-    init_res = requests.post(init_url, data=init_payload).json()
-    if "video_id" not in init_res or "upload_url" not in init_res:
-        print(f" -> Gagal Inisialisasi Reels: {json.dumps(init_res)}")
-        return init_res
-
-    video_id = init_res["video_id"]
-    upload_url = init_res["upload_url"]
-
-    # Step 2: Transfer Binary File Video
-    file_size = os.path.getsize(file_path)
-    headers = {
-        "Authorization": f"OAuth {page_token}",
-        "offset": "0",
-        "file_size": str(file_size),
-    }
-
-    with open(file_path, "rb") as f:
-        requests.post(upload_url, headers=headers, data=f)
-
-    # Step 3: Finish & Dipublikasikan sebagai Reel
-    finish_payload = {
-        "upload_phase": "finish",
-        "video_id": video_id,
-        "video_state": "PUBLISHED",
-        "description": caption,
-        "access_token": page_token,
-    }
-
-    finish_res = requests.post(init_url, data=finish_payload).json()
-    return finish_res
-
-
-def main():
-    pages_json = os.environ.get("FB_PAGES_DATA")
-    if not pages_json:
-        raise ValueError(
-            "Error: Secret 'FB_PAGES_DATA' tidak ditemukan atau kosong!"
-        )
-
-    pages = json.loads(pages_json)
-
-    if not os.path.exists("videos.json"):
-        raise FileNotFoundError("Error: File 'videos.json' tidak ditemukan!")
-
-    with open("videos.json", "r", encoding="utf-8") as f:
+try:
+    with open(videos_file, 'r') as f:
         videos = json.load(f)
+except Exception as e:
+    print(f"Error membaca videos.json: {e}")
+    exit(0)
 
-    updated = False
-    for video in videos:
-        # Mencari video pertama dengan status 'pending'
-        if video.get("status") == "pending":
-            video_url = video.get("url")
-            title = video.get("title", "")
-            description = video.get("description", "")
+# Cari video pertama yang berstatus 'pending'
+target_video = None
+target_index = -1
 
-            caption = (
-                f"{description}"
-                if description
-                else f"{title}\nhttps://part-selanjutnya.github.io/part-selanjutnya/\nTonton selanjutnya☝️"
-            )
+for index, video in enumerate(videos):
+    if video.get('status') == 'pending':
+        target_video = video
+        target_index = index
+        break
 
-            print("==========================================")
-            print(f"Memproses video: {title}")
-            print(f"URL: {video_url}")
-            print("==========================================")
+if not target_video:
+    print("Tidak ada video dengan status 'pending' di dalam antrean.")
+    exit(0)
 
-            temp_file = "temp_video.mp4"
-            try:
-                # 1. Unduh dari Google Drive
-                download_from_google_drive(video_url, temp_file)
+video_id_db = target_video.get('id')
+video_url = target_video.get('url')
+video_title = target_video.get('title', 'Video Reels')
+video_desc = target_video.get('description', '')
 
-                # 2. Unggah sebagai Reels ke seluruh halaman Facebook
-                success_count = 0
-                for page in pages:
-                    page_name = page.get("name", "Halaman")
-                    page_id = page.get("id") or page.get("page_id")
-                    page_token = page.get("token") or page.get("access_token")
+print(f"Memproses video ID: {video_id_db} - {video_title}")
+print(f"URL: {video_url}")
 
-                    print(f"Mengunggah ke halaman: {page_name} ({page_id})...")
+# Mengunduh video dari Google Drive ke penyimpanan lokal workflow
+output_filename = 'temp_video.mp4'
+if os.path.exists(output_filename):
+    os.remove(output_filename)
 
-                    res = upload_reels_to_page(
-                        page_id, page_token, temp_file, caption
-                    )
+try:
+    print("Mengunduh file video dari Google Drive...")
+    # Menggunakan gdown untuk mengunduh tautan langsung
+    gdown.download(video_url, output_filename, quiet=False, fuzzy=True)
+except Exception as e:
+    print(f"Gagal mengunduh video: {e}")
+    exit(1)
 
-                    if (
-                        res.get("success")
-                        or "x-fb-trace-id" in res
-                        or "video_id" in res
-                    ):
-                        print(" -> Sukses terunggah sebagai Reels!")
-                        success_count += 1
-                    else:
-                        print(f" -> Respon Upload: {json.dumps(res)}")
+if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
+    print("Gagal: File video kosong atau tidak berhasil diunduh.")
+    exit(1)
 
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
+print("Unduhan berhasil.")
 
-                if success_count > 0:
-                    video["status"] = "completed"
-                    updated = True
-                    break
-                else:
-                    raise RuntimeError(
-                        "Gagal mengunggah Reels ke halaman Facebook. Periksa token/izin halaman Anda."
-                    )
+# Mengunggah video ke setiap Fanpage yang terdaftar
+success_upload_count = 0
 
-            except Exception as e:
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
-                raise RuntimeError(f"Gagal memproses video: {e}")
+for page in pages_data:
+    page_token = page.get('token')
+    page_id = page.get('id')
+    page_name = page.get('name')
+    
+    if not page_token or not page_id:
+        continue
+        
+    print(f"Mengunggah Reels ke halaman: {page_name} ({page_id})...")
+    
+    upload_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
+    
+    try:
+        with open(output_filename, 'rb') as video_file:
+            files = {'source': video_file}
+            data = {
+                'access_token': page_token,
+                'description': f"{video_title}\n\n{video_desc}",
+                'upload_phase': 'start'
+            }
+            
+            # Memulai sesi upload Reels ke Meta Graph API
+            response = requests.post(upload_url, data=data, files=files)
+            res_json = response.json()
+            
+            if 'success' in res_json or res_json.get('id'):
+                print(f"-> Sukses terunggah sebagai Reels ke {page_name}!")
+                success_upload_count += 1
+            else:
+                print(f"-> Gagal mengunggah ke {page_name}: {res_json}")
+    except Exception as e:
+        print(f"-> Terjadi error saat mengunggah ke {page_name}: {e}")
 
-    # Simpan kembali status 'completed' ke videos.json
-    if updated:
-        with open("videos.json", "w", encoding="utf-8") as f:
-            json.dump(videos, f, indent=2, ensure_ascii=False)
+# Jika berhasil diunggah ke setidaknya satu halaman, ubah status di videos.json menjadi 'completed'
+if success_upload_count > 0:
+    videos[target_index]['status'] = 'completed'
+    try:
+        with open(videos_file, 'w') as f:
+            json.dump(videos, f, indent=4)
         print("videos.json berhasil diperbarui menjadi 'completed'.")
+    except Exception as e:
+        print(f"Gagal memperbarui videos.json: {e}")
+else:
+    print("Peringatan: Video gagal diunggah ke semua halaman, status tetap 'pending'.")
 
+# Membersihkan file video sementara
+if os.path.exists(output_filename):
+    os.remove(output_filename)
 
-if __name__ == "__main__":
-    main()
+print("Proses upload selesai.")
