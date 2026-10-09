@@ -28,6 +28,9 @@
         .form-control { width: 100%; padding: 8px; font-size: 13px; border: 1px solid #ccd0d5; border-radius: 6px; box-sizing: border-box; }
         textarea.form-control { resize: vertical; height: 90px; }
         
+        .checkbox-box { max-height: 110px; overflow-y: auto; background: white; padding: 6px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 12px; }
+        .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+
         /* Tabel & Tampilan Kartu */
         .table-container { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 13px; }
@@ -69,7 +72,7 @@
             </div>
         </div>
 
-        <!-- Menu Bar Navigasi 4 Menu -->
+        <!-- Menu Bar Navigasi -->
         <div class="menu-bar">
             <button class="menu-btn active" onclick="switchTab('tab-violations', this)">⚠️ Video Masalah</button>
             <button class="menu-btn" onclick="switchTab('tab-queue', this)">📋 Antrean Pending</button>
@@ -89,14 +92,13 @@
         <div id="tab-queue" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Daftar Video Menunggu Upload (Pending)</h2>
             
-            <!-- Panel Kontrol Upload Instan -->
             <div style="background: #e7f3ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
                 <h3 style="font-size: 13px; color: #1877f2; margin-top: 0;">⚡ Upload Instan (Tanpa Jadwal Cron)</h3>
                 <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan, lalu klik tombol di bawah untuk langsung mengunggah video teratas sekarang juga.</p>
                 
                 <div style="margin-bottom: 8px;">
                     <label style="font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px;">Pilih Fanpage Tujuan:</label>
-                    <div id="page-checkboxes" style="max-height: 110px; overflow-y: auto; background: white; padding: 6px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 12px;">
+                    <div id="page-checkboxes" class="checkbox-box">
                         <span style="color: #777; font-size: 11px;">Memuat daftar halaman...</span>
                     </div>
                 </div>
@@ -109,15 +111,34 @@
             </div>
         </div>
 
-        <!-- Tab 3: Tambah Link & Generator JSON -->
+        <!-- Tab 3: Tambah Link & Simpan Otomatis ke GitHub -->
         <div id="tab-add" class="section-view">
-            <h2 style="font-size: 15px; margin-top: 10px;">Generator Format Antrean Baru</h2>
-            <p style="font-size: 12px; color: #666;">Masukkan link Google Drive dan deskripsi di bawah ini untuk menghasilkan format JSON siap salin ke <code>videos.json</code>.</p>
+            <h2 style="font-size: 15px; margin-top: 10px;">Tambah & Simpan Antrean Baru</h2>
+            <p style="font-size: 12px; color: #666;">Pilih akun, jam cron, masukkan link, lalu klik simpan agar langsung masuk ke antrean GitHub tanpa buka GitHub.</p>
             
             <div class="form-group">
                 <label>Nomor Part (ID):</label>
                 <input type="number" id="input-id" class="form-control" value="12">
             </div>
+            
+            <!-- Pilihan Akun Fanpage di Tab Tambah Link -->
+            <div class="form-group">
+                <label>Pilih Akun Fanpage Tujuan:</label>
+                <div id="add-page-checkboxes" class="checkbox-box">
+                    <span style="color: #777; font-size: 11px;">Memuat pilihan akun...</span>
+                </div>
+            </div>
+
+            <!-- Pilihan Jam Cron Sesuai Jadwal -->
+            <div class="form-group">
+                <label>Pilih Slot Jam Penjadwalan Cron:</label>
+                <div class="checkbox-box">
+                    <div class="checkbox-grid" id="cron-hours-container">
+                        <!-- Dibuat otomatis oleh JS -->
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>Link Google Drive:</label>
                 <input type="text" id="input-url" class="form-control" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
@@ -130,14 +151,10 @@
                 <label>Deskripsi / Caption:</label>
                 <textarea id="input-desc" class="form-control">https://part-selanjutnya.github.io/Klik-disini/
 Tonton selanjutnya☝️
-​#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels</textarea>
+#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels</textarea>
             </div>
-            <button class="btn btn-success" style="width: 100%; padding: 10px;" onclick="generateJson()">Generate & Salin JSON</button>
-
-            <div class="form-group" style="margin-top: 15px;">
-                <label>Hasil Kode JSON (Salin dan tempel ke videos.json):</label>
-                <textarea id="output-json" class="form-control" readonly style="height: 110px; background: #f8f9fa; font-family: monospace; font-size: 11px;"></textarea>
-            </div>
+            
+            <button class="btn btn-success" style="width: 100%; padding: 12px; font-size: 13px;" onclick="saveToGitHub()">💾 Simpan Otomatis ke Antrean GitHub</button>
         </div>
 
         <!-- Tab 4: Status Fanpage -->
@@ -181,35 +198,107 @@ Tonton selanjutnya☝️
             return url;
         }
 
-        function generateJson() {
+        // Render pilihan jam cron [4,6,8,10,12,14,16,18,20,22]
+        const cronHours = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+        const cronContainer = document.getElementById('cron-hours-container');
+        cronHours.forEach(hour => {
+            let div = document.createElement('div');
+            div.innerHTML = `<label><input type="checkbox" class="cron-hour-select" value="${hour}" checked> Jam ${hour}:00 WIB</label>`;
+            cronContainer.appendChild(div);
+        });
+
+        // Fungsi Menyimpan Langsung ke GitHub via API
+        async function saveToGitHub() {
             let id = parseInt(document.getElementById('input-id').value) || 1;
             let rawUrl = document.getElementById('input-url').value.trim();
             let title = document.getElementById('input-title').value.trim();
             let desc = document.getElementById('input-desc').value;
+
+            let selectedPages = [];
+            document.querySelectorAll('.add-page-select:checked').forEach(cb => {
+                selectedPages.push(cb.value);
+            });
+
+            let selectedHours = [];
+            document.querySelectorAll('.cron-hour-select:checked').forEach(cb => {
+                selectedHours.push(parseInt(cb.value));
+            });
 
             if (!rawUrl) {
                 alert("Harap masukkan link Google Drive terlebih dahulu!");
                 return;
             }
 
+            let token = prompt("Masukkan GitHub Personal Access Token (PAT) Anda untuk menyimpan ke GitHub:");
+            if (!token) return;
+
             let formattedUrl = convertDriveUrl(rawUrl);
 
-            let dataObj = {
+            let newVideoObj = {
                 "id": id,
                 "url": formattedUrl,
                 "title": title,
                 "description": desc,
+                "target_pages": selectedPages.length > 0 ? selectedPages : ["Semua"],
+                "schedule_hours": selectedHours,
                 "status": "pending"
             };
 
-            let jsonString = JSON.stringify(dataObj, null, 4);
-            document.getElementById('output-json').value = jsonString;
+            let owner = "part-selanjutnya";
+            let repo = "fb-auto-uploader";
+            let path = "videos.json";
+            let apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
-            navigator.clipboard.writeText(jsonString).then(() => {
-                alert("Format JSON berhasil dibuat dan disalin ke Clipboard!");
-            }).catch(err => {
-                alert("Berhasil dibuat, silakan salin teks JSON di bawah.");
-            });
+            try {
+                // 1. Ambil isi file videos.json yang ada saat ini di GitHub
+                let getRes = await fetch(apiUrl, {
+                    headers: { "Authorization": `Bearer ${token}`, "Accept": "vnd.github+json" }
+                });
+
+                if (!getRes.ok) {
+                    alert("Gagal membaca videos.json dari GitHub. Periksa kembali token PAT Anda.");
+                    return;
+                }
+
+                let fileData = await getRes.json();
+                let sha = fileData.sha;
+                let currentContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
+
+                // 2. Masukkan video baru ke dalam array antrean
+                currentContent.push(newVideoObj);
+
+                // 3. Update file videos.json di GitHub secara otomatis
+                let updatedContentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(currentContent, null, 4))));
+
+                let putRes = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Accept": "vnd.github+json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "message": `Add Part ${id} via Web Dashboard`,
+                        "content": updatedContentBase64,
+                        "sha": sha
+                    })
+                });
+
+                if (putRes.ok) {
+                    alert("✅ Berhasil! Video baru telah ditambahkan ke antrean GitHub secara otomatis.");
+                    // Reset form ID berikutnya
+                    document.getElementById('input-id').value = id + 1;
+                    document.getElementById('input-title').value = `Part ${id + 1}`;
+                    document.getElementById('input-url').value = '';
+                } else {
+                    let errJson = await putRes.json();
+                    alert("Gagal menyimpan ke GitHub: " + (errJson.message || 'Unknown error'));
+                }
+
+            } catch (err) {
+                alert("Terjadi kesalahan koneksi saat mengirim data ke GitHub.");
+                console.error(err);
+            }
         }
 
         fetch('report.json')
@@ -222,6 +311,8 @@ Tonton selanjutnya☝️
                 pagesBody.innerHTML = '';
                 const checkboxContainer = document.getElementById('page-checkboxes');
                 checkboxContainer.innerHTML = '';
+                const addPageContainer = document.getElementById('add-page-checkboxes');
+                addPageContainer.innerHTML = '';
 
                 if (data.pages_status && data.pages_status.length > 0) {
                     data.pages_status.forEach((page, index) => {
@@ -237,14 +328,22 @@ Tonton selanjutnya☝️
                         `;
                         pagesBody.appendChild(tr);
 
-                        let div = document.createElement('div');
-                        div.style.marginBottom = '4px';
-                        div.innerHTML = `<label><input type="checkbox" class="page-select" value="${page.name}" checked> ${page.name}</label>`;
-                        checkboxContainer.appendChild(div);
+                        // Checkbox untuk Upload Instan
+                        let div1 = document.createElement('div');
+                        div1.style.marginBottom = '4px';
+                        div1.innerHTML = `<label><input type="checkbox" class="page-select" value="${page.name}" checked> ${page.name}</label>`;
+                        checkboxContainer.appendChild(div1);
+
+                        // Checkbox untuk Tab Tambah Link
+                        let div2 = document.createElement('div');
+                        div2.style.marginBottom = '4px';
+                        div2.innerHTML = `<label><input type="checkbox" class="add-page-select" value="${page.name}" checked> ${page.name}</label>`;
+                        addPageContainer.appendChild(div2);
                     });
                 } else {
                     pagesBody.innerHTML = '<tr><td colspan="3" class="no-data">Belum ada data.</td></tr>';
                     checkboxContainer.innerHTML = '<span style="color: #777;">Tidak ada fanpage ditemukan.</span>';
+                    addPageContainer.innerHTML = '<span style="color: #777;">Tidak ada fanpage ditemukan.</span>';
                 }
 
                 const violContainer = document.getElementById('violations-container');
