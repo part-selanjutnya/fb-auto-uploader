@@ -163,13 +163,26 @@ for page in pages_data:
     except Exception as e:
         print(f"-> Terjadi error saat mengunggah ke {page_name}: {e}")
 
-# Ubah status di videos.json jika berhasil
+# Ubah status video yang baru saja diunggah menjadi 'completed'
 if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
+    
+    # BERSIHKAN RIWAYAT: Hanya pertahankan status 'pending' dan 1 riwayat 'completed' terbaru
+    cleaned_videos = []
+    completed_videos = [v for v in videos if v.get('status') == 'completed']
+    pending_videos = [v for v in videos if v.get('status') == 'pending']
+    
+    # Ambil hanya 'completed' yang paling terakhir/baru
+    if completed_videos:
+        cleaned_videos.append(completed_videos[-1])
+    
+    # Masukkan seluruh antrean yang masih pending
+    cleaned_videos.extend(pending_videos)
+    
     try:
         with open(videos_file, 'w') as f:
-            json.dump(videos, f, indent=4)
-        print("videos.json berhasil diperbarui.")
+            json.dump(cleaned_videos, f, indent=4)
+        print("videos.json berhasil dibersihkan & diperbarui (hanya menyisakan pending & 1 riwayat terakhir).")
     except Exception as e:
         print(f"Gagal memperbarui videos.json: {e}")
 
