@@ -1,7 +1,11 @@
 name: Facebook Auto Uploader
 
 on:
-  workflow_dispatch: # Dipicu secara otomatis via API cron-job.org / Manual dari tab Actions
+  schedule:
+    - cron: '0 */2 * * *' # Berjalan otomatis setiap 2 jam sekali
+  workflow_dispatch:
+  repository_dispatch:
+    types: [instant_upload]
 
 permissions:
   contents: write
