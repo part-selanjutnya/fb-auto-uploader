@@ -53,8 +53,8 @@ if os.path.exists(output_filename):
 
 try:
     print("Mengunduh file video dari Google Drive...")
-    # Menggunakan gdown untuk mengunduh tautan langsung
-    gdown.download(video_url, output_filename, quiet=False, fuzzy=True)
+    # Menggunakan gdown tanpa argumen fuzzy agar kompatibel dengan versi terbaru
+    gdown.download(video_url, output_filename, quiet=False)
 except Exception as e:
     print(f"Gagal mengunduh video: {e}")
     exit(1)
