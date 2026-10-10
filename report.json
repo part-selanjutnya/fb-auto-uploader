@@ -1,5 +1,5 @@
 {
-    "last_check": "10 Oct 2026, 19:43:30 WIB",
+    "last_check": "10 Oct 2026, 23:10:30 WIB",
     "total_deleted": 132,
     "logs": [
         {
@@ -873,113 +873,7 @@
             "status": "Berhasil Dihapus (Pelanggaran/Copyright)"
         }
     ],
-    "pages_status": [
-        {
-            "name": "Kopi Nusantara",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Masa kini",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Alur sbb",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Ritme Video",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Lokasari Pride",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Part selanjutnya",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Lihat selengkapnya",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Cuplik Drama",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Lanjut Part 2",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Pengak",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Cleomenes",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Linda Haubrich",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Alur GMS",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Sempurna",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Sapu Jagat",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Kumbo Sanken",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Gunung Sahari",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Sedap Malam",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Laskar Pagi",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "O T A K U Reel",
-            "status": "Aman",
-            "badge": "success"
-        },
-        {
-            "name": "Storymu",
-            "status": "Aman",
-            "badge": "success"
-        }
-    ],
+    "pages_status": [],
     "total_warnings": 0,
     "violations": []
 }
