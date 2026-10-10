@@ -6,7 +6,7 @@
     <title>Dashboard Kontrol & Antrean Fanpage</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 10px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; }
         h1 { color: #1877f2; font-size: 18px; border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-top: 0; }
         
         .menu-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 15px 0; background: #e7f3ff; padding: 6px; border-radius: 8px; }
@@ -51,14 +51,22 @@
         .btn-success { background-color: #28a745; }
         .btn:disabled { background-color: #cccccc; cursor: not-allowed; opacity: 0.8; }
 
-        /* Spinner Loading Animasi */
         .spinner { width: 14px; height: 14px; border: 2px solid #ffffff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast Notification Melayang di Pojok Kanan Atas */
+        #toast-container { position: fixed; top: 15px; right: 15px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 300px; }
+        .toast { background: #333; color: white; padding: 12px 16px; border-radius: 8px; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast-success { background: #28a745; }
+        .toast-info { background: #1877f2; }
 
         .no-data { text-align: center; color: #777; padding: 20px; font-size: 13px; }
     </style>
 </head>
 <body>
+    <div id="toast-container"></div>
+
     <div class="container">
         <h1>Dashboard Kontrol & Antrean</h1>
         
@@ -187,6 +195,19 @@ Tonton selanjutnya☝️
     </div>
 
     <script>
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('show'); }, 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
@@ -224,7 +245,7 @@ Tonton selanjutnya☝️
             let selectedHours = [];
             document.querySelectorAll('.cron-hour-select:checked').forEach(cb => { selectedHours.push(parseInt(cb.value)); });
 
-            if (!rawUrl) { alert("Masukkan link Google Drive!"); return; }
+            if (!rawUrl) { showToast("Masukkan link Google Drive!", "info"); return; }
 
             let newVideoObj = {
                 "id": id,
@@ -242,19 +263,19 @@ Tonton selanjutnya☝️
             updateGitHubFile('videos.json', `Add Part ${id}`, (currentContent) => {
                 currentContent.push(newVideoObj);
                 return currentContent;
-            }, "Video berhasil ditambahkan ke antrean!", btn);
+            }, "Video berhasil ditambahkan! Menunggu deploy GitHub...", btn);
         }
 
         function addMultipleFanpages() {
             let rawInput = document.getElementById('new-fp-json').value.trim();
-            if (!rawInput) { alert("Masukkan data JSON Fanpage terlebih dahulu!"); return; }
+            if (!rawInput) { showToast("Masukkan data JSON Fanpage!", "info"); return; }
 
             let newPagesArray = [];
             try {
                 newPagesArray = JSON.parse(rawInput);
                 if (!Array.isArray(newPagesArray)) { newPagesArray = [newPagesArray]; }
             } catch (e) {
-                alert("Format JSON tidak valid!");
+                showToast("Format JSON tidak valid!", "info");
                 return;
             }
 
@@ -268,7 +289,7 @@ Tonton selanjutnya☝️
                     else { currentContent.push(newPage); }
                 });
                 return currentContent;
-            }, "Semua Fanpage berhasil ditambahkan secara otomatis!", btn);
+            }, "Fanpage berhasil ditambahkan! Menunggu deploy...", btn);
         }
 
         async function updateGitHubFile(filename, commitMessage, modifyCallback, successMessage, btnElement) {
@@ -288,7 +309,7 @@ Tonton selanjutnya☝️
                 });
 
                 if (!getRes.ok) {
-                    alert("Gagal mengakses repository. Periksa token PAT Anda.");
+                    showToast("Gagal mengakses repository. Periksa token PAT.", "info");
                     setLoading(btnElement, false);
                     return;
                 }
@@ -313,17 +334,42 @@ Tonton selanjutnya☝️
                 });
 
                 if (putRes.ok) {
-                    alert("✅ " + successMessage);
-                    location.reload();
+                    showToast("🚀 " + successMessage, "success");
+                    // Tunggu sebentar lalu cek berkala sampai GitHub selesai deploy
+                    pollForDeployUpdate(filename);
                 } else {
                     let errJson = await putRes.json();
-                    alert("Gagal menyimpan: " + (errJson.message || 'Error'));
+                    showToast("Gagal menyimpan: " + (errJson.message || 'Error'), "info");
                     setLoading(btnElement, false);
                 }
             } catch (err) {
-                alert("Terjadi kesalahan koneksi: " + err.message);
+                showToast("Kesalahan koneksi: " + err.message, "info");
                 setLoading(btnElement, false);
             }
+        }
+
+        // Fungsi Cek Berkala (Polling) untuk mendeteksi selesai deploy
+        function pollForDeployUpdate(filename) {
+            let initialLength = 0;
+            fetch(filename + '?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(data => { initialLength = data.length; })
+                .catch(() => {});
+
+            let checks = 0;
+            let interval = setInterval(() => {
+                checks++;
+                fetch(filename + '?t=' + new Date().getTime())
+                    .then(res => res.json())
+                    .then(newData => {
+                        if (newData.length !== initialLength || checks > 25) {
+                            clearInterval(interval);
+                            showToast("✨ Pembaruan Selesai! Halaman diperbarui.", "success");
+                            setTimeout(() => { location.reload(); }, 1500);
+                        }
+                    })
+                    .catch(() => {});
+            }, 5000); // Cek setiap 5 detik
         }
 
         function setLoading(btn, isLoading, text = "Memproses...") {
@@ -413,7 +459,7 @@ Tonton selanjutnya☝️
         function triggerInstantUpload() {
             let selectedPages = [];
             document.querySelectorAll('.page-select:checked').forEach(cb => { selectedPages.push(cb.value); });
-            if (selectedPages.length === 0) { alert("Pilih minimal satu Fanpage!"); return; }
+            if (selectedPages.length === 0) { showToast("Pilih minimal satu Fanpage!", "info"); return; }
             let token = prompt("Masukkan GitHub Personal Access Token (PAT):");
             if (!token) return;
 
@@ -426,14 +472,14 @@ Tonton selanjutnya☝️
                 body: JSON.stringify({ "event_type": "instant_upload", "client_payload": { "target_pages": selectedPages } })
             }).then(res => {
                 if (res.ok || res.status === 204) {
-                    alert("Perintah upload instan dikirim ke GitHub!");
+                    showToast("🚀 Perintah upload instan dikirim ke GitHub!", "success");
                     setLoading(btn, false);
                 } else {
-                    alert("Gagal memicu GitHub Action.");
+                    showToast("Gagal memicu GitHub Action.", "info");
                     setLoading(btn, false);
                 }
-            }).catch(err => {
-                alert("Kesalahan koneksi.");
+            }).catch(() => {
+                showToast("Kesalahan koneksi.", "info");
                 setLoading(btn, false);
             });
         }
