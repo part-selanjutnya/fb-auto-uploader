@@ -1,29 +1,9 @@
 [
     {
-        "id": 1,
-        "url": "https://drive.google.com/uc?export=download&id=1TJLrBM5m6iVfdQDiFfgFoT-ptRYEHbFo&usp=sharing",
-        "title": "Part selanjutnya",
-        "description": "https://s.shopee.co.id/6L578hCWf7\nTonton selanjutnya☝️\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels",
-        "target_pages": [
-            "Sisi Lain",
-            "Titik Temu",
-            "Dengerin Dulu",
-            "Meong Story",
-            "Ruang Cerita",
-            "Jejak Kisah",
-            "Cerita senja",
-            "Lucius"
-        ],
-        "schedule_hours": [
-            4
-        ],
-        "status": "completed"
-    },
-    {
         "id": 13,
         "url": "https://drive.google.com/uc?export=download&id=1kTDGlX2fGuYXKniT17HvYopDGddF10A8&usp=sharing",
         "title": "Klik link untuk part selanj",
-        "description": "https://part-selanjutnya.github.io/Klik-disini/\nTonton selanjutnya☝️\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels",
+        "description": "https://part-selanjutnya.github.io/Klik-disini/\nTonton selanjutnya\u261d\ufe0f\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels",
         "target_pages": [
             "Kopi Nusantara",
             "Masa kini",
@@ -67,6 +47,6 @@
             20,
             22
         ],
-        "status": "pending"
+        "status": "completed"
     }
 ]
