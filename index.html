@@ -335,7 +335,6 @@ Tonton selanjutnya☝️
 
                 if (putRes.ok) {
                     showToast("🚀 " + successMessage, "success");
-                    // Tunggu sebentar lalu cek berkala sampai GitHub selesai deploy
                     pollForDeployUpdate(filename);
                 } else {
                     let errJson = await putRes.json();
@@ -348,7 +347,6 @@ Tonton selanjutnya☝️
             }
         }
 
-        // Fungsi Cek Berkala (Polling) untuk mendeteksi selesai deploy
         function pollForDeployUpdate(filename) {
             let initialLength = 0;
             fetch(filename + '?t=' + new Date().getTime())
@@ -369,7 +367,7 @@ Tonton selanjutnya☝️
                         }
                     })
                     .catch(() => {});
-            }, 5000); // Cek setiap 5 detik
+            }, 5000);
         }
 
         function setLoading(btn, isLoading, text = "Memproses...") {
@@ -386,8 +384,8 @@ Tonton selanjutnya☝️
         }
 
         Promise.all([
-            fetch('report.json').then(res => res.json()).catch(() => ({})),
-            fetch('pages.json').then(res => res.json()).catch(() => ([]))
+            fetch('report.json?t=' + new Date().getTime()).then(res => res.json()).catch(() => ({})),
+            fetch('pages.json?t=' + new Date().getTime()).then(res => res.json()).catch(() => ([]))
         ]).then(([reportData, pagesList]) => {
             document.getElementById('last-check').textContent = reportData.last_check || '-';
             document.getElementById('total-warnings').textContent = reportData.total_warnings || 0;
@@ -437,7 +435,7 @@ Tonton selanjutnya☝️
             }
         });
 
-        fetch('videos.json')
+        fetch('videos.json?t=' + new Date().getTime())
             .then(res => res.json())
             .then(videos => {
                 const queueContainer = document.getElementById('queue-container');
