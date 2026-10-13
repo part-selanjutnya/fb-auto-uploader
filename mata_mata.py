@@ -39,30 +39,34 @@ def mulai_intai():
     for akun in config.get("target_akun", []):
         print(f"🔍 Menyisir @{akun}...")
         try:
-            # Mengambil 5 cuitan terbaru dari masing-masing akun
+            # Mengambil 5 cuitan terbaru dengan pengaman ekstra
             hasil = scraper.get_tweets(akun, mode='user', number=5)
             
-            if not hasil.get('tweets'):
+            if not hasil or 'tweets' not in hasil or not hasil['tweets']:
+                print(f"⚠️ Tidak ada data tweet yang bisa diambil dari @{akun}")
                 continue
                 
             for tweet in hasil['tweets']:
+                if 'text' not in tweet:
+                    continue
+                    
                 teks_tweet = tweet['text'].lower()
                 
                 # Cek apakah ada kata kunci yang cocok di dalam teks
                 for kw in kata_kunci:
                     if kw in teks_tweet:
                         judul = f"🚨 TARGET: '{kw.upper()}' di @{akun}"
-                        link = tweet['link']
+                        link = tweet.get('link', 'https://twitter.com')
                         
                         # Format pesan notifikasi
                         isi = f"**Target ditemukan!**\n\n**Teks:** {tweet['text']}\n\n**Buka di Twitter:** {link}\n\n*Segera balas menggunakan foto produk estetik Anda!*"
                         
                         kirim_notifikasi(judul, isi)
-                        break # Cukup 1 notifikasi per tweet agar tidak spam
+                        break 
         except Exception as e:
-            print(f"Error saat menyisir @{akun}: {e}")
+            print(f"⚠️ Gagal memproses @{akun} (Akan dilewati): {e}")
 
 if __name__ == "__main__":
     if not GITHUB_TOKEN or not REPO_NAME:
-        print("⚠️ Dijalankan secara lokal (Bukan di GitHub Actions). Notifikasi akan gagal.")
+        print("⚠️ Dijalankan secara lokal (Bukan di GitHub Actions).")
     mulai_intai()
