@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Kontrol & Antrean Fanpage v2</title>
+    <title>Dashboard Kontrol & Antrean God-Mode</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 10px; }
         .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; }
@@ -24,7 +24,7 @@
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #333; }
         .form-control { width: 100%; padding: 8px; font-size: 13px; border: 1px solid #ccd0d5; border-radius: 6px; box-sizing: border-box; }
-        textarea.form-control { resize: vertical; height: 120px; font-family: monospace; font-size: 11px; }
+        textarea.form-control { resize: vertical; height: 110px; font-family: monospace; font-size: 11px; }
         
         .checkbox-box { max-height: 110px; overflow-y: auto; background: white; padding: 6px; border: 1px solid #ccd0d5; border-radius: 6px; font-size: 12px; }
         .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
@@ -67,7 +67,7 @@
     <div id="toast-container"></div>
 
     <div class="container">
-        <h1>Dashboard Kontrol & Antrean v2</h1>
+        <h1>Dashboard God-Mode v3</h1>
         
         <div class="stats">
             <div class="card">
@@ -75,7 +75,7 @@
                 <p id="last-check" style="font-size: 11px;">-</p>
             </div>
             <div class="card">
-                <h3>Peringatan / Masalah</h3>
+                <h3>Masalah / Peringatan</h3>
                 <p id="total-warnings">0</p>
             </div>
         </div>
@@ -83,7 +83,7 @@
         <div class="menu-bar" style="grid-template-columns: repeat(3, 1fr);">
             <button class="menu-btn active" onclick="switchTab('tab-violations', this)">⚠️ Masalah</button>
             <button class="menu-btn" onclick="switchTab('tab-queue', this)">📋 Antrean</button>
-            <button class="menu-btn" onclick="switchTab('tab-add', this)">➕ Tambah Link</button>
+            <button class="menu-btn" onclick="switchTab('tab-add', this)">📁 Tambah Folder</button>
             <button class="menu-btn" onclick="switchTab('tab-addpage', this)">➕ Tambah FP</button>
             <button class="menu-btn" onclick="switchTab('tab-pages', this)" style="grid-column: span 2;">📊 Status Fanpage</button>
         </div>
@@ -101,8 +101,8 @@
             <h2 style="font-size: 15px; margin-top: 10px;">Daftar Video Menunggu Upload (Pending)</h2>
             
             <div style="background: #e7f3ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
-                <h3 style="font-size: 13px; color: #1877f2; margin-top: 0;">⚡ Upload Instan (God-Mode)</h3>
-                <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan, sistem akan langsung mengunggah dan menyematkan link komisi otomatis.</p>
+                <h3 style="font-size: 13px; color: #1877f2; margin-top: 0;">⚡ Upload Instan (Mode Pemulihan)</h3>
+                <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan secara bijak (jangan centang semua sekaligus demi kesehatan akun).</p>
                 
                 <div style="margin-bottom: 8px;">
                     <label style="font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px;">Pilih Fanpage Tujuan:</label>
@@ -119,13 +119,14 @@
             </div>
         </div>
 
-        <!-- Tab 3: Tambah Link -->
+        <!-- Tab 3: Tambah Folder Massal -->
         <div id="tab-add" class="section-view">
-            <h2 style="font-size: 15px; margin-top: 10px;">Tambah & Simpan Antrean Baru</h2>
+            <h2 style="font-size: 15px; margin-top: 10px;">Tambah Antrean via Link Folder Google Drive</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 12px;">Cukup masukkan link folder utama Anda. Anda bisa menempelkan banyak link file video sekaligus di bawah jika ingin instan.</p>
             
             <div class="form-group">
-                <label>Nomor Part (ID):</label>
-                <input type="number" id="input-id" class="form-control" value="13">
+                <label>Mulai Nomor Part (ID Awal):</label>
+                <input type="number" id="input-id" class="form-control" value="1">
             </div>
             
             <div class="form-group">
@@ -143,13 +144,15 @@
             </div>
 
             <div class="form-group">
-                <label>Link Google Drive:</label>
-                <input type="text" id="input-url" class="form-control" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
+                <label>Tempel Daftar Link Google Drive (Satu link per baris):</label>
+                <textarea id="input-bulk-urls" class="form-control" placeholder="https://drive.google.com/file/d/...&#10;https://drive.google.com/file/d/...&#10;https://drive.google.com/file/d/..."></textarea>
             </div>
+
             <div class="form-group">
-                <label>Judul / Bagian:</label>
-                <input type="text" id="input-title" class="form-control" value="Part 13">
+                <label>Format Judul Dasar:</label>
+                <input type="text" id="input-title" class="form-control" value="Alur Cerita Part">
             </div>
+            
             <div class="form-group">
                 <label>Deskripsi / Caption (Baris 1 wajib Link Afiliasi):</label>
                 <textarea id="input-desc" class="form-control">https://part-selanjutnya.github.io/Klik-disini/
@@ -157,20 +160,17 @@ Tonton selanjutnya☝️
 #AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels</textarea>
             </div>
             
-            <button id="btn-save-video" class="btn btn-success" onclick="saveVideoToGitHub()">💾 Simpan Otomatis ke Antrean GitHub</button>
+            <button id="btn-save-video" class="btn btn-success" onclick="saveBulkVideosToGitHub()">💾 Tambahkan Semua ke Antrean GitHub</button>
         </div>
 
         <!-- Tab 4: Tambah Fanpage Massal -->
         <div id="tab-addpage" class="section-view">
             <h2 style="font-size: 15px; margin-top: 10px;">Tambah Fanpage Massal / Satuan</h2>
-            <p style="font-size: 12px; color: #666;">Tempelkan data JSON berisi banyak Fanpage sekaligus.</p>
-            
             <div class="form-group">
                 <label>Tempel Format JSON Massal:</label>
                 <textarea id="new-fp-json" class="form-control" placeholder='[&#10;  {&#10;    "id": "...",&#10;    "name": "Nama FP",&#10;    "token": "..."&#10;  }&#10;]'></textarea>
             </div>
-
-            <button id="btn-save-fp" class="btn btn-primary" onclick="addMultipleFanpages()">✨ Proses & Tambahkan Semua Fanpage</button>
+            <button id="btn-save-fp" class="btn btn-primary" onclick="addMultipleFanpages()">✨ Proses & Tambahkan Fanpage</button>
         </div>
 
         <!-- Tab 5: Status Fanpage -->
@@ -221,10 +221,10 @@ Tonton selanjutnya☝️
             if (matchD) fileId = matchD[1];
             else if (matchId) fileId = matchId[1];
             if (fileId) return `https://drive.google.com/uc?export=download&id=${fileId}&usp=sharing`;
-            return url;
+            return url.trim();
         }
 
-        const cronHours = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+        const cronHours = [12, 17, 20]; // Disesuaikan dengan mode pemulihan prime-time
         const cronContainer = document.getElementById('cron-hours-container');
         cronHours.forEach(hour => {
             let div = document.createElement('div');
@@ -232,11 +232,16 @@ Tonton selanjutnya☝️
             cronContainer.appendChild(div);
         });
 
-        function saveVideoToGitHub() {
-            let id = parseInt(document.getElementById('input-id').value) || 1;
-            let rawUrl = document.getElementById('input-url').value.trim();
-            let title = document.getElementById('input-title').value.trim();
+        function saveBulkVideosToGitHub() {
+            let startId = parseInt(document.getElementById('input-id').value) || 1;
+            let rawUrlsText = document.getElementById('input-bulk-urls').value.trim();
+            let baseTitle = document.getElementById('input-title').value.trim();
             let desc = document.getElementById('input-desc').value;
+
+            if (!rawUrlsText) { showToast("Masukkan minimal satu link Google Drive di kolom!", "info"); return; }
+
+            let urlLines = rawUrlsText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if (urlLines.length === 0) { showToast("Tidak ada link yang valid ditemukan.", "info"); return; }
 
             let selectedPages = [];
             document.querySelectorAll('.add-page-select:checked').forEach(cb => { selectedPages.push(cb.value); });
@@ -244,25 +249,29 @@ Tonton selanjutnya☝️
             let selectedHours = [];
             document.querySelectorAll('.cron-hour-select:checked').forEach(cb => { selectedHours.push(parseInt(cb.value)); });
 
-            if (!rawUrl) { showToast("Masukkan link Google Drive!", "info"); return; }
-
-            let newVideoObj = {
-                "id": id,
-                "url": convertDriveUrl(rawUrl),
-                "title": title,
-                "description": desc,
-                "target_pages": selectedPages.length > 0 ? selectedPages : ["Semua"],
-                "schedule_hours": selectedHours,
-                "status": "pending"
-            };
+            let newVideosArray = [];
+            urlLines.forEach((rawUrl, idx) => {
+                let currentId = startId + idx;
+                newVideosArray.push({
+                    "id": currentId,
+                    "url": convertDriveUrl(rawUrl),
+                    "title": `${baseTitle} ${currentId}`,
+                    "description": desc,
+                    "target_pages": selectedPages.length > 0 ? selectedPages : ["Semua"],
+                    "schedule_hours": selectedHours.length > 0 ? selectedHours : [12, 17, 20],
+                    "status": "pending"
+                });
+            });
 
             let btn = document.getElementById('btn-save-video');
-            setLoading(btn, true, "Menyimpan ke Antrean...");
+            setLoading(btn, true, `Menyimpan ${newVideosArray.length} antrean...`);
 
-            updateGitHubFile('videos.json', `Add Part ${id}`, (currentContent) => {
-                currentContent.push(newVideoObj);
-                return currentContent;
-            }, "Video berhasil ditambahkan! Menunggu deploy GitHub...", btn);
+            updateGitHubFile('videos.json', `Add bulk ${newVideosArray.length} videos`, (currentContent) => {
+                // Gabungkan dengan antrean lama yang masih pending
+                let existingPending = currentContent.filter(v => v.status === 'pending');
+                let existingCompleted = currentContent.filter(v => v.status === 'completed');
+                return existingCompleted.concat(existingPending, newVideosArray);
+            }, `${newVideosArray.length} video berhasil dimasukkan ke antrean!`, btn);
         }
 
         function addMultipleFanpages() {
@@ -288,7 +297,7 @@ Tonton selanjutnya☝️
                     else { currentContent.push(newPage); }
                 });
                 return currentContent;
-            }, "Fanpage berhasil ditambahkan! Menunggu deploy...", btn);
+            }, "Fanpage berhasil ditambahkan!", btn);
         }
 
         async function updateGitHubFile(filename, commitMessage, modifyCallback, successMessage, btnElement) {
@@ -347,26 +356,15 @@ Tonton selanjutnya☝️
         }
 
         function pollForDeployUpdate(filename) {
-            let initialLength = 0;
-            fetch(filename + '?t=' + new Date().getTime())
-                .then(res => res.json())
-                .then(data => { initialLength = data.length; })
-                .catch(() => {});
-
             let checks = 0;
             let interval = setInterval(() => {
                 checks++;
-                fetch(filename + '?t=' + new Date().getTime())
-                    .then(res => res.json())
-                    .then(newData => {
-                        if (newData.length !== initialLength || checks > 25) {
-                            clearInterval(interval);
-                            showToast("✨ Pembaruan Selesai! Halaman diperbarui.", "success");
-                            setTimeout(() => { location.reload(); }, 1500);
-                        }
-                    })
-                    .catch(() => {});
-            }, 5000);
+                if (checks > 20) {
+                    clearInterval(interval);
+                    showToast("✨ Pembaruan Selesai!", "success");
+                    setTimeout(() => { location.reload(); }, 1500);
+                }
+            }, 3000);
         }
 
         function setLoading(btn, isLoading, text = "Memproses...") {
@@ -413,7 +411,7 @@ Tonton selanjutnya☝️
 
                     let div2 = document.createElement('div');
                     div2.style.marginBottom = '4px';
-                    div2.innerHTML = `<label><input type="checkbox" class="add-page-select" value="${page.name}" checked> ${page.name}</label>`;
+                    div2.innerHTML = `<label><input type="checkbox" class="add-page-select" value="${page.name}"> ${page.name}</label>`;
                     addPageContainer.appendChild(div2);
                 });
             } else {
@@ -422,26 +420,15 @@ Tonton selanjutnya☝️
 
             const violContainer = document.getElementById('violations-container');
             violContainer.innerHTML = '';
-            
-            // Gabungkan violations dan logs jika ada untuk ditampilkan di Tab Masalah
             let combinedLogs = [];
-            if (reportData.violations && reportData.violations.length > 0) {
-                combinedLogs = combinedLogs.concat(reportData.violations);
-            }
-            if (reportData.logs && reportData.logs.length > 0) {
-                // Konversi format logs agar serasi
+            if (reportData.violations) combinedLogs = combinedLogs.concat(reportData.violations);
+            if (reportData.logs) {
                 reportData.logs.forEach(l => {
-                    combinedLogs.push({
-                        "upload_time": l.time,
-                        "page_name": l.page,
-                        "title": l.title || l.status,
-                        "is_log": true
-                    });
+                    combinedLogs.push({ "upload_time": l.time, "page_name": l.page, "title": l.title || l.status });
                 });
             }
 
             if (combinedLogs.length > 0) {
-                // Urutkan dari yang paling baru
                 combinedLogs.slice(-50).reverse().forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'violation-card';
@@ -457,7 +444,7 @@ Tonton selanjutnya☝️
             .then(res => res.json())
             .then(videos => {
                 const queueContainer = document.getElementById('queue-container');
-                queueContainer.innerHTML = '';
+                queueContainer.innerHTML = && [];
                 let pendingVideos = videos.filter(v => v.status === 'pending');
                 
                 if (pendingVideos.length > 0) {
