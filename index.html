@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Kontrol & Antrean Fanpage</title>
+    <title>Dashboard Kontrol & Antrean Fanpage v2</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 10px; }
         .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; }
@@ -54,7 +54,6 @@
         .spinner { width: 14px; height: 14px; border: 2px solid #ffffff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Toast Notification Melayang di Pojok Kanan Atas */
         #toast-container { position: fixed; top: 15px; right: 15px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 300px; }
         .toast { background: #333; color: white; padding: 12px 16px; border-radius: 8px; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-10px); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .toast.show { opacity: 1; transform: translateY(0); }
@@ -68,7 +67,7 @@
     <div id="toast-container"></div>
 
     <div class="container">
-        <h1>Dashboard Kontrol & Antrean</h1>
+        <h1>Dashboard Kontrol & Antrean v2</h1>
         
         <div class="stats">
             <div class="card">
@@ -76,7 +75,7 @@
                 <p id="last-check" style="font-size: 11px;">-</p>
             </div>
             <div class="card">
-                <h3>Peringatan</h3>
+                <h3>Peringatan / Masalah</h3>
                 <p id="total-warnings">0</p>
             </div>
         </div>
@@ -91,9 +90,9 @@
 
         <!-- Tab 1: Video Bermasalah -->
         <div id="tab-violations" class="section-view active">
-            <h2 style="font-size: 15px; margin-top: 10px;">Daftar Video Terdeteksi Copyright / Masalah</h2>
+            <h2 style="font-size: 15px; margin-top: 10px;">Daftar Pelanggaran & Riwayat Pembersihan</h2>
             <div id="violations-container">
-                <div class="no-data">Memuat data video bermasalah...</div>
+                <div class="no-data">Memuat data log pemantauan...</div>
             </div>
         </div>
 
@@ -102,8 +101,8 @@
             <h2 style="font-size: 15px; margin-top: 10px;">Daftar Video Menunggu Upload (Pending)</h2>
             
             <div style="background: #e7f3ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
-                <h3 style="font-size: 13px; color: #1877f2; margin-top: 0;">⚡ Upload Instan (Tanpa Jadwal Cron)</h3>
-                <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan, lalu klik tombol untuk langsung mengunggah video teratas.</p>
+                <h3 style="font-size: 13px; color: #1877f2; margin-top: 0;">⚡ Upload Instan (God-Mode)</h3>
+                <p style="font-size: 11px; color: #555; margin-bottom: 8px;">Pilih Fanpage tujuan, sistem akan langsung mengunggah dan menyematkan link komisi otomatis.</p>
                 
                 <div style="margin-bottom: 8px;">
                     <label style="font-size: 11px; font-weight: bold; display: block; margin-bottom: 4px;">Pilih Fanpage Tujuan:</label>
@@ -126,7 +125,7 @@
             
             <div class="form-group">
                 <label>Nomor Part (ID):</label>
-                <input type="number" id="input-id" class="form-control" value="12">
+                <input type="number" id="input-id" class="form-control" value="13">
             </div>
             
             <div class="form-group">
@@ -149,10 +148,10 @@
             </div>
             <div class="form-group">
                 <label>Judul / Bagian:</label>
-                <input type="text" id="input-title" class="form-control" value="Part 12">
+                <input type="text" id="input-title" class="form-control" value="Part 13">
             </div>
             <div class="form-group">
-                <label>Deskripsi / Caption:</label>
+                <label>Deskripsi / Caption (Baris 1 wajib Link Afiliasi):</label>
                 <textarea id="input-desc" class="form-control">https://part-selanjutnya.github.io/Klik-disini/
 Tonton selanjutnya☝️
 #AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels</textarea>
@@ -423,15 +422,34 @@ Tonton selanjutnya☝️
 
             const violContainer = document.getElementById('violations-container');
             violContainer.innerHTML = '';
+            
+            // Gabungkan violations dan logs jika ada untuk ditampilkan di Tab Masalah
+            let combinedLogs = [];
             if (reportData.violations && reportData.violations.length > 0) {
-                reportData.violations.forEach(item => {
+                combinedLogs = combinedLogs.concat(reportData.violations);
+            }
+            if (reportData.logs && reportData.logs.length > 0) {
+                // Konversi format logs agar serasi
+                reportData.logs.forEach(l => {
+                    combinedLogs.push({
+                        "upload_time": l.time,
+                        "page_name": l.page,
+                        "title": l.title || l.status,
+                        "is_log": true
+                    });
+                });
+            }
+
+            if (combinedLogs.length > 0) {
+                // Urutkan dari yang paling baru
+                combinedLogs.slice(-50).reverse().forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'violation-card';
                     card.innerHTML = `<span class="violation-time">🕒 ${item.upload_time}</span><span class="violation-page">📌 ${item.page_name}</span><div class="violation-text">${item.title}</div>`;
                     violContainer.appendChild(card);
                 });
             } else {
-                violContainer.innerHTML = '<div class="no-data">✅ Semua halaman aman!</div>';
+                violContainer.innerHTML = '<div class="no-data">✅ Semua halaman terpantau aman dan bersih!</div>';
             }
         });
 
@@ -450,7 +468,7 @@ Tonton selanjutnya☝️
                         queueContainer.appendChild(card);
                     });
                 } else {
-                    queueContainer.innerHTML = '<div class="no-data">🎉 Semua antrean video selesai!</div>';
+                    queueContainer.innerHTML = '<div class="no-data">🎉 Semua antrean video selesai diunggah!</div>';
                 }
             }).catch(() => {});
 
