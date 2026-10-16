@@ -16,9 +16,9 @@ if os.path.exists(report_file):
         with open(report_file, 'r') as f:
             report_data = json.load(f)
     except:
-        report_data = {"last_check": "", "total_warnings": 0, "violations": [], "pages_status": []}
+        report_data = {"last_check": "", "total_warnings": 0, "violations": [], "pages_status": [], "logs": []}
 else:
-    report_data = {"last_check": "", "total_warnings": 0, "violations": [], "pages_status": []}
+    report_data = {"last_check": "", "total_warnings": 0, "violations": [], "pages_status": [], "logs": []}
 
 current_violations = []
 pages_status_list = []
@@ -105,6 +105,17 @@ report_data["last_check"] = datetime.now().strftime("%d %b %Y, %H:%M:%S WIB")
 report_data["total_warnings"] = warning_count
 report_data["violations"] = current_violations
 report_data["pages_status"] = pages_status_list
+
+# =========================================================
+# 🧹 GARBAGE COLLECTOR: Mencegah file report.json membengkak
+# Membatasi maksimal hanya 100 riwayat terbaru yang disimpan
+# =========================================================
+if "logs" in report_data and isinstance(report_data["logs"], list) and len(report_data["logs"]) > 100:
+    report_data["logs"] = report_data["logs"][-100:]
+
+if "violations" in report_data and isinstance(report_data["violations"], list) and len(report_data["violations"]) > 100:
+    report_data["violations"] = report_data["violations"][-100:]
+# =========================================================
 
 with open(report_file, 'w') as f:
     json.dump(report_data, f, indent=4)
