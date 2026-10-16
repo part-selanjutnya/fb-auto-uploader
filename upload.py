@@ -2,6 +2,8 @@ import os
 import json
 import requests
 import datetime
+import time
+import random
 import gdown
 
 # Mendapatkan jam saat ini dalam waktu Indonesia (WIB / UTC+7)
@@ -105,7 +107,7 @@ if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
 file_size = os.path.getsize(output_filename)
 success_upload_count = 0
 
-# Mengunggah video menggunakan metode 3 tahap ke Fanpage tujuan
+# Mengunggah video menggunakan metode 3 tahap + 1 tahap Auto-Comment ke Fanpage tujuan
 for page in pages_data:
     page_token = page.get('token')
     page_id = page.get('id')
@@ -154,14 +156,48 @@ for page in pages_data:
             'publishing_phase': 'post'
         }).json()
         
-        if finish_res.get('success') or finish_res.get('id'):
+        new_video_id = finish_res.get('id') or finish_res.get('video_id')
+        
+        if finish_res.get('success') or new_video_id:
             print(f"-> Sukses terunggah sebagai Reels ke {page_name}!")
             success_upload_count += 1
+            
+            # TAHAP 4: AUTO-COMMENT AFILIASI (PENCETAK KOMISI)
+            if new_video_id:
+                # Mengambil baris pertama deskripsi (biasanya tautan landing page/Shopee)
+                first_line_link = video_desc.splitlines()[0] if video_desc else ""
+                
+                # Spintax variasi komentar agar aman dari algoritma spam Facebook
+                comment_variations = [
+                    f"👇 Tonton kelanjutannya / cek info selengkapnya di sini ya gais:\n{first_line_link}",
+                    f"🔥 Lanjut part berikutnya / cek link di sini:\n{first_line_link}",
+                    f"✨ Tonton selengkapnya di tautan ini:\n{first_line_link}",
+                    f"📌 Link lanjutannya sudah disiapin di sini ya:\n{first_line_link}"
+                ]
+                selected_comment = random.choice(comment_variations)
+                
+                comment_url = f"https://graph.facebook.com/v26.0/{new_video_id}/comments"
+                try:
+                    comment_res = requests.post(comment_url, data={
+                        'access_token': page_token,
+                        'message': selected_comment
+                    }).json()
+                    
+                    if comment_res.get('id'):
+                        print(f"   💬 [AUTO-COMMENT] Berhasil menaruh link komisi di komentar {page_name}!")
+                    else:
+                        print(f"   ⚠️ [AUTO-COMMENT] Gagal di {page_name}: {comment_res}")
+                except Exception as c_err:
+                    print(f"   ❌ [AUTO-COMMENT] Error di {page_name}: {c_err}")
+                    
         else:
             print(f"-> Gagal di Tahap Finish untuk {page_name}: {finish_res}")
             
     except Exception as e:
         print(f"-> Terjadi error saat mengunggah ke {page_name}: {e}")
+
+    # Jeda acak 3-6 detik antar Fanpage untuk menjaga reputasi jaringan dari kecurigaan spam
+    time.sleep(random.randint(3, 6))
 
 # Ubah status video yang baru saja diunggah menjadi 'completed'
 if success_upload_count > 0:
