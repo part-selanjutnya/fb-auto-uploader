@@ -58,10 +58,15 @@ def main():
     else:
         videos = []
         
+    # Cek apakah URL video sudah ada di antrean agar tidak duplikat
+    existing_urls = [v.get('url') for v in videos]
+    if new_video['url'] in existing_urls:
+        print("Video ini sudah ada di dalam antrean sebelumnya.")
+        return
+
     max_id = max([v.get('id', 0) for v in videos], default=0)
     new_id = max_id + 1
     
-    # Kumpulan variasi caption cerdas & spintax afiliasi otomatis
     base_link = "https://part-selanjutnya.github.io/Klik-disini/"
     hooks = [
         "Merinding banget endingnya! Wajib tonton sampai habis 👇",
@@ -74,6 +79,7 @@ def main():
     default_desc = f"{base_link}\n{selected_hook}\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"
     final_desc = new_video['caption'] if new_video['caption'] else default_desc
 
+    # Murni memasukkan ke antrean dengan status 'pending'
     video_entry = {
         "id": new_id,
         "url": new_video['url'],
@@ -89,7 +95,7 @@ def main():
     with open(VIDEOS_FILE, 'w') as f:
         json.dump(videos, f, indent=4)
         
-    print(f"Video Part {new_id} berhasil disinkronkan dan disiapkan secara otonom!")
+    print(f"Berhasil! Video Part {new_id} masuk ke antrean (Pending) dan siap dikelola dari Dasbor Web.")
 
 if __name__ == '__main__':
     main()
