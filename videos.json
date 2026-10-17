@@ -1,51 +1,16 @@
 [
     {
-        "id": 12,
-        "url": "https://drive.google.com/uc?export=download&id=18YnbvatHn1sfW7UPeD7wBmc8D-u5j_Uw&usp=sharing",
-        "title": "Klik selanjutnya",
-        "description": "https://part-selanjutnya.github.io/Klik-disini/\nTonton selanjutnya\u261d\ufe0f\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels",
+        "id": 13,
+        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_0.mp4",
+        "title": "Part 13 - Video Alur Cerita",
+        "description": "https://part-selanjutnya.github.io/Klik-disini/\nMerinding banget endingnya! Wajib tonton sampai habis \ud83d\udc47\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels",
         "target_pages": [
-            "Kopi Nusantara",
-            "Masa kini",
-            "Alur sbb",
-            "Ritme Video",
-            "Lokasari Pride",
-            "Part selanjutnya",
-            "Lihat selengkapnya",
-            "Cuplik Drama",
-            "Lanjut Part 2",
-            "Pengak",
-            "Cleomenes",
-            "Linda Haubrich",
-            "Alur GMS",
-            "Sempurna",
-            "Sapu Jagat",
-            "Kumbo Sanken",
-            "Gunung Sahari",
-            "Sedap Malam",
-            "Laskar Pagi",
-            "O T A K U Reel",
-            "Storymu",
-            "Sisi Lain",
-            "Titik Temu",
-            "Dengerin Dulu",
-            "Meong Story",
-            "Ruang Cerita",
-            "Jejak Kisah",
-            "Cerita senja",
-            "Lucius"
+            "Semua"
         ],
         "schedule_hours": [
-            4,
-            6,
-            8,
-            10,
             12,
-            14,
-            16,
-            18,
-            20,
-            22
+            17,
+            20
         ],
         "status": "completed"
     }
