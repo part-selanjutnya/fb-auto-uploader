@@ -2,8 +2,6 @@ name: Facebook Auto Uploader
 
 on:
   schedule:
-    # Berjalan otomatis 3 kali sehari (Pukul 12:00, 17:00, dan 20:00 WIB)
-    # Dikonversi ke waktu UTC (WIB dikurangi 7 jam): 05:00, 10:00, 13:00 UTC
     - cron: '0 5,10,13 * * *'
     
   workflow_dispatch:
@@ -30,6 +28,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests gdown
 
+      - name: Sync Video from Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python telegram_sync.py
+
       - name: Run Upload Script
         run: python upload.py
 
@@ -42,5 +45,5 @@ jobs:
           git pull origin main --rebase
           git stash pop || true
           git add videos.json
-          git commit -m "Auto-update status video setelah unggah" || exit 0
+          git commit -m "Auto-update antrean dari Telegram & Upload" || exit 0
           git push origin main
