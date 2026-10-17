@@ -2,7 +2,8 @@ name: Facebook Auto Uploader
 
 on:
   schedule:
-    - cron: '0 5,10,13 * * *'
+    # Sinkronisasi Telegram otomatis setiap jam, agar video langsung masuk antrean web
+    - cron: '0 * * * *'
     
   workflow_dispatch:
   repository_dispatch:
@@ -12,14 +13,14 @@ permissions:
   contents: write
 
 jobs:
-  upload:
+  sync_and_upload:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: setup-python@v5
         with:
           python-version: '3.10'
 
@@ -29,15 +30,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests gdown
 
-      - name: Sync Video from Telegram
+      # 1. Jalankan sinkronisasi Telegram untuk menangkap video baru & memasukkannya ke antrean pending
+      - name: Sync Video from Telegram to Queue
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: python telegram_sync.py
 
-      - name: Run Upload Script
+      # 2. Jalankan skrip upload (hanya akan mengeksekusi jika ada jadwal jam cron yang cocok atau via tombol Instant Upload)
+      - name: Run Upload Script if Scheduled or Triggered
         run: python upload.py
 
-      - name: Commit and Push changes
+      - name: Commit and Push changes to GitHub
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -46,5 +49,5 @@ jobs:
           git pull origin main --rebase
           git stash pop || true
           git add videos.json
-          git commit -m "Auto-update antrean dari Telegram & Upload otonom" || exit 0
+          git commit -m "Auto-sync queue from Telegram & process uploads" || exit 0
           git push origin main
