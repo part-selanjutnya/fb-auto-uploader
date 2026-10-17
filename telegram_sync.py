@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import random
 
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 VIDEOS_FILE = 'videos.json'
@@ -23,8 +24,8 @@ def get_latest_telegram_video():
             video = message.get('video') or message.get('document')
             if video:
                 file_id = video.get('file_id')
-                file_name = video.get('file_name', 'Video Telegram')
-                caption = message.get('caption', 'Alur Cerita Part')
+                file_name = video.get('file_name', 'Video Alur Cerita')
+                caption = message.get('caption', '')
                 
                 file_path_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={file_id}"
                 file_res = requests.get(file_path_url).json()
@@ -60,8 +61,18 @@ def main():
     max_id = max([v.get('id', 0) for v in videos], default=0)
     new_id = max_id + 1
     
-    default_desc = "https://part-selanjutnya.github.io/Klik-disini/\nTonton selanjutnya☝️\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"
-    final_desc = new_video['caption'] if new_video['caption'] != 'Alur Cerita Part' else default_desc
+    # Kumpulan variasi caption cerdas & spintax afiliasi otomatis
+    base_link = "https://part-selanjutnya.github.io/Klik-disini/"
+    hooks = [
+        "Merinding banget endingnya! Wajib tonton sampai habis 👇",
+        "Gila sih plot twist film ini di luar nurul! Cek kelanjutannya ☝️",
+        "Nyesel banget baru tahu film seru ini sekarang. Tonton part selanjutnya di sini:",
+        "Adegan paling bikin emosi ada di sini. Selengkapnya 👇"
+    ]
+    selected_hook = random.choice(hooks)
+    
+    default_desc = f"{base_link}\n{selected_hook}\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"
+    final_desc = new_video['caption'] if new_video['caption'] else default_desc
 
     video_entry = {
         "id": new_id,
@@ -78,7 +89,7 @@ def main():
     with open(VIDEOS_FILE, 'w') as f:
         json.dump(videos, f, indent=4)
         
-    print(f"Video Part {new_id} berhasil dimasukkan ke videos.json dari Telegram!")
+    print(f"Video Part {new_id} berhasil disinkronkan dan disiapkan secara otonom!")
 
 if __name__ == '__main__':
     main()
