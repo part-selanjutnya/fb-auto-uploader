@@ -102,10 +102,9 @@ if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) == 0:
     print("Gagal: File video kosong atau tidak berhasil diunduh.")
     exit(1)
 
-# --- MODUL KECerdasan: Mutasi Digital Hash Video via FFmpeg ---
+# --- MODUL KECERDASAN: Mutasi Digital Hash Video via FFmpeg ---
 print("🤖 Menjalankan Mutasi Digital Video (Anti-Duplicate Hash)...")
 try:
-    # Memangkas durasi sangat tipis (0.3 detik di awal) dan mengubah sedikit parameter video agar hash digital unik
     mutation_cmd = [
         'ffmpeg', '-i', raw_filename,
         '-ss', '0.3', 
@@ -132,6 +131,7 @@ for page in pages_data:
     page_name = page.get('name')
     
     if not page_token or not page_id:
+        print(f"-> Token atau ID kosong untuk halaman {page_name}")
         continue
         
     print(f"Mengunggah Reels otonom ke halaman: {page_name}...")
@@ -145,7 +145,7 @@ for page in pages_data:
         }).json()
         
         if 'upload_session_id' not in start_res:
-            print(f"-> Gagal di Tahap Start untuk {page_name}: {start_res}")
+            print(f"-> ❌ Gagal di Tahap Start untuk {page_name}: {start_res}")
             continue
             
         upload_session_id = start_res['upload_session_id']
@@ -174,7 +174,7 @@ for page in pages_data:
         new_video_id = finish_res.get('id') or finish_res.get('video_id')
         
         if finish_res.get('success') or new_video_id:
-            print(f"-> Sukses terunggah sebagai Reels ke {page_name}!")
+            print(f"-> ✅ Sukses terunggah sebagai Reels ke {page_name} (ID: {new_video_id})!")
             success_upload_count += 1
             
             if new_video_id:
@@ -195,10 +195,10 @@ for page in pages_data:
                 except:
                     pass
         else:
-            print(f"-> Gagal di Tahap Finish untuk {page_name}: {finish_res}")
+            print(f"-> ❌ Gagal di Tahap Finish untuk {page_name}: {finish_res}")
             
     except Exception as e:
-        print(f"-> Terjadi error saat mengunggah ke {page_name}: {e}")
+        print(f"-> ❌ Terjadi error exception saat mengunggah ke {page_name}: {e}")
 
     delay_time = random.randint(15, 30)
     print(f"⏳ Jeda organik pemulihan algoritma selama {delay_time} detik...")
@@ -208,8 +208,8 @@ if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
     
     cleaned_videos = []
-    completed_videos = [v for v in videos if v.get('status') == 'completed']
-    pending_videos = [v for v in videos if v.get('status') == 'pending']
+    completed_videos = [v for v in videos if v.get('status'] == 'completed']
+    pending_videos = [v for v in videos if v.get('status'] == 'pending']
     
     if completed_videos:
         cleaned_videos.append(completed_videos[-1])
