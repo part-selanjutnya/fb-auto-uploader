@@ -4,6 +4,7 @@ import requests
 import datetime
 import time
 import random
+import subprocess
 import gdown
 
 current_hour = (datetime.datetime.utcnow() + datetime.timedelta(hours=7)).hour
@@ -54,7 +55,7 @@ for index, video in enumerate(videos):
         if not is_instant_upload:
             schedule_hours = video.get('schedule_hours', [])
             if schedule_hours and current_hour not in schedule_hours:
-                print(f"Video ID {video.get('id')} dilewati (Dijadwalkan jam {schedule_hours}, sekarang jam {current_hour}).")
+                print(f"Video ID {video.get('id')} dilewati (Jadwal jam {schedule_hours}, sekarang jam {current_hour}).")
                 continue
         
         target_video = video
@@ -77,27 +78,48 @@ if is_instant_upload:
     pages_data = [p for p in all_pages if p.get('name') in target_pages_input]
     print(f"Mode Upload Instan - Target Fanpage: {target_pages_input}")
 elif video_targets and "Semua" not in video_targets:
-    # PERBAIKAN SINTAKS DI SINI (Menggunakan kurung siku yang benar)
     pages_data = [p for p in all_pages if p.get('name') in video_targets]
     print(f"Mode Jadwal Cron - Target Spesifik: {video_targets}")
 else:
     pages_data = all_pages
     print("Mode Otomatis - Semua Fanpage diproses.")
 
-output_filename = 'temp_video.mp4'
-if os.path.exists(output_filename):
-    os.remove(output_filename)
+raw_filename = 'raw_video.mp4'
+output_filename = 'final_video.mp4'
+
+for f_name in [raw_filename, output_filename]:
+    if os.path.exists(f_name):
+        os.remove(f_name)
 
 try:
     print("Mengunduh file video...")
-    gdown.download(video_url, output_filename, quiet=False)
+    gdown.download(video_url, raw_filename, quiet=False)
 except Exception as e:
     print(f"Gagal mengunduh video: {e}")
     exit(1)
 
-if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
+if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) == 0:
     print("Gagal: File video kosong atau tidak berhasil diunduh.")
     exit(1)
+
+# --- MODUL KECerdasan: Mutasi Digital Hash Video via FFmpeg ---
+print("🤖 Menjalankan Mutasi Digital Video (Anti-Duplicate Hash)...")
+try:
+    # Memangkas durasi sangat tipis (0.3 detik di awal) dan mengubah sedikit parameter video agar hash digital unik
+    mutation_cmd = [
+        'ffmpeg', '-i', raw_filename,
+        '-ss', '0.3', 
+        '-c:v', 'libx264', '-crf', '23',
+        '-c:a', 'aac', '-b:a', '128k',
+        output_filename, '-y'
+    ]
+    subprocess.run(mutation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+except Exception as e:
+    print(f"Mutasi FFmpeg dilewati, menggunakan video mentah: {e}")
+    output_filename = raw_filename
+
+if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
+    output_filename = raw_filename
 
 file_size = os.path.getsize(output_filename)
 success_upload_count = 0
@@ -112,7 +134,7 @@ for page in pages_data:
     if not page_token or not page_id:
         continue
         
-    print(f"Mengunggah Reels ke halaman: {page_name}...")
+    print(f"Mengunggah Reels otonom ke halaman: {page_name}...")
     video_graph_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
     
     try:
@@ -179,15 +201,15 @@ for page in pages_data:
         print(f"-> Terjadi error saat mengunggah ke {page_name}: {e}")
 
     delay_time = random.randint(15, 30)
-    print(f"⏳ Jeda pemulihan algoritma selama {delay_time} detik...")
+    print(f"⏳ Jeda organik pemulihan algoritma selama {delay_time} detik...")
     time.sleep(delay_time)
 
 if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
     
     cleaned_videos = []
-    completed_videos = [v for v in videos if v.get('status'] == 'completed']
-    pending_videos = [v for v in videos if v.get('status'] == 'pending']
+    completed_videos = [v for v in videos if v.get('status') == 'completed']
+    pending_videos = [v for v in videos if v.get('status') == 'pending']
     
     if completed_videos:
         cleaned_videos.append(completed_videos[-1])
@@ -199,7 +221,8 @@ if success_upload_count > 0:
     except:
         pass
 
-if os.path.exists(output_filename):
-    os.remove(output_filename)
+for f_name in [raw_filename, output_filename]:
+    if os.path.exists(f_name):
+        os.remove(f_name)
 
-print("Proses pemulihan & upload selesai.")
+print("Proses otonom mutasi & upload selesai.")
