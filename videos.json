@@ -13,5 +13,20 @@
             20
         ],
         "status": "completed"
+    },
+    {
+        "id": 14,
+        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_0.mp4",
+        "title": "Part 14 - Video Alur Cerita",
+        "description": "https://part-selanjutnya.github.io/Klik-disini/\nMerinding banget endingnya! Wajib tonton sampai habis \ud83d\udc47\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels",
+        "target_pages": [
+            "Semua"
+        ],
+        "schedule_hours": [
+            12,
+            17,
+            20
+        ],
+        "status": "pending"
     }
 ]
