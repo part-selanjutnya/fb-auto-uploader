@@ -12,7 +12,7 @@
         .btn-sync:hover { background: #219150; }
         .btn-edit { background: #3498db; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         table { width: 100%; background: #fff; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background: #2c3e50; color: #fff; }
         tr:hover { background: #f1f1f1; }
         .status-pending { color: #e67e22; font-weight: bold; }
@@ -29,6 +29,10 @@
         .btn-save { background: #e74c3c; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
         .btn-cancel { background: #95a5a6; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
         .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-top: 5px;}
+        
+        /* Thumbnail Style */
+        .video-thumbnail { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-right: 15px; flex-shrink: 0; }
+        .title-container { display: flex; align-items: center; }
     </style>
 </head>
 <body>
@@ -45,8 +49,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Judul Video</th>
+                    <th style="width: 50px;">ID</th>
+                    <th>Detail Video</th>
                     <th>Status</th>
                     <th>Aksi</th>
                 </tr>
@@ -93,17 +97,13 @@
         const REPO_OWNER = 'part-selanjutnya'; 
         const REPO_NAME = 'fb-auto-uploader';
 
-        // 1. Fungsi Memuat Data (Anti Error)
         async function loadVideos() {
             const tbody = document.getElementById('video-list');
             try {
                 const cacheBuster = new Date().getTime();
                 const response = await fetch('videos.json?t=' + cacheBuster);
                 
-                if (!response.ok) {
-                    throw new Error('Gagal memuat JSON');
-                }
-                
+                if (!response.ok) throw new Error('Gagal memuat JSON');
                 const videos = await response.json();
                 
                 if (!Array.isArray(videos) || videos.length === 0) {
@@ -126,23 +126,30 @@
                         actionHtml = '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')">✏️ Edit Afiliasi</button>';
                     }
 
+                    // Logika Thumbnail Gambar
+                    let thumbHtml = '';
+                    if (video.thumbnail) {
+                        thumbHtml = '<img src="' + video.thumbnail + '" class="video-thumbnail" alt="Thumb">';
+                    } else {
+                        thumbHtml = '<div class="video-thumbnail" style="background:#eee; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; border: 1px dashed #ccc;">No Cover</div>';
+                    }
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = '<td>#' + video.id + '</td>' +
-                                   '<td>' + (video.title || 'Tanpa Judul') + '</td>' +
+                                   '<td><div class="title-container">' + thumbHtml + '<span style="font-weight:600;">' + (video.title || 'Tanpa Judul') + '</span></div></td>' +
                                    '<td class="' + statusClass + '">' + statusText + '</td>' +
                                    '<td>' + actionHtml + '</td>';
                     tbody.appendChild(tr);
                 });
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat daftar video. (Pastikan videos.json tidak kosong)</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat daftar video.</td></tr>';
             }
         }
 
-        // 2. Fungsi Tombol Tarik Video
         window.triggerTelegramSync = function() {
             let token = localStorage.getItem('github_pat');
             if (!token) {
-                token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\n(Token harus berawalan ghp_...)");
+                token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\\n(Token harus berawalan ghp_...)");
                 if (!token) return;
                 localStorage.setItem('github_pat', token);
             }
@@ -158,29 +165,17 @@
                 body: JSON.stringify({ event_type: 'instant_upload' })
             })
             .then(function(res) {
-                if(res.ok) {
-                    alert('✅ Sukses! Perintah ditarik. Tunggu 1 menit lalu refresh halaman ini.');
-                } else {
-                    if (res.status === 401 || res.status === 403) {
-                        alert('❌ Token salah atau kadaluarsa. Silakan klik Reset Token Akses.');
-                        localStorage.removeItem('github_pat');
-                    } else {
-                        alert('❌ Gagal mengirim perintah. Status: ' + res.status);
-                    }
-                }
+                if(res.ok) alert('✅ Sukses! Perintah ditarik. Tunggu 1 menit lalu refresh halaman ini.');
+                else alert('❌ Gagal. Pastikan Token benar dan belum kadaluarsa.');
             })
-            .catch(function(err) {
-                alert('❌ Terjadi kesalahan jaringan. Cek koneksi Anda.');
-            });
+            .catch(function(err) { alert('❌ Terjadi kesalahan jaringan.'); });
         };
 
-        // 3. Fungsi Reset Token
         window.resetToken = function() {
             localStorage.removeItem('github_pat');
-            alert("Token berhasil dihapus! Klik tombol hijau untuk memasukkan token baru.");
+            alert("Token dihapus! Klik tombol hijau untuk memasukkan token baru.");
         };
 
-        // 4. Fungsi Buka & Tutup Edit Modal
         window.openEditModal = function(id, desc, comment, link) {
             document.getElementById('editModal').style.display = 'flex';
             document.getElementById('modeManual').checked = true;
@@ -190,11 +185,8 @@
             window.toggleMode();
         };
 
-        window.closeModal = function() {
-            document.getElementById('editModal').style.display = 'none';
-        };
+        window.closeModal = function() { document.getElementById('editModal').style.display = 'none'; };
 
-        // 5. Fungsi Mode Otomatis / Manual
         window.toggleMode = function() {
             const isAuto = document.getElementById('modeOtomatis').checked;
             const descField = document.getElementById('modalDesc');
@@ -216,11 +208,10 @@
         };
 
         window.saveVideoEdit = function() {
-            alert("⚠️ Catatan: Mode web statis. (Diperlukan workflow Actions terpisah jika ingin menyimpan data ke repositori).");
+            alert("⚠️ Catatan: Mode web statis.");
             window.closeModal();
         };
 
-        // Muat tabel secara otomatis saat halaman pertama kali dibuka
         window.addEventListener('DOMContentLoaded', loadVideos);
     </script>
 </body>
