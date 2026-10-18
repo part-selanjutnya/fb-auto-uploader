@@ -5,60 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dasbor FB Auto Uploader - CEO Panel</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        h1 { margin: 0; font-size: 24px; color: #2c3e50; }
-        .btn-sync { background: #27ae60; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 10px; color: #333; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; flex-direction: column; gap: 10px; text-align: center; }
+        
+        @media(min-width: 600px) {
+            .header { flex-direction: row; text-align: left; padding: 15px 25px; }
+            body { padding: 20px; }
+        }
+
+        h1 { margin: 0; font-size: 20px; color: #2c3e50; }
+        @media(min-width: 600px) { h1 { font-size: 24px; } }
+
+        .btn-sync { background: #27ae60; color: #fff; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; font-size: 14px; }
+        @media(min-width: 600px) { .btn-sync { width: auto; } }
         .btn-sync:hover { background: #219150; }
         
+        /* Navigasi Tab Menu */
+        .tab-container { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; }
+        .tab-btn { flex: 1; background: #bdc3c7; color: #2c3e50; border: none; padding: 10px 5px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 13px; text-align: center; }
+        .tab-btn.active { background: #2c3e50; color: #fff; }
+
         /* Tombol Aksi Tabel */
-        .btn-edit { background: #3498db; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-upload { background: #9b59b6; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .action-buttons { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+        .btn-edit { background: #3498db; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-upload { background: #9b59b6; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
         
-        table { width: 100%; background: #fff; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
-        th { background: #2c3e50; color: #fff; }
+        .table-responsive { width: 100%; background: #fff; border-radius: 10px; overflow-x: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: top; font-size: 13px; }
+        th { background: #2c3e50; color: #fff; font-size: 14px; }
         tr:hover { background: #f1f1f1; }
         .status-pending { color: #e67e22; font-weight: bold; }
         .status-completed { color: #27ae60; font-weight: bold; }
         
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; }
-        .modal-content { background: #fff; padding: 25px; border-radius: 10px; width: 450px; max-width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .modal-content h3 { margin-top: 0; color: #2c3e50; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        textarea, input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
-        .radio-group { margin-bottom: 15px; display: flex; gap: 15px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        .btn-save { background: #e74c3c; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .btn-cancel { background: #95a5a6; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-top: 5px;}
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; padding: 15px; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 10px; width: 100%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .modal-content h3 { margin-top: 0; color: #2c3e50; font-size: 18px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+        textarea, input[type="text"], input[type="datetime-local"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: inherit; font-size: 14px; }
+        .radio-group { margin-bottom: 12px; display: flex; gap: 15px; font-size: 13px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+        .btn-save { background: #e74c3c; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-cancel { background: #95a5a6; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; margin-top: 5px;}
         
-        .video-thumbnail { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-right: 15px; flex-shrink: 0; }
-        .title-container { display: flex; align-items: center; }
+        .video-thumbnail { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-right: 10px; flex-shrink: 0; }
+        @media(min-width: 600px) { .video-thumbnail { width: 70px; height: 70px; } }
+        
+        .content-flex { display: flex; align-items: flex-start; }
+        .meta-text { font-size: 11px; color: #555; margin-top: 3px; word-break: break-all; }
+        @media(min-width: 600px) { .meta-text { font-size: 13px; } }
+        .link-text { color: #2980b9; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>
-            <h1>🚀 Dasbor Antrean Video Afiliasi</h1>
+        <div style="width: 100%;">
+            <h1>🚀 Dasbor FB Auto Uploader</h1>
             <button class="btn-reset" onclick="resetToken()">Reset Token Akses</button>
         </div>
-        <div>
+        <div style="width: 100%;">
             <button class="btn-sync" onclick="triggerTelegramSync()">🔄 Tarik Video Telegram (Tanpa Upload)</button>
         </div>
     </div>
 
-    <div style="overflow-x: auto;">
+    <!-- MENU TAB NAVIGASI -->
+    <div class="tab-container">
+        <button id="tabPendingBtn" class="tab-btn active" onclick="switchTab('pending')">📋 Antrean (<span id="countPending">0</span>)</button>
+        <button id="tabCompletedBtn" class="tab-btn" onclick="switchTab('completed')">✅ Selesai (<span id="countCompleted">0</span>)</button>
+    </div>
+
+    <div class="table-responsive">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 50px;">ID</th>
-                    <th>Detail Video</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
+                    <th style="width: 40px;">ID</th>
+                    <th>Detail Konten & Atribut Afiliasi</th>
+                    <th style="width: 90px;">Status</th>
+                    <th style="width: 90px;">Aksi</th>
                 </tr>
             </thead>
             <tbody id="video-list">
@@ -73,8 +102,8 @@
             <h3>⚙️ Konfigurasi Video & Afiliasi</h3>
             
             <div class="radio-group">
-                <label><input type="radio" name="editMode" id="modeOtomatis" value="auto" onchange="toggleMode()"> 🤖 Mode Otomatis</label>
-                <label><input type="radio" name="editMode" id="modeManual" value="manual" onchange="toggleMode()" checked> ✍️ Mode Manual</label>
+                <label><input type="radio" name="editMode" id="modeOtomatis" value="auto" onchange="toggleMode()"> 🤖 Otomatis</label>
+                <label><input type="radio" name="editMode" id="modeManual" value="manual" onchange="toggleMode()" checked> ✍️ Manual</label>
             </div>
 
             <div class="form-group">
@@ -94,7 +123,7 @@
 
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal()">Batal</button>
-                <button class="btn-save" onclick="saveVideoEdit()">💾 Simpan Ke Server</button>
+                <button class="btn-save" onclick="saveVideoEdit()">💾 Simpan</button>
             </div>
         </div>
     </div>
@@ -103,18 +132,18 @@
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <h3>🚀 Jadwal & Upload Video</h3>
-            <p style="font-size: 14px; color: #555;">Atur kapan video ini akan dipublikasikan ke Facebook.</p>
+            <p style="font-size: 13px; color: #555;">Atur jadwal tayang atau langsung upload sekarang.</p>
             
             <div class="form-group">
                 <label>Pilih Tanggal & Jam (WIB):</label>
-                <input type="datetime-local" id="uploadDateTime" style="font-size: 16px;">
+                <input type="datetime-local" id="uploadDateTime">
             </div>
 
-            <div class="modal-actions" style="justify-content: space-between; align-items: center; margin-top: 25px;">
+            <div class="modal-actions" style="justify-content: space-between; align-items: center; margin-top: 15px;">
                 <button class="btn-cancel" onclick="closeUploadModal()">Batal</button>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-sync" onclick="saveUploadSchedule()">💾 Simpan Jadwal</button>
-                    <button class="btn-save" style="background:#8e44ad;" onclick="uploadVideoNow()">⚡ Upload Sekarang</button>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button class="btn-sync" style="padding: 8px 10px; font-size: 12px;" onclick="saveUploadSchedule()">💾 Jadwal</button>
+                    <button class="btn-save" style="background:#8e44ad; padding: 8px 10px; font-size: 12px;" onclick="uploadVideoNow()">⚡ Upload</button>
                 </div>
             </div>
         </div>
@@ -124,6 +153,7 @@
         const REPO_OWNER = 'part-selanjutnya'; 
         const REPO_NAME = 'fb-auto-uploader';
         window.allVideos = [];
+        window.currentTab = 'pending';
         window.currentUploadVideoId = null;
 
         async function loadVideos() {
@@ -134,16 +164,26 @@
                 if (!response.ok) throw new Error('Gagal memuat JSON');
                 window.allVideos = await response.json();
                 
-                if (!Array.isArray(window.allVideos) || window.allVideos.length === 0) {
-                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada antrean video</td></tr>';
+                if (!Array.isArray(window.allVideos)) window.allVideos = [];
+
+                const pendingList = window.allVideos.filter(v => v.status === 'pending');
+                const completedList = window.allVideos.filter(v => v.status === 'completed');
+                
+                document.getElementById('countPending').innerText = pendingList.length;
+                document.getElementById('countCompleted').innerText = completedList.length;
+
+                const activeData = window.currentTab === 'pending' ? pendingList : completedList;
+
+                if (activeData.length === 0) {
+                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 25px; color:#7f8c8d;">Tidak ada data pada menu ini.</td></tr>';
                      return;
                 }
 
                 tbody.innerHTML = '';
-                window.allVideos.forEach(function(video) {
+                activeData.forEach(function(video) {
                     const isPending = video.status === 'pending';
                     const statusClass = isPending ? 'status-pending' : 'status-completed';
-                    let statusText = isPending ? 'Menunggu Antrean' : 'Selesai Terunggah';
+                    let statusText = isPending ? 'Pending' : 'Selesai';
                     
                     const desc = video.description ? video.description.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
                     const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
@@ -151,31 +191,47 @@
 
                     let actionHtml = '<span>-</span>';
                     if (isPending) {
-                        actionHtml = '<div style="display:flex; gap:5px; flex-wrap:wrap;">' +
+                        actionHtml = '<div class="action-buttons">' +
                                      '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')">✏️ Edit</button>' +
                                      '<button class="btn-upload" onclick="openUploadModal(' + video.id + ')">🚀 Upload</button>' +
                                      '<button class="btn-delete" onclick="deleteVideo(' + video.id + ')">🗑️ Hapus</button>' +
                                      '</div>';
                     }
 
-                    // Tampilkan info jadwal jika ada
-                    let scheduleHtml = '';
+                    let scheduleDisplay = '<br><span style="color:#e67e22; font-size:11px;">⏰ Status: Otomatis</span>';
                     if (video.scheduled_time && isPending) {
                         const schDate = new Date(video.scheduled_time);
-                        scheduleHtml = '<br><small style="color:#8e44ad; font-weight:bold;">🕒 Terjadwal: ' + schDate.toLocaleString('id-ID') + '</small>';
+                        scheduleDisplay = '<br><span style="color:#8e44ad; font-weight:bold; font-size:11px;">🕒 ' + schDate.toLocaleString('id-ID') + '</span>';
+                    } else if (!isPending) {
+                        scheduleDisplay = '<br><span style="color:#27ae60; font-weight:bold; font-size:11px;">✅ Terunggah</span>';
                     }
+
+                    let descPreview = video.description ? '<div class="meta-text"><b>📝</b> ' + escapeHtml(video.description) + '</div>' : '';
+                    let commentPreview = video.comment_text ? '<div class="meta-text"><b>💬</b> ' + escapeHtml(video.comment_text) + '</div>' : '';
+                    let linkPreview = video.redirect_link ? '<div class="meta-text"><b>🔗</b> <a href="' + video.redirect_link + '" target="_blank" class="link-text">Link Afiliasi</a></div>' : '';
 
                     let thumbHtml = '';
                     if (video.thumbnail) {
                         thumbHtml = '<img src="' + video.thumbnail + '" class="video-thumbnail" alt="Thumb">';
                     } else {
-                        thumbHtml = '<div class="video-thumbnail" style="background:#eee; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; border: 1px dashed #ccc;">No Cover</div>';
+                        thumbHtml = '<div class="video-thumbnail" style="background:#eee; display:flex; align-items:center; justify-content:center; font-size:9px; color:#999; border: 1px dashed #ccc;">No Cover</div>';
                     }
 
                     const tr = document.createElement('tr');
-                    tr.innerHTML = '<td>#' + video.id + '</td>' +
-                                   '<td><div class="title-container">' + thumbHtml + '<div><span style="font-weight:600;">' + (video.title || 'Tanpa Judul') + '</span>' + scheduleHtml + '</div></div></td>' +
-                                   '<td class="' + statusClass + '">' + statusText + '</td>' +
+                    tr.innerHTML = '<td style="font-weight:bold;">#' + video.id + '</td>' +
+                                   '<td>' +
+                                       '<div class="content-flex">' +
+                                           thumbHtml +
+                                           '<div style="flex:1; min-width: 0;">' +
+                                               '<span style="font-weight:700; font-size:13px; color:#2c3e50; display:block; word-break: break-word;">' + (video.title || 'Tanpa Judul') + '</span>' +
+                                               scheduleDisplay +
+                                               descPreview +
+                                               commentPreview +
+                                               linkPreview +
+                                           '</div>' +
+                                       '</div>' +
+                                   '</td>' +
+                                   '<td class="' + statusClass + '" style="font-size:12px;">' + statusText + '</td>' +
                                    '<td>' + actionHtml + '</td>';
                     tbody.appendChild(tr);
                 });
@@ -184,10 +240,22 @@
             }
         }
 
+        window.switchTab = function(tabName) {
+            window.currentTab = tabName;
+            document.getElementById('tabPendingBtn').className = tabName === 'pending' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tabCompletedBtn').className = tabName === 'completed' ? 'tab-btn active' : 'tab-btn';
+            loadVideos();
+        };
+
+        function escapeHtml(text) {
+            if(!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
         function checkToken() {
             let token = localStorage.getItem('github_pat');
             if (!token) {
-                token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\\n(Token harus berawalan ghp_...)");
+                token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\n(Token harus berawalan ghp_...)");
                 if (token) localStorage.setItem('github_pat', token);
             }
             return token;
@@ -223,24 +291,21 @@
         window.triggerTelegramSync = function() {
             const token = checkToken();
             if(!token) return;
-            if(!confirm("Tarik video dari Telegram ke antrean (Tanpa di-upload)?")) return;
+            if(!confirm("Tarik video dari Telegram ke antrean?")) return;
             
             fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
                 method: 'POST',
                 headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
                 body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'sync_only' } })
             }).then(res => {
-                if(res.ok) alert('✅ Perintah ditarik! Video akan masuk ke antrean pending.');
+                if(res.ok) alert('✅ Perintah ditarik! Video masuk ke antrean pending.');
                 else alert('❌ Gagal. Token mungkin salah.');
             });
         };
 
-        // --- FUNGSI MODAL UPLOAD ---
         window.openUploadModal = function(id) {
             window.currentUploadVideoId = id;
             document.getElementById('uploadModal').style.display = 'flex';
-            
-            // Set waktu default ke waktu saat ini
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('uploadDateTime').value = now.toISOString().slice(0,16);
@@ -253,51 +318,35 @@
             if(!dt) return alert('Pilih tanggal dan jam terlebih dahulu!');
             
             window.closeUploadModal();
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan jadwal ke server...</td></tr>';
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan jadwal...</td></tr>';
             
             const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
             if (vIndex !== -1) {
-                window.allVideos[vIndex].scheduled_time = dt; // format: YYYY-MM-DDTHH:mm
-                const success = await updateVideosFile(window.allVideos, "Atur jadwal upload video ID #" + window.currentUploadVideoId);
-                
-                if(success) {
-                    alert('✅ Jadwal berhasil disimpan!');
-                    setTimeout(loadVideos, 2000);
-                } else {
-                    alert('❌ Gagal menyimpan jadwal.');
-                    loadVideos();
-                }
+                window.allVideos[vIndex].scheduled_time = dt;
+                const success = await updateVideosFile(window.allVideos, "Atur jadwal upload ID #" + window.currentUploadVideoId);
+                if(success) { alert('✅ Jadwal disimpan!'); setTimeout(loadVideos, 2000); } else { alert('❌ Gagal.'); loadVideos(); }
             }
         };
 
         window.uploadVideoNow = function() {
             const token = checkToken();
             if(!token) return;
-            if(!confirm("⚡ Yakin ingin MENGUPLOAD video ID #" + window.currentUploadVideoId + " ini SEKARANG juga?")) return;
+            if(!confirm("⚡ Upload video ID #" + window.currentUploadVideoId + " sekarang?")) return;
             
             window.closeUploadModal();
-            
             fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
                 method: 'POST',
                 headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
-                body: JSON.stringify({ 
-                    event_type: 'instant_upload', 
-                    client_payload: { 
-                        command: 'upload_now',
-                        video_id: window.currentUploadVideoId
-                    } 
-                })
-            })
-            .then(res => {
-                if(res.ok) alert('🚀 Perintah Upload Instan dilesatkan! Proses memakan waktu 2-3 menit, silakan cek Facebook Anda nanti.');
-                else alert('❌ Gagal mengirim perintah ke server.');
+                body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'upload_now', video_id: window.currentUploadVideoId } })
+            }).then(res => {
+                if(res.ok) alert('🚀 Perintah Upload dikirim! Cek Facebook dalam 1-2 menit.');
+                else alert('❌ Gagal mengirim perintah.');
             });
         };
-        // ---------------------------
 
         window.deleteVideo = async function(id) {
-            if(!confirm("Yakin ingin MENGHAPUS video ID #" + id + "?")) return;
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menghapus data...</td></tr>';
+            if(!confirm("Hapus video ID #" + id + "?")) return;
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menghapus...</td></tr>';
             const updatedVideos = window.allVideos.filter(v => v.id !== id);
             const success = await updateVideosFile(updatedVideos, "Menghapus video ID #" + id);
             if(success) setTimeout(loadVideos, 2000); else loadVideos();
@@ -332,10 +381,10 @@
 
         window.saveVideoEdit = async function() {
             window.closeModal();
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan metadata...</td></tr>';
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan...</td></tr>';
             const vIndex = window.allVideos.findIndex(v => v.id === window.currentEditingVideoId);
             if (vIndex !== -1) {
-                window.allVideos[vIndex].description = document.getElementById('modalDesc').value;
+                window.allVideos[vIndex].description = document.getElementById('modalDesc'>value || document.getElementById('modalDesc').value;
                 window.allVideos[vIndex].comment_text = document.getElementById('modalComment').value;
                 window.allVideos[vIndex].redirect_link = document.getElementById('modalLink').value;
                 const success = await updateVideosFile(window.allVideos, "Update metadata ID #" + window.currentEditingVideoId);
