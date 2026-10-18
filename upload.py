@@ -7,12 +7,9 @@ import random
 import subprocess
 import gdown
 
-# --- 1. SISTEM REM DARURAT TINGKAT DEWA ---
 event_name = os.environ.get('GITHUB_EVENT_NAME', '')
-
-# A. Jika workflow nyala karena ada file yang di-save/hapus dari Web (Event: Push)
 if event_name == 'push':
-    print("Aktivitas Edit/Hapus dari Web terdeteksi. Skrip Upload DIBEKUKAN agar video tetap aman di antrean.")
+    print("Aktivitas Edit/Hapus/Atur Jadwal dari Web terdeteksi. Skrip Upload DIBEKUKAN.")
     exit(0)
 
 current_hour = (datetime.datetime.utcnow() + datetime.timedelta(hours=7)).hour
@@ -44,6 +41,8 @@ except Exception as e:
 
 target_pages_input = []
 is_instant_upload = False
+target_video_id_inst = None
+
 event_path = os.environ.get('GITHUB_EVENT_PATH')
 if event_path and os.path.exists(event_path):
     try:
@@ -51,14 +50,15 @@ if event_path and os.path.exists(event_path):
             event_data = json.load(f)
             payload = event_data.get('client_payload', {})
             
-            # B. Jika perintah dari tombol Tarik Data Web (Event: sync_only)
-            if payload.get('command') == 'sync_only':
-                print("Mode Tarik Data Aktif: Skrip upload dihentikan agar video masuk antrean (Pending).")
+            command = payload.get('command')
+            if command == 'sync_only':
+                print("Mode Tarik Data Aktif: Skrip upload dihentikan.")
                 exit(0)
-            
-            target_pages_input = payload.get('target_pages', [])
-            if target_pages_input:
+            elif command == 'upload_now':
+                target_video_id_inst = payload.get('video_id')
                 is_instant_upload = True
+                print(f"⚡ Mode Upload Instan dipicu langsung dari Dasbor untuk Video ID: {target_video_id_inst}")
+                
     except Exception as e:
         print(f"Error membaca event payload: {e}")
 
@@ -67,18 +67,37 @@ target_index = -1
 
 for index, video in enumerate(videos):
     if video.get('status') == 'pending':
-        if not is_instant_upload:
-            schedule_hours = video.get('schedule_hours', [])
-            if schedule_hours and current_hour not in schedule_hours:
-                print(f"Video ID {video.get('id')} dilewati (Jadwal jam {schedule_hours}, sekarang jam {current_hour}).")
-                continue
         
-        target_video = video
-        target_index = index
-        break
+        # 1. Jika tombol "Upload Sekarang" dari web diklik untuk video tertentu
+        if is_instant_upload and target_video_id_inst is not None:
+            if video.get('id') == target_video_id_inst:
+                target_video = video
+                target_index = index
+                break
+        
+        # 2. Jika berjalan otomatis (Cron Job / Tanpa perintah instan)
+        elif not is_instant_upload:
+            scheduled_time_str = video.get('scheduled_time')
+            if scheduled_time_str:
+                try:
+                    # Parse tanggal & jam dari format HTML datetime-local (YYYY-MM-DDTHH:MM)
+                    sch_dt = datetime.datetime.strptime(scheduled_time_str, "%Y-%m-%dT%H:%M")
+                    now_wib = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
+                    
+                    # Jika jam saat ini belum melewati jadwal yang diatur di web, lewati video ini
+                    if now_wib < sch_dt:
+                        print(f"Video ID {video.get('id')} masih Ditunda. (Jadwal Tayang: {scheduled_time_str}, Waktu Sekarang: {now_wib.strftime('%Y-%m-%dT%H:%M')})")
+                        continue
+                except Exception as e:
+                    print(f"Format jadwal salah untuk video {video.get('id')}")
+            
+            # Jika video tersebut tidak ada jadwal atau jadwalnya sudah terlewati, upload!
+            target_video = video
+            target_index = index
+            break
 
 if not target_video:
-    print("Tidak ada video pending yang cocok dengan jadwal jam saat ini.")
+    print("Tidak ada video pending yang masuk jadwal atau cocok untuk diproses saat ini.")
     exit(0)
 
 video_id_db = target_video.get('id')
@@ -91,12 +110,8 @@ video_targets = target_video.get('target_pages', ["Semua"])
 
 print(f"Memproses video ID: {video_id_db} - {video_title}")
 
-if is_instant_upload:
-    pages_data = [p for p in all_pages if p.get('name') in target_pages_input]
-    print(f"Mode Upload Instan - Target Fanpage: {target_pages_input}")
-elif video_targets and "Semua" not in video_targets:
+if video_targets and "Semua" not in video_targets:
     pages_data = [p for p in all_pages if p.get('name') in video_targets]
-    print(f"Mode Jadwal Cron - Target Spesifik: {video_targets}")
 else:
     pages_data = all_pages
     print("Mode Otomatis - Semua Fanpage diproses.")
@@ -153,13 +168,7 @@ for page in pages_data:
     video_graph_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
     
     try:
-        start_res = requests.post(video_graph_url, data={
-            'access_token': page_token,
-            'upload_phase': 'start',
-            'file_size': file_size,
-            'media_type': 'REELS'
-        }).json()
-        
+        start_res = requests.post(video_graph_url, data={'access_token': page_token, 'upload_phase': 'start', 'file_size': file_size, 'media_type': 'REELS'}).json()
         if 'upload_session_id' not in start_res:
             continue
             
@@ -171,21 +180,9 @@ for page in pages_data:
             video_file.seek(start_offset)
             chunk_data = video_file.read(end_offset - start_offset)
             
-        transfer_res = requests.post(video_graph_url, data={
-            'access_token': page_token,
-            'upload_phase': 'transfer',
-            'upload_session_id': upload_session_id,
-            'start_offset': start_offset
-        }, files={'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}).json()
+        requests.post(video_graph_url, data={'access_token': page_token, 'upload_phase': 'transfer', 'upload_session_id': upload_session_id, 'start_offset': start_offset}, files={'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}).json()
         
-        finish_res = requests.post(video_graph_url, data={
-            'access_token': page_token,
-            'upload_phase': 'finish',
-            'upload_session_id': upload_session_id,
-            'description': f"{video_title}\n\n{video_desc}",
-            'media_type': 'REELS',
-            'video_state': 'PUBLISHED'
-        }).json()
+        finish_res = requests.post(video_graph_url, data={'access_token': page_token, 'upload_phase': 'finish', 'upload_session_id': upload_session_id, 'description': f"{video_title}\n\n{video_desc}", 'media_type': 'REELS', 'video_state': 'PUBLISHED'}).json()
         
         new_video_id = finish_res.get('id') or finish_res.get('video_id')
         
@@ -205,9 +202,8 @@ for page in pages_data:
                         final_comment = f"👇 Lanjutannya ada di link ini ya:\n{first_line_link}"
 
                 if final_comment:
-                    comment_url = f"https://graph.facebook.com/v26.0/{new_video_id}/comments"
                     try:
-                        requests.post(comment_url, data={'access_token': page_token, 'message': final_comment})
+                        requests.post(f"https://graph.facebook.com/v26.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment})
                     except:
                         pass
     except Exception as e:
