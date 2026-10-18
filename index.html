@@ -3,498 +3,554 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dasbor FB Auto Uploader - CEO Panel</title>
+    <title>FB Auto Uploader Pro - Automation Empire</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 10px; color: #333; }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; flex-direction: column; gap: 10px; text-align: center; }
-        
-        @media(min-width: 600px) {
-            .header { flex-direction: row; text-align: left; padding: 15px 25px; }
-            body { padding: 20px; }
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #334155;
+            --border: #e2e8f0;
         }
 
-        h1 { margin: 0; font-size: 20px; color: #2c3e50; }
-        @media(min-width: 600px) { h1 { font-size: 24px; } }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 12px; color: var(--text); }
+        
+        .container { max-width: 800px; margin: 0 auto; }
 
-        .btn-sync { background: #27ae60; color: #fff; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; font-size: 14px; }
-        .btn-sync:hover { background: #219150; }
+        .header { background: var(--card-bg); padding: 16px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border); }
         
-        .tab-container { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; position: relative; z-index: 10; }
-        .tab-btn { flex: 1; background: #bdc3c7; color: #2c3e50; border: none; padding: 12px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 14px; text-align: center; -webkit-tap-highlight-color: transparent; }
-        .tab-btn.active { background: #2c3e50; color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .brand-area { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        h1 { margin: 0; font-size: 20px; color: var(--dark); display: flex; align-items: center; gap: 8px; }
+        
+        .top-actions { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; }
+        
+        .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1; text-decoration: none; }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
 
-        .action-buttons { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-        .btn-edit { background: #3498db; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-upload { background: #9b59b6; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .tab-container { display: flex; gap: 8px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; background: #e2e8f0; color: var(--dark); border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; text-align: center; }
+        .tab-btn.active { background: var(--dark); color: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+
+        .table-responsive { width: 100%; background: var(--card-bg); border-radius: 12px; overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; min-width: 350px; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 13px; }
+        th { background: #f1f5f9; color: var(--dark); font-weight: 600; }
+        tr:hover { background: #f8fafc; }
         
-        .table-responsive { width: 100%; background: #fff; border-radius: 10px; overflow-x: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 320px; table-layout: auto; }
-        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: top; font-size: 12px; }
-        @media(min-width: 600px) { th, td { padding: 12px 15px; font-size: 13px; } }
-        th { background: #2c3e50; color: #fff; font-size: 13px; }
-        tr:hover { background: #f1f1f1; }
-        .status-pending { color: #e67e22; font-weight: bold; }
-        .status-completed { color: #27ae60; font-weight: bold; }
+        .status-pending { color: var(--warning); font-weight: 600; }
+        .status-completed { color: var(--success); font-weight: 600; }
         
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 10px; }
-        .modal-content { background: #fff; padding: 20px; border-radius: 10px; width: 100%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
-        .modal-content h3 { margin-top: 0; color: #2c3e50; font-size: 18px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
-        textarea, input[type="text"], input[type="datetime-local"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: inherit; font-size: 14px; }
-        .radio-group { margin-bottom: 12px; display: flex; gap: 15px; font-size: 13px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .btn-save { background: #e74c3c; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-cancel { background: #95a5a6; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; margin-top: 5px;}
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 12px; }
+        .modal-content { background: var(--card-bg); padding: 20px; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); }
+        .modal-content h3 { margin-top: 0; color: var(--dark); font-size: 18px; }
         
-        .video-thumbnail { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-right: 8px; flex-shrink: 0; cursor: pointer; }
-        @media(min-width: 600px) { .video-thumbnail { width: 65px; height: 65px; margin-right: 12px; } }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: var(--dark); }
+        textarea, input[type="text"], input[type="datetime-local"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; background: #f8fafc; }
+        textarea:focus, input:focus { outline: none; border-color: var(--primary); background: #fff; }
         
-        .content-flex { display: flex; align-items: flex-start; }
-        .meta-text { font-size: 11px; color: #555; margin-top: 3px; word-break: break-all; }
-        .link-text { color: #2980b9; font-weight: 500; }
-        .clickable-title { cursor: pointer; color: #2980b9; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+        
+        .video-thumbnail { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
+        .content-flex { display: flex; align-items: flex-start; gap: 10px; }
+        .meta-text { font-size: 12px; color: #64748b; margin-top: 4px; word-break: break-all; }
+        .link-text { color: var(--primary); font-weight: 500; text-decoration: none; }
+        .clickable-title { cursor: pointer; color: var(--primary); font-weight: 600; }
         .clickable-title:hover { text-decoration: underline; }
 
-        .preview-thumb { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-        .preview-box { background: #f8f9fa; border: 1px solid #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; word-break: break-word; white-space: pre-wrap; }
+        .preview-thumb { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+        .preview-box { background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; word-break: break-word; white-space: pre-wrap; }
         
-        /* Styling Checkbox FP List */
-        .fp-checkbox-container { max-height: 140px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; border-radius: 5px; background: #fafafa; }
-        .fp-checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 4px; cursor: pointer; }
+        .fp-checkbox-container { max-height: 150px; overflow-y: auto; border: 1px solid var(--border); padding: 8px; border-radius: 8px; background: #f8fafc; }
+        .fp-checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; cursor: pointer; }
+        
+        .action-buttons { display: flex; flex-direction: column; gap: 4px; }
+        .action-btn { padding: 5px 8px; border-radius: 6px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; color: #fff; text-align: center; }
+        .bg-blue { background: #3b82f6; }
+        .bg-purple { background: #8b5cf6; }
+        .bg-red { background: var(--danger); }
     </style>
 </head>
 <body>
 
+<div class="container">
     <div class="header">
-        <div style="width: 100%;">
-            <h1>🚀 Dasbor FB Auto Uploader</h1>
-            <button class="btn-reset" onclick="resetToken()">Reset Token Akses</button>
+        <div class="brand-area">
+            <h1>🚀 FB Auto Uploader <span style="font-size: 11px; background: #e0e7ff; color: var(--primary); padding: 3px 8px; border-radius: 20px;">PRO Edition</span></h1>
+            <button class="btn btn-secondary" style="flex: unset; padding: 6px 10px; font-size: 11px;" onclick="openSettingsModal()">⚙️ Pengaturan Token</button>
         </div>
-        <div style="width: 100%;">
-            <button class="btn-sync" onclick="triggerTelegramSync()">🔄 Tarik Video Telegram (Tanpa Upload)</button>
+        <div class="top-actions">
+            <button class="btn btn-success" onclick="triggerTelegramSync()">🔄 Tarik Video Telegram</button>
+            <button class="btn btn-secondary" onclick="openPagesModal()">📂 Kelola Fanpage</button>
         </div>
     </div>
 
     <div class="tab-container">
-        <button id="tabPendingBtn" class="tab-btn active" type="button" onclick="switchTab('pending')">📋 Antrean (<span id="countPending">0</span>)</button>
-        <button id="tabCompletedBtn" class="tab-btn" type="button" onclick="switchTab('completed')">✅ Selesai (<span id="countCompleted">0</span>)</button>
+        <button id="tabPendingBtn" class="tab-btn active" onclick="switchTab('pending')">📋 Antrean (<span id="countPending">0</span>)</button>
+        <button id="tabCompletedBtn" class="tab-btn" onclick="switchTab('completed')">✅ Selesai (<span id="countCompleted">0</span>)</button>
     </div>
 
     <div class="table-responsive">
         <table>
             <thead>
                 <tr>
-                    <th style="width: 35px;">ID</th>
+                    <th style="width: 40px;">ID</th>
                     <th>Detail Konten & Atribut Afiliasi</th>
-                    <th style="width: 75px;">Status</th>
+                    <th style="width: 70px;">Status</th>
                     <th style="width: 80px;">Aksi</th>
                 </tr>
             </thead>
             <tbody id="video-list">
-                <tr><td colspan="4" style="text-align:center; padding: 20px;">Memuat data...</td></tr>
+                <tr><td colspan="4" style="text-align:center; padding: 25px; color:#64748b;">Memuat data sistem...</td></tr>
             </tbody>
         </table>
     </div>
+</div>
 
-    <!-- MODAL DETAIL PREVIEW -->
-    <div id="detailModal" class="modal">
-        <div class="modal-content">
-            <h3 id="previewTitle">Detail Video</h3>
-            <div id="previewThumbContainer"></div>
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Status:</div>
-            <div id="previewStatus" class="preview-box" style="font-weight: bold;"></div>
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Deskripsi / Caption Facebook:</div>
-            <div id="previewDesc" class="preview-box"></div>
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Komentar Pancingan:</div>
-            <div id="previewComment" class="preview-box"></div>
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Link Afiliasi:</div>
-            <div id="previewLink" class="preview-box"></div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeDetailModal()" type="button" style="width: 100%;">Tutup Pratinjau</button>
+<!-- MODAL SETTINGS (TOKEN) -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <h3>⚙️ Pengaturan Lisensi & Token</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Konfigurasikan akses GitHub repositori Anda agar panel dapat bekerja secara mandiri.</p>
+        <div class="form-group">
+            <label>GitHub Personal Access Token (PAT):</label>
+            <input type="text" id="settingPat" placeholder="ghp_xxxxxx...">
+        </div>
+        <div class="form-group">
+            <label>Repository Owner (Username GitHub):</label>
+            <input type="text" id="settingOwner" placeholder="contoh: namanda">
+        </div>
+        <div class="form-group">
+            <label>Nama Repository:</label>
+            <input type="text" id="settingRepo" placeholder="contoh: fb-auto-uploader">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeSettingsModal()">Batal</button>
+            <button class="btn" onclick="saveSettings()">Simpan Pengaturan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KELOLA FANPAGE -->
+<div id="pagesModal" class="modal">
+    <div class="modal-content">
+        <h3>📂 Daftar Fanpage Terdaftar</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Daftar Fanpage yang terhubung dengan sistem otomatisasi Anda.</p>
+        <div id="pagesListContainer" class="preview-box" style="max-height: 200px; overflow-y: auto;">
+            Memuat daftar halaman...
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closePagesModal()" style="width: 100%;">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DETAIL PREVIEW -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <h3 id="previewTitle">Detail Konten</h3>
+        <div id="previewThumbContainer"></div>
+        <div style="font-size: 12px; font-weight: 600; margin-bottom: 3px; color: #64748b;">Status:</div>
+        <div id="previewStatus" class="preview-box" style="font-weight: 600;"></div>
+        <div style="font-size: 12px; font-weight: 600; margin-bottom: 3px; color: #64748b;">Deskripsi / Caption:</div>
+        <div id="previewDesc" class="preview-box"></div>
+        <div style="font-size: 12px; font-weight: 600; margin-bottom: 3px; color: #64748b;">Komentar Pancingan:</div>
+        <div id="previewComment" class="preview-box"></div>
+        <div style="font-size: 12px; font-weight: 600; margin-bottom: 3px; color: #64748b;">Link Afiliasi:</div>
+        <div id="previewLink" class="preview-box"></div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeDetailModal()" style="width: 100%;">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>✏️ Edit Metadata & Afiliasi</h3>
+        <div class="form-group">
+            <label>Deskripsi / Caption Facebook:</label>
+            <textarea id="modalDesc" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Komentar Pancingan:</label>
+            <textarea id="modalComment" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Link Afiliasi / Redirect:</label>
+            <input type="text" id="modalLink" placeholder="https://shopee.co.id/...">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            <button class="btn" onclick="saveVideoEdit()">Simpan Perubahan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL UPLOAD / TARGET FP -->
+<div id="uploadModal" class="modal">
+    <div class="modal-content">
+        <h3>🚀 Eksekusi Unggahan Reels</h3>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Pilih Fanpage tujuan untuk menghindari pembatasan spam Meta.</p>
+        
+        <div class="form-group">
+            <label>Jadwal Tayang (Opsional):</label>
+            <input type="datetime-local" id="uploadDateTime">
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Pilih Fanpage Tujuan:</span>
+                <span style="font-size: 11px; color: var(--primary); cursor: pointer; font-weight: 600;" onclick="toggleSelectAllFp(true)">Pilih Semua</span>
+            </label>
+            <div id="fpCheckboxList" class="fp-checkbox-container">
+                Memuat Fanpage...
+            </div>
+        </div>
+
+        <div class="modal-actions" style="justify-content: space-between; align-items: center; margin-top: 15px;">
+            <button class="btn btn-secondary" onclick="closeUploadModal()">Batal</button>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn btn-success" style="padding: 8px 12px; font-size: 12px;" onclick="saveUploadSchedule()">Simpan Jadwal</button>
+                <button class="btn" style="background:#8b5cf6; padding: 8px 12px; font-size: 12px;" onclick="uploadVideoNow()">Upload Sekarang</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- MODAL EDIT AFILIASI -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <h3>⚙️ Konfigurasi Video & Afiliasi</h3>
-            <div class="radio-group">
-                <label><input type="radio" name="editMode" id="modeOtomatis" value="auto" onchange="toggleMode()"> 🤖 Otomatis</label>
-                <label><input type="radio" name="editMode" id="modeManual" value="manual" onchange="toggleMode()" checked> ✍️ Manual</label>
-            </div>
-            <div class="form-group">
-                <label>Deskripsi / Caption Facebook:</label>
-                <textarea id="modalDesc" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Komentar Pancingan (Disematkan):</label>
-                <textarea id="modalComment" rows="2"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Link Redirect / Afiliasi (Shopee/TikTok):</label>
-                <input type="text" id="modalLink" placeholder="https://shopee.co.id/...">
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal()" type="button">Batal</button>
-                <button class="btn-save" onclick="saveVideoEdit()" type="button">💾 Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL UPLOAD / JADWAL + PEMILIHAN FP -->
-    <div id="uploadModal" class="modal">
-        <div class="modal-content">
-            <h3>🚀 Jadwal & Upload Video</h3>
-            <p style="font-size: 13px; color: #555; margin-bottom: 10px;">Atur jadwal atau pilih Fanpage tujuan upload.</p>
-            
-            <div class="form-group">
-                <label>Pilih Tanggal & Jam (WIB):</label>
-                <input type="datetime-local" id="uploadDateTime">
-            </div>
-
-            <div class="form-group">
-                <label style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>Pilih Fanpage Tujuan:</span>
-                    <span style="font-size: 11px; color: #2980b9; cursor: pointer;" onclick="toggleSelectAllFp(true)">Pilih Semua</span>
-                </label>
-                <div id="fpCheckboxList" class="fp-checkbox-container">
-                    Memuat daftar Fanpage...
-                </div>
-            </div>
-
-            <div class="modal-actions" style="justify-content: space-between; align-items: center; margin-top: 15px;">
-                <button class="btn-cancel" onclick="closeUploadModal()" type="button">Batal</button>
-                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                    <button class="btn-sync" style="padding: 8px 10px; font-size: 12px;" onclick="saveUploadSchedule()" type="button">💾 Jadwal</button>
-                    <button class="btn-save" style="background:#8e44ad; padding: 8px 10px; font-size: 12px;" onclick="uploadVideoNow()" type="button">⚡ Upload</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const REPO_OWNER = 'part-selanjutnya'; 
-        const REPO_NAME = 'fb-auto-uploader';
-        window.allVideos = [];
-        window.allPagesList = [];
-        window.currentTab = 'pending';
-        window.currentUploadVideoId = null;
-        window.currentEditingVideoId = null;
-
-        async function loadVideos() {
-            const tbody = document.getElementById('video-list');
-            try {
-                const cacheBuster = new Date().getTime();
-                const [vidRes, pageRes] = await Promise.all([
-                    fetch('videos.json?t=' + cacheBuster),
-                    fetch('pages.json?t=' + cacheBuster).catch(() => ({ ok: false }))
-                ]);
-                
-                if (!vidRes.ok) throw new Error('Gagal memuat JSON');
-                window.allVideos = await vidRes.json();
-                
-                if (pageRes.ok) {
-                    window.allPagesList = await pageRes.json();
-                }
-                renderTable();
-            } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat daftar video.</td></tr>';
-            }
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('video-list');
-            if (!Array.isArray(window.allVideos)) window.allVideos = [];
-
-            const pendingList = window.allVideos.filter(v => v.status === 'pending');
-            const completedList = window.allVideos.filter(v => v.status === 'completed');
-            
-            document.getElementById('countPending').innerText = pendingList.length;
-            document.getElementById('countCompleted').innerText = completedList.length;
-
-            const activeData = window.currentTab === 'pending' ? pendingList : completedList;
-
-            if (activeData.length === 0) {
-                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 25px; color:#7f8c8d;">Tidak ada data pada menu ini.</td></tr>';
-                 return;
-            }
-
-            tbody.innerHTML = '';
-            activeData.forEach(function(video) {
-                const isPending = video.status === 'pending';
-                const statusClass = isPending ? 'status-pending' : 'status-completed';
-                let statusText = isPending ? 'Pending' : 'Selesai';
-                
-                const desc = video.description ? video.description.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
-                const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
-                const link = video.redirect_link ? video.redirect_link.replace(/'/g, "&#39;").replace(/"/g, "&quot;") : '';
-
-                let actionHtml = '<span style="color:#999; font-size:11px;">Arsip</span>';
-                if (isPending) {
-                    actionHtml = '<div class="action-buttons">' +
-                                 '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')" type="button">✏️ Edit</button>' +
-                                 '<button class="btn-upload" onclick="openUploadModal(' + video.id + ')" type="button">🚀 Upload</button>' +
-                                 '<button class="btn-delete" onclick="deleteVideo(' + video.id + ')" type="button">🗑️ Hapus</button>' +
-                                 '</div>';
-                }
-
-                let scheduleDisplay = '<br><span style="color:#e67e22; font-size:11px;">⏰ Status: Otomatis</span>';
-                if (video.scheduled_time && isPending) {
-                    const schDate = new Date(video.scheduled_time);
-                    scheduleDisplay = '<br><span style="color:#8e44ad; font-weight:bold; font-size:11px;">🕒 ' + schDate.toLocaleString('id-ID') + '</span>';
-                } else if (!isPending) {
-                    scheduleDisplay = '<br><span style="color:#27ae60; font-weight:bold; font-size:11px;">✅ Terunggah</span>';
-                }
-
-                let descPreview = video.description ? '<div class="meta-text"><b>📝</b> ' + escapeHtml(video.description) + '</div>' : '';
-                let commentPreview = video.comment_text ? '<div class="meta-text"><b>💬</b> ' + escapeHtml(video.comment_text) + '</div>' : '';
-                let linkPreview = video.redirect_link ? '<div class="meta-text"><b>🔗</b> <a href="' + video.redirect_link + '" target="_blank" class="link-text">Link Afiliasi</a></div>' : '';
-
-                let thumbHtml = '';
-                if (video.thumbnail) {
-                    thumbHtml = '<img src="' + video.thumbnail + '" class="video-thumbnail" alt="Thumb" onclick="openDetailModal(' + video.id + ')">';
-                } else {
-                    thumbHtml = '<div class="video-thumbnail" style="background:#eee; display:flex; align-items:center; justify-content:center; font-size:9px; color:#999; border: 1px dashed #ccc;" onclick="openDetailModal(' + video.id + ')">No Cover</div>';
-                }
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = '<td style="font-weight:bold;">#' + video.id + '</td>' +
-                               '<td>' +
-                                   '<div class="content-flex">' +
-                                       thumbHtml +
-                                       '<div style="flex:1; min-width: 0;">' +
-                                           '<span class="clickable-title" onclick="openDetailModal(' + video.id + ')"><b>' + (video.title || 'Tanpa Judul') + '</b></span>' +
-                                           scheduleDisplay +
-                                           descPreview +
-                                           commentPreview +
-                                           linkPreview +
-                                       '</div>' +
-                                   '</div>' +
-                               '</td>' +
-                               '<td class="' + statusClass + '" style="font-size:11px;">' + statusText + '</td>' +
-                               '<td>' + actionHtml + '</td>';
-                tbody.appendChild(tr);
-            });
-        }
-
-        window.openDetailModal = function(id) {
-            const video = window.allVideos.find(v => v.id === id);
-            if (!video) return;
-            document.getElementById('previewTitle').innerText = video.title || 'Detail Video #' + video.id;
-            const thumbContainer = document.getElementById('previewThumbContainer');
-            if (video.thumbnail) {
-                thumbContainer.innerHTML = '<img src="' + video.thumbnail + '" class="preview-thumb" alt="Thumbnail">';
-            } else {
-                thumbContainer.innerHTML = '<div style="background:#eee; height:120px; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:12px; color:#777;">Tidak ada Thumbnail</div>';
-            }
-            document.getElementById('previewStatus').innerText = video.status === 'pending' ? '⏳ Menunggu Antrean (Pending)' : '✅ Selesai Terunggah';
-            document.getElementById('previewDesc').innerText = video.description || '-';
-            document.getElementById('previewComment').innerText = video.comment_text || '-';
-            const linkBox = document.getElementById('previewLink');
-            if (video.redirect_link) {
-                linkBox.innerHTML = '<a href="' + video.redirect_link + '" target="_blank" style="color:#2980b9;">' + video.redirect_link + '</a>';
-            } else {
-                linkBox.innerText = '-';
-            }
-            document.getElementById('detailModal').style.display = 'flex';
+<script>
+    // Konfigurasi dinamis yang diambil dari LocalStorage atau default
+    function getConfig() {
+        return {
+            owner: localStorage.getItem('repo_owner') || 'part-selanjutnya',
+            repo: localStorage.getItem('repo_name') || 'fb-auto-uploader',
+            token: localStorage.getItem('github_pat') || ''
         };
+    }
 
-        window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
+    window.allVideos = [];
+    window.allPagesList = [];
+    window.currentTab = 'pending';
+    window.currentUploadVideoId = null;
+    window.currentEditingVideoId = null;
 
-        window.switchTab = function(tabName) {
-            window.currentTab = tabName;
-            document.getElementById('tabPendingBtn').className = tabName === 'pending' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('tabCompletedBtn').className = tabName === 'completed' ? 'tab-btn active' : 'tab-btn';
+    async function loadVideos() {
+        const tbody = document.getElementById('video-list');
+        const cfg = getConfig();
+        try {
+            const cacheBuster = new Date().getTime();
+            const [vidRes, pageRes] = await Promise.all([
+                fetch('videos.json?t=' + cacheBuster),
+                fetch('pages.json?t=' + cacheBuster).catch(() => ({ ok: false }))
+            ]);
+            
+            if (!vidRes.ok) throw new Error('Gagal memuat data');
+            window.allVideos = await vidRes.json();
+            
+            if (pageRes.ok) {
+                window.allPagesList = await pageRes.json();
+            }
             renderTable();
-        };
+        } catch (error) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">Gagal memuat data. Periksa koneksi atau file JSON.</td></tr>';
+        }
+    }
 
-        function escapeHtml(text) {
-            if(!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    function renderTable() {
+        const tbody = document.getElementById('video-list');
+        if (!Array.isArray(window.allVideos)) window.allVideos = [];
+
+        const pendingList = window.allVideos.filter(v => v.status === 'pending');
+        const completedList = window.allVideos.filter(v => v.status === 'completed');
+        
+        document.getElementById('countPending').innerText = pendingList.length;
+        document.getElementById('countCompleted').innerText = completedList.length;
+
+        const activeData = window.currentTab === 'pending' ? pendingList : completedList;
+
+        if (activeData.length === 0) {
+             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 25px; color:#64748b;">Tidak ada data pada menu ini.</td></tr>';
+             return;
         }
 
-        function checkToken() {
-            let token = localStorage.getItem('github_pat');
-            if (!token) {
-                token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\n(Token harus berawalan ghp_...)");
-                if (token) localStorage.setItem('github_pat', token);
+        tbody.innerHTML = '';
+        activeData.forEach(function(video) {
+            const isPending = video.status === 'pending';
+            const statusClass = isPending ? 'status-pending' : 'status-completed';
+            let statusText = isPending ? 'Pending' : 'Selesai';
+            
+            const desc = video.description ? video.description.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
+            const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
+            const link = video.redirect_link ? video.redirect_link.replace(/'/g, "&#39;").replace(/"/g, "&quot;") : '';
+
+            let actionHtml = '<span style="color:#64748b; font-size:11px;">Arsip</span>';
+            if (isPending) {
+                actionHtml = `<div class="action-buttons">
+                             <button class="action-btn bg-blue" onclick="openEditModal(${video.id}, '${desc}', '${comment}', '${link}')">Edit</button>
+                             <button class="action-btn bg-purple" onclick="openUploadModal(${video.id})">Upload</button>
+                             <button class="action-btn bg-red" onclick="deleteVideo(${video.id})">Hapus</button>
+                             </div>`;
             }
-            return token;
-        }
 
-        async function updateVideosFile(newJsonData, commitMessage) {
-            const token = checkToken();
-            if(!token) return false;
-            try {
-                const getRes = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/videos.json?t=' + new Date().getTime(), {
-                    headers: { 'Authorization': 'token ' + token }
-                });
-                const getJson = await getRes.json();
-                const sha = getJson.sha;
-                const jsonStr = JSON.stringify(newJsonData, null, 4);
-                const base64Content = btoa(unescape(encodeURIComponent(jsonStr)));
-                const putRes = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/videos.json', {
-                    method: 'PUT',
-                    headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: commitMessage, content: base64Content, sha: sha })
-                });
-                return putRes.ok;
-            } catch (error) {
-                console.error(error);
-                return false;
+            let scheduleDisplay = '<br><span style="color:#f59e0b; font-size:11px;">⏰ Status: Otomatis</span>';
+            if (video.scheduled_time && isPending) {
+                const schDate = new Date(video.scheduled_time);
+                scheduleDisplay = `<br><span style="color:#8b5cf6; font-weight:600; font-size:11px;">🕒 ${schDate.toLocaleString('id-ID')}</span>`;
+            } else if (!isPending) {
+                scheduleDisplay = '<br><span style="color:#10b981; font-weight:600; font-size:11px;">✅ Terunggah</span>';
             }
-        }
 
-        window.triggerTelegramSync = function() {
-            const token = checkToken();
-            if(!token) return;
-            if(!confirm("Tarik video dari Telegram ke antrean?")) return;
-            fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
-                method: 'POST',
-                headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
-                body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'sync_only' } })
-            }).then(res => {
-                if(res.ok) alert('✅ Perintah ditarik! Video masuk ke antrean pending.');
-                else alert('❌ Gagal. Token mungkin salah.');
+            let descPreview = video.description ? `<div class="meta-text"><b>📝</b> ${escapeHtml(video.description)}</div>` : '';
+            let linkPreview = video.redirect_link ? `<div class="meta-text"><b>🔗</b> <a href="${video.redirect_link}" target="_blank" class="link-text">Link Afiliasi</a></div>` : '';
+
+            let thumbHtml = video.thumbnail ? 
+                `<img src="${video.thumbnail}" class="video-thumbnail" alt="Thumb" onclick="openDetailModal(${video.id})">` : 
+                `<div class="video-thumbnail" style="background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:9px; color:#64748b;" onclick="openDetailModal(${video.id})">No Cover</div>`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="font-weight:600;">#${video.id}</td>
+                           <td>
+                               <div class="content-flex">
+                                   ${thumbHtml}
+                                   <div style="flex:1; min-width: 0;">
+                                       <span class="clickable-title" onclick="openDetailModal(${video.id})"><b>${escapeHtml(video.title || 'Tanpa Judul')}</b></span>
+                                       ${scheduleDisplay}
+                                       ${descPreview}
+                                       ${linkPreview}
+                                   </div>
+                               </div>
+                           </td>
+                           <td class="${statusClass}" style="font-size:12px;">${statusText}</td>
+                           <td>${actionHtml}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function checkToken() {
+        const cfg = getConfig();
+        if (!cfg.token) {
+            alert("⚠️ Harap masukkan GitHub Personal Access Token (PAT) terlebih dahulu melalui menu 'Pengaturan Token' di pojok kanan atas.");
+            openSettingsModal();
+            return null;
+        }
+        return cfg.token;
+    }
+
+    async function updateVideosFile(newJsonData, commitMessage) {
+        const token = checkToken();
+        const cfg = getConfig();
+        if(!token) return false;
+        try {
+            const getRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/videos.json?t=` + new Date().getTime(), {
+                headers: { 'Authorization': 'token ' + token }
             });
-        };
-
-        window.openUploadModal = function(id) {
-            window.currentUploadVideoId = id;
-            document.getElementById('uploadModal').style.display = 'flex';
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('uploadDateTime').value = now.toISOString().slice(0,16);
-
-            // Render Checkbox FP List
-            const container = document.getElementById('fpCheckboxList');
-            if (!window.allPagesList || window.allPagesList.length === 0) {
-                container.innerHTML = '<div style="color:#777; padding:5px; font-size:11px;">Tidak ada data halaman ditemukan di pages.json</div>';
-                return;
-            }
-
-            let html = '';
-            window.allPagesList.forEach((page, idx) => {
-                const pageName = page.name || ('FP ' + (idx + 1));
-                html += `<label class="fp-checkbox-item">
-                            <input type="checkbox" name="targetFp" value="${escapeHtml(pageName)}" checked>
-                            <span>${escapeHtml(pageName)}</span>
-                         </label>`;
+            const getJson = await getRes.json();
+            const sha = getJson.sha;
+            const jsonStr = JSON.stringify(newJsonData, null, 4);
+            const base64Content = btoa(unescape(encodeURIComponent(jsonStr)));
+            const putRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/videos.json`, {
+                method: 'PUT',
+                headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: commitMessage, content: base64Content, sha: sha })
             });
+            return putRes.ok;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    }
+
+    window.triggerTelegramSync = function() {
+        const token = checkToken();
+        const cfg = getConfig();
+        if(!token) return;
+        if(!confirm("Tarik video terbaru dari bot Telegram ke antrean sistem?")) return;
+        fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/dispatches`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
+            body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'sync_only' } })
+        }).then(res => {
+            if(res.ok) alert('✅ Perintah sinkronisasi terkirim! Cek antrean beberapa saat lagi.');
+            else alert('❌ Gagal mengirim perintah. Periksa token Anda.');
+        });
+    };
+
+    window.openUploadModal = function(id) {
+        window.currentUploadVideoId = id;
+        document.getElementById('uploadModal').style.display = 'flex';
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('uploadDateTime').value = now.toISOString().slice(0,16);
+
+        const container = document.getElementById('fpCheckboxList');
+        if (!window.allPagesList || window.allPagesList.length === 0) {
+            container.innerHTML = '<div style="color:#64748b; padding:5px; font-size:12px;">Tidak ada Fanpage ditemukan di pages.json</div>';
+            return;
+        }
+
+        let html = '';
+        window.allPagesList.forEach((page, idx) => {
+            const pageName = page.name || ('FP ' + (idx + 1));
+            html += `<label class="fp-checkbox-item">
+                        <input type="checkbox" name="targetFp" value="${escapeHtml(pageName)}" checked>
+                        <span>${escapeHtml(pageName)}</span>
+                     </label>`;
+        });
+        container.innerHTML = html;
+    };
+
+    window.closeUploadModal = function() { document.getElementById('uploadModal').style.display = 'none'; };
+    window.toggleSelectAllFp = function(status) { document.querySelectorAll('input[name="targetFp"]').forEach(cb => cb.checked = status); };
+    window.getSelectedPages = function() {
+        const selected = [];
+        document.querySelectorAll('input[name="targetFp"]:checked').forEach(cb => selected.push(cb.value));
+        return selected;
+    };
+
+    window.saveUploadSchedule = async function() {
+        const dt = document.getElementById('uploadDateTime').value;
+        const selectedPages = window.getSelectedPages();
+        if(!dt) return alert('Pilih jadwal terlebih dahulu!');
+        if(selectedPages.length === 0) return alert('Pilih minimal 1 Fanpage tujuan!');
+        
+        window.closeUploadModal();
+        const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
+        if (vIndex !== -1) {
+            window.allVideos[vIndex].scheduled_time = dt;
+            window.allVideos[vIndex].target_pages = selectedPages;
+            renderTable();
+            const success = await updateVideosFile(window.allVideos, "Atur jadwal & target FP ID #" + window.currentUploadVideoId);
+            if(success) alert('✅ Jadwal berhasil disimpan!'); else alert('❌ Gagal menyimpan.');
+        }
+    };
+
+    window.uploadVideoNow = async function() {
+        const token = checkToken();
+        const cfg = getConfig();
+        if(!token) return;
+        const selectedPages = window.getSelectedPages();
+        if(selectedPages.length === 0) return alert('Pilih minimal 1 Fanpage tujuan!');
+        if(!confirm(`⚡ Eksekusi upload video ID #${window.currentUploadVideoId} ke ${selectedPages.length} Fanpage sekarang?`)) return;
+        
+        window.closeUploadModal();
+        const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
+        if (vIndex !== -1) {
+            window.allVideos[vIndex].target_pages = selectedPages;
+            await updateVideosFile(window.allVideos, "Update target FP instant upload ID #" + window.currentUploadVideoId);
+        }
+
+        fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/dispatches`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
+            body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'upload_now', video_id: window.currentUploadVideoId } })
+        }).then(res => {
+            if(res.ok) alert('🚀 Perintah upload instan dikirim! Cek Facebook dalam 1-2 menit.');
+            else alert('❌ Gagal mengirim perintah.');
+        });
+    };
+
+    window.deleteVideo = async function(id) {
+        if(!confirm(`Hapus video ID #${id} dari antrean?`)) return;
+        const updatedVideos = window.allVideos.filter(v => v.id !== id);
+        window.allVideos = updatedVideos;
+        renderTable();
+        await updateVideosFile(updatedVideos, "Menghapus video ID #" + id);
+    };
+
+    window.openEditModal = function(id, desc, comment, link) {
+        window.currentEditingVideoId = id;
+        document.getElementById('editModal').style.display = 'flex';
+        document.getElementById('modalDesc').value = (desc !== 'undefined') ? desc.replace(/\\n/g, '\n') : '';
+        document.getElementById('modalComment').value = (comment !== 'undefined') ? comment.replace(/\\n/g, '\n') : '';
+        document.getElementById('modalLink').value = (link !== 'undefined') ? link : '';
+    };
+    window.closeModal = function() { document.getElementById('editModal').style.display = 'none'; };
+
+    window.saveVideoEdit = async function() {
+        window.closeModal();
+        const vIndex = window.allVideos.findIndex(v => v.id === window.currentEditingVideoId);
+        if (vIndex !== -1) {
+            window.allVideos[vIndex].description = document.getElementById('modalDesc').value;
+            window.allVideos[vIndex].comment_text = document.getElementById('modalComment').value;
+            window.allVideos[vIndex].redirect_link = document.getElementById('modalLink').value;
+            renderTable();
+            const success = await updateVideosFile(window.allVideos, "Update metadata ID #" + window.currentEditingVideoId);
+            if(!success) alert('❌ Gagal menyimpan ke server.');
+        }
+    };
+
+    window.openDetailModal = function(id) {
+        const video = window.allVideos.find(v => v.id === id);
+        if (!video) return;
+        document.getElementById('previewTitle').innerText = video.title || 'Detail Video #' + video.id;
+        const thumbContainer = document.getElementById('previewThumbContainer');
+        thumbContainer.innerHTML = video.thumbnail ? `<img src="${video.thumbnail}" class="preview-thumb" alt="Thumb">` : '<div style="background:#e2e8f0; height:120px; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:12px; color:#64748b;">Tidak ada Thumbnail</div>';
+        document.getElementById('previewStatus').innerText = video.status === 'pending' ? '⏳ Menunggu Antrean' : '✅ Selesai Terunggah';
+        document.getElementById('previewDesc').innerText = video.description || '-';
+        document.getElementById('previewComment').innerText = video.comment_text || '-';
+        document.getElementById('previewLink').innerHTML = video.redirect_link ? `<a href="${video.redirect_link}" target="_blank" class="link-text">${video.redirect_link}</a>` : '-';
+        document.getElementById('detailModal').style.display = 'flex';
+    };
+    window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
+
+    window.openSettingsModal = function() {
+        const cfg = getConfig();
+        document.getElementById('settingPat').value = cfg.token;
+        document.getElementById('settingOwner').value = cfg.owner;
+        document.getElementById('settingRepo').value = cfg.repo;
+        document.getElementById('settingsModal').style.display = 'flex';
+    };
+    window.closeSettingsModal = function() { document.getElementById('settingsModal').style.display = 'none'; };
+    window.saveSettings = function() {
+        localStorage.setItem('github_pat', document.getElementById('settingPat').value.trim());
+        localStorage.setItem('repo_owner', document.getElementById('settingOwner').value.trim());
+        localStorage.setItem('repo_name', document.getElementById('settingRepo').value.trim());
+        closeSettingsModal();
+        alert('✅ Pengaturan berhasil disimpan!');
+        loadVideos();
+    };
+
+    window.openPagesModal = function() {
+        const container = document.getElementById('pagesListContainer');
+        if (!window.allPagesList || window.allPagesList.length === 0) {
+            container.innerHTML = 'Belum ada data halaman di pages.json';
+        } else {
+            let html = '<ul style="margin:0; padding-left:15px; font-size:13px;">';
+            window.allPagesList.forEach(p => {
+                html += `<li><b>${escapeHtml(p.name)}</b> (ID: ${escapeHtml(p.id)})</li>`;
+            });
+            html += '</ul>';
             container.innerHTML = html;
-        };
+        }
+        document.getElementById('pagesModal').style.display = 'flex';
+    };
+    window.closePagesModal = function() { document.getElementById('pagesModal').style.display = 'none'; };
 
-        window.closeUploadModal = function() { document.getElementById('uploadModal').style.display = 'none'; };
+    window.switchTab = function(tabName) {
+        window.currentTab = tabName;
+        document.getElementById('tabPendingBtn').className = tabName === 'pending' ? 'tab-btn active' : 'tab-btn';
+        document.getElementById('tabCompletedBtn').className = tabName === 'completed' ? 'tab-btn active' : 'tab-btn';
+        renderTable();
+    };
 
-        window.toggleSelectAllFp = function(checkStatus) {
-            const checkboxes = document.querySelectorAll('input[name="targetFp"]');
-            checkboxes.forEach(cb => cb.checked = checkStatus);
-        };
+    function escapeHtml(text) {
+        if(!text) return '';
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
 
-        window.getSelectedPages = function() {
-            const checkboxes = document.querySelectorAll('input[name="targetFp"]:checked');
-            const selected = [];
-            checkboxes.forEach(cb => selected.push(cb.value));
-            return selected;
-        };
-
-        window.saveUploadSchedule = async function() {
-            const dt = document.getElementById('uploadDateTime').value;
-            const selectedPages = window.getSelectedPages();
-            if(!dt) return alert('Pilih tanggal dan jam terlebih dahulu!');
-            if(selectedPages.length === 0) return alert('Pilih minimal 1 Fanpage tujuan!');
-            
-            window.closeUploadModal();
-            const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
-            if (vIndex !== -1) {
-                window.allVideos[vIndex].scheduled_time = dt;
-                window.allVideos[vIndex].target_pages = selectedPages;
-                renderTable();
-                const success = await updateVideosFile(window.allVideos, "Atur jadwal & target FP ID #" + window.currentUploadVideoId);
-                if(success) alert('✅ Jadwal & Target Fanpage disimpan!'); else alert('❌ Gagal sinkronisasi.');
-            }
-        };
-
-        window.uploadVideoNow = async function() {
-            const token = checkToken();
-            if(!token) return;
-            const selectedPages = window.getSelectedPages();
-            if(selectedPages.length === 0) return alert('Pilih minimal 1 Fanpage tujuan!');
-            if(!confirm("⚡ Upload video ID #" + window.currentUploadVideoId + " ke " + selectedPages.length + " Fanpage sekarang?")) return;
-            
-            window.closeUploadModal();
-            const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
-            if (vIndex !== -1) {
-                window.allVideos[vIndex].target_pages = selectedPages;
-                await updateVideosFile(window.allVideos, "Update target FP sebelum instant upload ID #" + window.currentUploadVideoId);
-            }
-
-            fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
-                method: 'POST',
-                headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
-                body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'upload_now', video_id: window.currentUploadVideoId } })
-            }).then(res => {
-                if(res.ok) alert('🚀 Perintah Upload dikirim! Cek Facebook dalam 1-2 menit.');
-                else alert('❌ Gagal mengirim perintah.');
-            });
-        };
-
-        window.deleteVideo = async function(id) {
-            if(!confirm("Hapus video ID #" + id + "?")) return;
-            const updatedVideos = window.allVideos.filter(v => v.id !== id);
-            window.allVideos = updatedVideos;
-            renderTable();
-            await updateVideosFile(updatedVideos, "Menghapus video ID #" + id);
-        };
-
-        window.openEditModal = function(id, desc, comment, link) {
-            window.currentEditingVideoId = id;
-            document.getElementById('editModal').style.display = 'flex';
-            document.getElementById('modeManual').checked = true;
-            document.getElementById('modalDesc').value = (desc !== 'undefined') ? desc.replace(/\\n/g, '\n') : '';
-            document.getElementById('modalComment').value = (comment !== 'undefined') ? comment.replace(/\\n/g, '\n') : '';
-            document.getElementById('modalLink').value = (link !== 'undefined') ? link : '';
-            window.toggleMode();
-        };
-
-        window.closeModal = function() { document.getElementById('editModal').style.display = 'none'; };
-
-        window.toggleMode = function() {
-            const isAuto = document.getElementById('modeOtomatis').checked;
-            const descField = document.getElementById('modalDesc');
-            const commentField = document.getElementById('modalComment');
-            if (isAuto) {
-                descField.value = "🔥 Part terbaru nih guys! Makin seru aja ceritanya. Tonton sampai habis ya!\n\n#alurcerita #filmseru";
-                commentField.value = "👇 Lanjutannya dan barang di video ada di link ini:";
-                descField.readOnly = true; commentField.readOnly = true;
-                descField.style.background = "#f0f0f0";
-            } else {
-                descField.readOnly = false; commentField.readOnly = false;
-                descField.style.background = "#fff";
-            }
-        };
-
-        window.saveVideoEdit = async function() {
-            window.closeModal();
-            const vIndex = window.allVideos.findIndex(v => v.id === window.currentEditingVideoId);
-            if (vIndex !== -1) {
-                window.allVideos[vIndex].description = document.getElementById('modalDesc').value;
-                window.allVideos[vIndex].comment_text = document.getElementById('modalComment').value;
-                window.allVideos[vIndex].redirect_link = document.getElementById('modalLink').value;
-                renderTable();
-                const success = await updateVideosFile(window.allVideos, "Update metadata ID #" + window.currentEditingVideoId);
-                if(!success) alert('❌ Gagal menyimpan ke server GitHub.');
-            }
-        };
-
-        window.resetToken = function() { localStorage.removeItem('github_pat'); alert("Token dihapus!"); };
-        window.addEventListener('DOMContentLoaded', loadVideos);
-    </script>
+    window.addEventListener('DOMContentLoaded', loadVideos);
+</script>
 </body>
 </html>
