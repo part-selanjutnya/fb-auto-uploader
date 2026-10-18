@@ -39,12 +39,24 @@ for update in updates:
         file_id = video_obj.get('file_id')
         caption = message.get('caption', 'Video Alur Cerita Afiliasi')
         
+        # 1. Ambil URL File Video Utama
         file_info_url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={file_id}"
         file_info_res = requests.get(file_info_url).json()
         
         if file_info_res.get('ok'):
             file_path = file_info_res['result']['file_path']
             download_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
+            
+            # 2. Ambil URL Thumbnail (Gambar Pratinjau)
+            thumbnail_url = ""
+            thumb_obj = video_obj.get('thumbnail') or video_obj.get('thumb')
+            if thumb_obj:
+                thumb_file_id = thumb_obj.get('file_id')
+                thumb_info_url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={thumb_file_id}"
+                thumb_info_res = requests.get(thumb_info_url).json()
+                if thumb_info_res.get('ok'):
+                    thumb_file_path = thumb_info_res['result']['file_path']
+                    thumbnail_url = f"https://api.telegram.org/file/bot{TOKEN}/{thumb_file_path}"
             
             # Cek apakah video sudah ada di antrean
             exists = any(v.get('url') == download_url for v in existing_videos)
@@ -60,6 +72,7 @@ for update in updates:
                     "comment_text": "", 
                     "redirect_link": "",
                     "url": download_url,
+                    "thumbnail": thumbnail_url, # Menyimpan URL gambar Thumbnail
                     "status": "pending",
                     "target_pages": ["Semua"]
                 }
