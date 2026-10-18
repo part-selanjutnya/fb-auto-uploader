@@ -19,7 +19,6 @@
         @media(min-width: 600px) { h1 { font-size: 24px; } }
 
         .btn-sync { background: #27ae60; color: #fff; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; font-size: 14px; }
-        @media(min-width: 600px) { .btn-sync { width: auto; } }
         .btn-sync:hover { background: #219150; }
         
         .tab-container { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; position: relative; z-index: 10; }
@@ -57,14 +56,16 @@
         
         .content-flex { display: flex; align-items: flex-start; }
         .meta-text { font-size: 11px; color: #555; margin-top: 3px; word-break: break-all; }
-        @media(min-width: 600px) { .meta-text { font-size: 13px; } }
         .link-text { color: #2980b9; font-weight: 500; }
         .clickable-title { cursor: pointer; color: #2980b9; }
         .clickable-title:hover { text-decoration: underline; }
 
-        /* Styling Modal Detail Preview */
         .preview-thumb { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
         .preview-box { background: #f8f9fa; border: 1px solid #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; word-break: break-word; white-space: pre-wrap; }
+        
+        /* Styling Checkbox FP List */
+        .fp-checkbox-container { max-height: 140px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; border-radius: 5px; background: #fafafa; }
+        .fp-checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -100,24 +101,19 @@
         </table>
     </div>
 
-    <!-- MODAL DETAIL PREVIEW KONTEN -->
+    <!-- MODAL DETAIL PREVIEW -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <h3 id="previewTitle">Detail Video</h3>
             <div id="previewThumbContainer"></div>
-            
             <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Status:</div>
             <div id="previewStatus" class="preview-box" style="font-weight: bold;"></div>
-
             <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Deskripsi / Caption Facebook:</div>
             <div id="previewDesc" class="preview-box"></div>
-
             <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Komentar Pancingan:</div>
             <div id="previewComment" class="preview-box"></div>
-
             <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Link Afiliasi:</div>
             <div id="previewLink" class="preview-box"></div>
-
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeDetailModal()" type="button" style="width: 100%;">Tutup Pratinjau</button>
             </div>
@@ -128,27 +124,22 @@
     <div id="editModal" class="modal">
         <div class="modal-content">
             <h3>⚙️ Konfigurasi Video & Afiliasi</h3>
-            
             <div class="radio-group">
                 <label><input type="radio" name="editMode" id="modeOtomatis" value="auto" onchange="toggleMode()"> 🤖 Otomatis</label>
                 <label><input type="radio" name="editMode" id="modeManual" value="manual" onchange="toggleMode()" checked> ✍️ Manual</label>
             </div>
-
             <div class="form-group">
                 <label>Deskripsi / Caption Facebook:</label>
                 <textarea id="modalDesc" rows="3"></textarea>
             </div>
-
             <div class="form-group">
                 <label>Komentar Pancingan (Disematkan):</label>
                 <textarea id="modalComment" rows="2"></textarea>
             </div>
-
             <div class="form-group">
                 <label>Link Redirect / Afiliasi (Shopee/TikTok):</label>
                 <input type="text" id="modalLink" placeholder="https://shopee.co.id/...">
             </div>
-
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal()" type="button">Batal</button>
                 <button class="btn-save" onclick="saveVideoEdit()" type="button">💾 Simpan</button>
@@ -156,15 +147,25 @@
         </div>
     </div>
 
-    <!-- MODAL UPLOAD / JADWAL -->
+    <!-- MODAL UPLOAD / JADWAL + PEMILIHAN FP -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <h3>🚀 Jadwal & Upload Video</h3>
-            <p style="font-size: 13px; color: #555;">Atur jadwal tayang atau langsung upload sekarang.</p>
+            <p style="font-size: 13px; color: #555; margin-bottom: 10px;">Atur jadwal atau pilih Fanpage tujuan upload.</p>
             
             <div class="form-group">
                 <label>Pilih Tanggal & Jam (WIB):</label>
                 <input type="datetime-local" id="uploadDateTime">
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Pilih Fanpage Tujuan:</span>
+                    <span style="font-size: 11px; color: #2980b9; cursor: pointer;" onclick="toggleSelectAllFp(true)">Pilih Semua</span>
+                </label>
+                <div id="fpCheckboxList" class="fp-checkbox-container">
+                    Memuat daftar Fanpage...
+                </div>
             </div>
 
             <div class="modal-actions" style="justify-content: space-between; align-items: center; margin-top: 15px;">
@@ -181,6 +182,7 @@
         const REPO_OWNER = 'part-selanjutnya'; 
         const REPO_NAME = 'fb-auto-uploader';
         window.allVideos = [];
+        window.allPagesList = [];
         window.currentTab = 'pending';
         window.currentUploadVideoId = null;
         window.currentEditingVideoId = null;
@@ -189,9 +191,17 @@
             const tbody = document.getElementById('video-list');
             try {
                 const cacheBuster = new Date().getTime();
-                const response = await fetch('videos.json?t=' + cacheBuster);
-                if (!response.ok) throw new Error('Gagal memuat JSON');
-                window.allVideos = await response.json();
+                const [vidRes, pageRes] = await Promise.all([
+                    fetch('videos.json?t=' + cacheBuster),
+                    fetch('pages.json?t=' + cacheBuster).catch(() => ({ ok: false }))
+                ]);
+                
+                if (!vidRes.ok) throw new Error('Gagal memuat JSON');
+                window.allVideos = await vidRes.json();
+                
+                if (pageRes.ok) {
+                    window.allPagesList = await pageRes.json();
+                }
                 renderTable();
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat daftar video.</td></tr>';
@@ -273,38 +283,29 @@
             });
         }
 
-        // --- FUNGSI MODAL DETAIL PREVIEW ---
         window.openDetailModal = function(id) {
             const video = window.allVideos.find(v => v.id === id);
             if (!video) return;
-
             document.getElementById('previewTitle').innerText = video.title || 'Detail Video #' + video.id;
-            
             const thumbContainer = document.getElementById('previewThumbContainer');
             if (video.thumbnail) {
                 thumbContainer.innerHTML = '<img src="' + video.thumbnail + '" class="preview-thumb" alt="Thumbnail">';
             } else {
                 thumbContainer.innerHTML = '<div style="background:#eee; height:120px; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:12px; color:#777;">Tidak ada Thumbnail</div>';
             }
-
             document.getElementById('previewStatus').innerText = video.status === 'pending' ? '⏳ Menunggu Antrean (Pending)' : '✅ Selesai Terunggah';
             document.getElementById('previewDesc').innerText = video.description || '-';
             document.getElementById('previewComment').innerText = video.comment_text || '-';
-            
             const linkBox = document.getElementById('previewLink');
             if (video.redirect_link) {
                 linkBox.innerHTML = '<a href="' + video.redirect_link + '" target="_blank" style="color:#2980b9;">' + video.redirect_link + '</a>';
             } else {
                 linkBox.innerText = '-';
             }
-
             document.getElementById('detailModal').style.display = 'flex';
         };
 
-        window.closeDetailModal = function() {
-            document.getElementById('detailModal').style.display = 'none';
-        };
-        // -----------------------------------
+        window.closeDetailModal = function() { document.getElementById('detailModal').style.display = 'none'; };
 
         window.switchTab = function(tabName) {
             window.currentTab = tabName;
@@ -330,23 +331,19 @@
         async function updateVideosFile(newJsonData, commitMessage) {
             const token = checkToken();
             if(!token) return false;
-            
             try {
                 const getRes = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/videos.json?t=' + new Date().getTime(), {
                     headers: { 'Authorization': 'token ' + token }
                 });
                 const getJson = await getRes.json();
                 const sha = getJson.sha;
-
                 const jsonStr = JSON.stringify(newJsonData, null, 4);
                 const base64Content = btoa(unescape(encodeURIComponent(jsonStr)));
-
                 const putRes = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/videos.json', {
                     method: 'PUT',
                     headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: commitMessage, content: base64Content, sha: sha })
                 });
-
                 return putRes.ok;
             } catch (error) {
                 console.error(error);
@@ -358,7 +355,6 @@
             const token = checkToken();
             if(!token) return;
             if(!confirm("Tarik video dari Telegram ke antrean?")) return;
-            
             fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
                 method: 'POST',
                 headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
@@ -375,30 +371,70 @@
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('uploadDateTime').value = now.toISOString().slice(0,16);
+
+            // Render Checkbox FP List
+            const container = document.getElementById('fpCheckboxList');
+            if (!window.allPagesList || window.allPagesList.length === 0) {
+                container.innerHTML = '<div style="color:#777; padding:5px; font-size:11px;">Tidak ada data halaman ditemukan di pages.json</div>';
+                return;
+            }
+
+            let html = '';
+            window.allPagesList.forEach((page, idx) => {
+                const pageName = page.name || ('FP ' + (idx + 1));
+                html += `<label class="fp-checkbox-item">
+                            <input type="checkbox" name="targetFp" value="${escapeHtml(pageName)}" checked>
+                            <span>${escapeHtml(pageName)}</span>
+                         </label>`;
+            });
+            container.innerHTML = html;
         };
 
         window.closeUploadModal = function() { document.getElementById('uploadModal').style.display = 'none'; };
 
+        window.toggleSelectAllFp = function(checkStatus) {
+            const checkboxes = document.querySelectorAll('input[name="targetFp"]');
+            checkboxes.forEach(cb => cb.checked = checkStatus);
+        };
+
+        window.getSelectedPages = function() {
+            const checkboxes = document.querySelectorAll('input[name="targetFp"]:checked');
+            const selected = [];
+            checkboxes.forEach(cb => selected.push(cb.value));
+            return selected;
+        };
+
         window.saveUploadSchedule = async function() {
             const dt = document.getElementById('uploadDateTime').value;
+            const selectedPages = window.getSelectedPages();
             if(!dt) return alert('Pilih tanggal dan jam terlebih dahulu!');
+            if(selectedPages.length === 0) return alert('Pilih minimal 1 Fanpage tujuan!');
             
             window.closeUploadModal();
             const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
             if (vIndex !== -1) {
                 window.allVideos[vIndex].scheduled_time = dt;
+                window.allVideos[vIndex].target_pages = selectedPages;
                 renderTable();
-                const success = await updateVideosFile(window.allVideos, "Atur jadwal upload ID #" + window.currentUploadVideoId);
-                if(success) alert('✅ Jadwal disimpan & disinkronkan ke server!'); else alert('❌ Gagal sinkronisasi.');
+                const success = await updateVideosFile(window.allVideos, "Atur jadwal & target FP ID #" + window.currentUploadVideoId);
+                if(success) alert('✅ Jadwal & Target Fanpage disimpan!'); else alert('❌ Gagal sinkronisasi.');
             }
         };
 
-        window.uploadVideoNow = function() {
+        window.uploadVideoNow = async function() {
             const token = checkToken();
             if(!token) return;
-            if(!confirm("⚡ Upload video ID #" + window.currentUploadVideoId + " sekarang?")) return;
+            const selectedPages = window.getSelectedPages();
+            if(selectedPages.length === 0) return alert('Pilih minimal 1 Fanpage tujuan!');
+            if(!confirm("⚡ Upload video ID #" + window.currentUploadVideoId + " ke " + selectedPages.length + " Fanpage sekarang?")) return;
             
             window.closeUploadModal();
+            const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
+            if (vIndex !== -1) {
+                window.allVideos[vIndex].target_pages = selectedPages;
+                await updateVideosFile(window.allVideos, "Update target FP sebelum instant upload ID #" + window.currentUploadVideoId);
+            }
+
             fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
                 method: 'POST',
                 headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
@@ -461,4 +497,4 @@
         window.addEventListener('DOMContentLoaded', loadVideos);
     </script>
 </body>
-    </html>
+</html>
