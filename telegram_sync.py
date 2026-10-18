@@ -4,19 +4,19 @@ import json
 
 TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 if not TOKEN:
-    print("Error: TELEGRAM_BOT_TOKEN tidak ditemukan di environment secrets.")
+    print("Error: TELEGRAM_BOT_TOKEN tidak ditemukan.")
     exit(1)
 
 url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
 response = requests.get(url).json()
 
 if not response.get('ok'):
-    print(f"Gagal terhubung ke Telegram API: {response}")
+    print("Gagal terhubung ke Telegram API")
     exit(1)
 
 updates = response.get('result', [])
 if not updates:
-    print("Tidak ada pesan baru di bot Telegram.")
+    print("Tidak ada pesan baru.")
     exit(0)
 
 videos_file = 'videos.json'
@@ -26,12 +26,12 @@ if os.path.exists(videos_file):
         with open(videos_file, 'r') as f:
             existing_videos = json.load(f)
     except:
-        existing_videos = []
+        pass
 
 new_videos_added = 0
 
-# Telusuri pesan dari yang terbaru
-for update in reversed(updates):
+# Proses BANYAK video sekaligus dari Telegram
+for update in updates:
     message = update.get('message', {})
     video_obj = message.get('video')
     
@@ -39,7 +39,6 @@ for update in reversed(updates):
         file_id = video_obj.get('file_id')
         caption = message.get('caption', 'Video Alur Cerita Afiliasi')
         
-        # Ambil link download file dari Telegram
         file_info_url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={file_id}"
         file_info_res = requests.get(file_info_url).json()
         
@@ -47,17 +46,19 @@ for update in reversed(updates):
             file_path = file_info_res['result']['file_path']
             download_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
             
-            # Cek apakah video ini sudah ada di antrean berdasarkan URL-nya
+            # Cek apakah video sudah ada di antrean
             exists = any(v.get('url') == download_url for v in existing_videos)
             if not exists:
                 new_id = len(existing_videos) + 1
                 lines = caption.splitlines()
-                title = lines[0] if lines else "Video Reels Afiliasi"
+                title = lines[0] if lines else f"Video Part {new_id}"
                 
                 new_entry = {
                     "id": new_id,
                     "title": title,
                     "description": caption,
+                    "comment_text": "", 
+                    "redirect_link": "",
                     "url": download_url,
                     "status": "pending",
                     "target_pages": ["Semua"]
@@ -65,16 +66,11 @@ for update in reversed(updates):
                 
                 existing_videos.append(new_entry)
                 new_videos_added += 1
-                print(f"-> Berhasil menambahkan video baru dari Telegram ke antrean: {title}")
-                # Ambil 1 video teratas saja per sinkronisasi agar antrean terkelola rapi
-                break
+                print(f"-> Masuk antrean pending: {title}")
 
 if new_videos_added > 0:
-    try:
-        with open(videos_file, 'w') as f:
-            json.dump(existing_videos, f, indent=4)
-        print("File videos.json berhasil diperbarui dengan antrean baru.")
-    except Exception as e:
-        print(f"Gagal menyimpan videos.json: {e}")
+    with open(videos_file, 'w') as f:
+        json.dump(existing_videos, f, indent=4)
+    print(f"Sukses menambahkan {new_videos_added} video ke dalam antrean!")
 else:
-    print("Tidak ada video baru yang perlu disinkronkan (sudah ada di antrean).")
+    print("Tidak ada video baru atau semua sudah ada di antrean.")
