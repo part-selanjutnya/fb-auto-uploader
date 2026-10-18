@@ -1,17 +1,38 @@
 [
     {
-        "id": 16,
-        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_2.mp4",
-        "title": "Part 16 - Video Alur Cerita",
-        "description": "https://part-selanjutnya.github.io/Klik-disini/\nNyesel banget baru tahu film seru ini sekarang. Tonton part selanjutnya di sini:\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels",
+        "id": 2,
+        "title": "Video Alur Cerita Afiliasi",
+        "description": "Video Alur Cerita Afiliasi",
+        "comment_text": "",
+        "redirect_link": "",
+        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_0.mp4",
+        "status": "completed",
         "target_pages": [
             "Semua"
-        ],
-        "schedule_hours": [
-            12,
-            17,
-            20
-        ],
-        "status": "completed"
+        ]
+    },
+    {
+        "id": 3,
+        "title": "Video Alur Cerita Afiliasi",
+        "description": "Video Alur Cerita Afiliasi",
+        "comment_text": "",
+        "redirect_link": "",
+        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_1.mp4",
+        "status": "pending",
+        "target_pages": [
+            "Semua"
+        ]
+    },
+    {
+        "id": 4,
+        "title": "Video Alur Cerita Afiliasi",
+        "description": "Video Alur Cerita Afiliasi",
+        "comment_text": "",
+        "redirect_link": "",
+        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_3.mp4",
+        "status": "pending",
+        "target_pages": [
+            "Semua"
+        ]
     }
 ]
