@@ -10,8 +10,12 @@
         h1 { margin: 0; font-size: 24px; color: #2c3e50; }
         .btn-sync { background: #27ae60; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-sync:hover { background: #219150; }
+        
+        /* Tombol Aksi Tabel */
         .btn-edit { background: #3498db; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px; }
+        .btn-upload { background: #9b59b6; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        
         table { width: 100%; background: #fff; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background: #2c3e50; color: #fff; }
@@ -63,7 +67,7 @@
         </table>
     </div>
 
-    <!-- OVERLAY BOX (MODAL) -->
+    <!-- MODAL EDIT AFILIASI -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <h3>⚙️ Konfigurasi Video & Afiliasi</h3>
@@ -95,10 +99,32 @@
         </div>
     </div>
 
+    <!-- MODAL UPLOAD / JADWAL -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <h3>🚀 Jadwal & Upload Video</h3>
+            <p style="font-size: 14px; color: #555;">Atur kapan video ini akan dipublikasikan ke Facebook.</p>
+            
+            <div class="form-group">
+                <label>Pilih Tanggal & Jam (WIB):</label>
+                <input type="datetime-local" id="uploadDateTime" style="font-size: 16px;">
+            </div>
+
+            <div class="modal-actions" style="justify-content: space-between; align-items: center; margin-top: 25px;">
+                <button class="btn-cancel" onclick="closeUploadModal()">Batal</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-sync" onclick="saveUploadSchedule()">💾 Simpan Jadwal</button>
+                    <button class="btn-save" style="background:#8e44ad;" onclick="uploadVideoNow()">⚡ Upload Sekarang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const REPO_OWNER = 'part-selanjutnya'; 
         const REPO_NAME = 'fb-auto-uploader';
         window.allVideos = [];
+        window.currentUploadVideoId = null;
 
         async function loadVideos() {
             const tbody = document.getElementById('video-list');
@@ -117,7 +143,7 @@
                 window.allVideos.forEach(function(video) {
                     const isPending = video.status === 'pending';
                     const statusClass = isPending ? 'status-pending' : 'status-completed';
-                    const statusText = isPending ? 'Menunggu Antrean (Pending)' : 'Selesai Terunggah';
+                    let statusText = isPending ? 'Menunggu Antrean' : 'Selesai Terunggah';
                     
                     const desc = video.description ? video.description.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
                     const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
@@ -125,8 +151,18 @@
 
                     let actionHtml = '<span>-</span>';
                     if (isPending) {
-                        actionHtml = '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')">✏️ Edit</button>' +
-                                     '<button class="btn-delete" onclick="deleteVideo(' + video.id + ')">🗑️ Hapus</button>';
+                        actionHtml = '<div style="display:flex; gap:5px; flex-wrap:wrap;">' +
+                                     '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')">✏️ Edit</button>' +
+                                     '<button class="btn-upload" onclick="openUploadModal(' + video.id + ')">🚀 Upload</button>' +
+                                     '<button class="btn-delete" onclick="deleteVideo(' + video.id + ')">🗑️ Hapus</button>' +
+                                     '</div>';
+                    }
+
+                    // Tampilkan info jadwal jika ada
+                    let scheduleHtml = '';
+                    if (video.scheduled_time && isPending) {
+                        const schDate = new Date(video.scheduled_time);
+                        scheduleHtml = '<br><small style="color:#8e44ad; font-weight:bold;">🕒 Terjadwal: ' + schDate.toLocaleString('id-ID') + '</small>';
                     }
 
                     let thumbHtml = '';
@@ -138,7 +174,7 @@
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = '<td>#' + video.id + '</td>' +
-                                   '<td><div class="title-container">' + thumbHtml + '<span style="font-weight:600;">' + (video.title || 'Tanpa Judul') + '</span></div></td>' +
+                                   '<td><div class="title-container">' + thumbHtml + '<div><span style="font-weight:600;">' + (video.title || 'Tanpa Judul') + '</span>' + scheduleHtml + '</div></div></td>' +
                                    '<td class="' + statusClass + '">' + statusText + '</td>' +
                                    '<td>' + actionHtml + '</td>';
                     tbody.appendChild(tr);
@@ -157,7 +193,6 @@
             return token;
         }
 
-        // ================= FITUR CMS API LANGSUNG =================
         async function updateVideosFile(newJsonData, commitMessage) {
             const token = checkToken();
             if(!token) return false;
@@ -169,31 +204,21 @@
                 const getJson = await getRes.json();
                 const sha = getJson.sha;
 
-                // Encode to Base64 (Aman untuk karakter unicode/emoji)
                 const jsonStr = JSON.stringify(newJsonData, null, 4);
                 const base64Content = btoa(unescape(encodeURIComponent(jsonStr)));
 
                 const putRes = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/videos.json', {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': 'token ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: commitMessage,
-                        content: base64Content,
-                        sha: sha
-                    })
+                    headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: commitMessage, content: base64Content, sha: sha })
                 });
 
-                if (putRes.ok) return true;
-                else throw new Error("Gagal menyimpan ke repositori.");
+                return putRes.ok;
             } catch (error) {
                 console.error(error);
                 return false;
             }
         }
-        // ==========================================================
 
         window.triggerTelegramSync = function() {
             const token = checkToken();
@@ -203,29 +228,79 @@
             fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
                 method: 'POST',
                 headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
-                // MENGIRIM PAYLOAD KHUSUS AGAR TIDAK LANGSUNG UPLOAD
                 body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'sync_only' } })
-            })
-            .then(res => {
-                if(res.ok) alert('✅ Perintah ditarik! Video akan masuk ke antrean pending dalam 1 menit. Silakan refresh halaman nanti.');
+            }).then(res => {
+                if(res.ok) alert('✅ Perintah ditarik! Video akan masuk ke antrean pending.');
                 else alert('❌ Gagal. Token mungkin salah.');
             });
         };
 
-        window.deleteVideo = async function(id) {
-            if(!confirm("Yakin ingin MENGHAPUS video ID #" + id + " secara permanen dari antrean?")) return;
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menghapus data di server... Mohon tunggu.</td></tr>';
+        // --- FUNGSI MODAL UPLOAD ---
+        window.openUploadModal = function(id) {
+            window.currentUploadVideoId = id;
+            document.getElementById('uploadModal').style.display = 'flex';
             
-            const updatedVideos = window.allVideos.filter(v => v.id !== id);
-            const success = await updateVideosFile(updatedVideos, "Menghapus video ID #" + id + " dari antrean Web");
+            // Set waktu default ke waktu saat ini
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('uploadDateTime').value = now.toISOString().slice(0,16);
+        };
+
+        window.closeUploadModal = function() { document.getElementById('uploadModal').style.display = 'none'; };
+
+        window.saveUploadSchedule = async function() {
+            const dt = document.getElementById('uploadDateTime').value;
+            if(!dt) return alert('Pilih tanggal dan jam terlebih dahulu!');
             
-            if(success) {
-                alert('✅ Video berhasil dihapus!');
-                setTimeout(loadVideos, 2000);
-            } else {
-                alert('❌ Gagal menghapus video.');
-                loadVideos();
+            window.closeUploadModal();
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan jadwal ke server...</td></tr>';
+            
+            const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
+            if (vIndex !== -1) {
+                window.allVideos[vIndex].scheduled_time = dt; // format: YYYY-MM-DDTHH:mm
+                const success = await updateVideosFile(window.allVideos, "Atur jadwal upload video ID #" + window.currentUploadVideoId);
+                
+                if(success) {
+                    alert('✅ Jadwal berhasil disimpan!');
+                    setTimeout(loadVideos, 2000);
+                } else {
+                    alert('❌ Gagal menyimpan jadwal.');
+                    loadVideos();
+                }
             }
+        };
+
+        window.uploadVideoNow = function() {
+            const token = checkToken();
+            if(!token) return;
+            if(!confirm("⚡ Yakin ingin MENGUPLOAD video ID #" + window.currentUploadVideoId + " ini SEKARANG juga?")) return;
+            
+            window.closeUploadModal();
+            
+            fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
+                method: 'POST',
+                headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
+                body: JSON.stringify({ 
+                    event_type: 'instant_upload', 
+                    client_payload: { 
+                        command: 'upload_now',
+                        video_id: window.currentUploadVideoId
+                    } 
+                })
+            })
+            .then(res => {
+                if(res.ok) alert('🚀 Perintah Upload Instan dilesatkan! Proses memakan waktu 2-3 menit, silakan cek Facebook Anda nanti.');
+                else alert('❌ Gagal mengirim perintah ke server.');
+            });
+        };
+        // ---------------------------
+
+        window.deleteVideo = async function(id) {
+            if(!confirm("Yakin ingin MENGHAPUS video ID #" + id + "?")) return;
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menghapus data...</td></tr>';
+            const updatedVideos = window.allVideos.filter(v => v.id !== id);
+            const success = await updateVideosFile(updatedVideos, "Menghapus video ID #" + id);
+            if(success) setTimeout(loadVideos, 2000); else loadVideos();
         };
 
         window.openEditModal = function(id, desc, comment, link) {
@@ -244,51 +319,31 @@
             const isAuto = document.getElementById('modeOtomatis').checked;
             const descField = document.getElementById('modalDesc');
             const commentField = document.getElementById('modalComment');
-            
             if (isAuto) {
-                descField.value = "🔥 Part terbaru nih guys! Makin seru aja ceritanya. Tonton sampai habis ya!\n\n#alurcerita #filmseru #reelsindo";
-                commentField.value = "👇 Lanjutannya dan barang yang dipakai di video ada di link ini ya guys:";
-                descField.readOnly = true;
-                commentField.readOnly = true;
+                descField.value = "🔥 Part terbaru nih guys! Makin seru aja ceritanya. Tonton sampai habis ya!\n\n#alurcerita #filmseru";
+                commentField.value = "👇 Lanjutannya dan barang di video ada di link ini:";
+                descField.readOnly = true; commentField.readOnly = true;
                 descField.style.background = "#f0f0f0";
             } else {
-                descField.readOnly = false;
-                commentField.readOnly = false;
+                descField.readOnly = false; commentField.readOnly = false;
                 descField.style.background = "#fff";
             }
         };
 
         window.saveVideoEdit = async function() {
-            const newDesc = document.getElementById('modalDesc').value;
-            const newComment = document.getElementById('modalComment').value;
-            const newLink = document.getElementById('modalLink').value;
-            
             window.closeModal();
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan perubahan ke server... Mohon tunggu.</td></tr>';
-            
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan metadata...</td></tr>';
             const vIndex = window.allVideos.findIndex(v => v.id === window.currentEditingVideoId);
             if (vIndex !== -1) {
-                window.allVideos[vIndex].description = newDesc;
-                window.allVideos[vIndex].comment_text = newComment;
-                window.allVideos[vIndex].redirect_link = newLink;
-                
-                const success = await updateVideosFile(window.allVideos, "Update metadata link video ID #" + window.currentEditingVideoId);
-                
-                if(success) {
-                    alert('✅ Perubahan berhasil disimpan ke sistem!');
-                    setTimeout(loadVideos, 2000);
-                } else {
-                    alert('❌ Gagal menyimpan.');
-                    loadVideos();
-                }
+                window.allVideos[vIndex].description = document.getElementById('modalDesc').value;
+                window.allVideos[vIndex].comment_text = document.getElementById('modalComment').value;
+                window.allVideos[vIndex].redirect_link = document.getElementById('modalLink').value;
+                const success = await updateVideosFile(window.allVideos, "Update metadata ID #" + window.currentEditingVideoId);
+                if(success) setTimeout(loadVideos, 2000); else loadVideos();
             }
         };
 
-        window.resetToken = function() {
-            localStorage.removeItem('github_pat');
-            alert("Token dihapus!");
-        };
-
+        window.resetToken = function() { localStorage.removeItem('github_pat'); alert("Token dihapus!"); };
         window.addEventListener('DOMContentLoaded', loadVideos);
     </script>
 </body>
