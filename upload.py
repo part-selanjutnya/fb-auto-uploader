@@ -119,11 +119,11 @@ print("Mengunduh file video...")
 gdown.download(video_url, raw_filename, quiet=False)
 
 if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) == 0:
+    print("Gagal mengunduh video dari Telegram.")
     exit(1)
 
 print("🤖 Menjalankan Mutasi Digital Video Tingkat Lanjut...")
 try:
-    # Mutasi mendalam: mengubah sedikit skala piksel, filter noise mikro, dan re-encode agar hash unik
     mutation_cmd = [
         'ffmpeg', '-i', raw_filename, 
         '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,eq=brightness=0.01:contrast=1.02', 
@@ -131,21 +131,20 @@ try:
         '-c:a', 'aac', '-b:a', '128k', 
         output_filename, '-y'
     ]
-    subprocess.run(mutation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-except:
-    output_filename = raw_filename
-
-if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
+    subprocess.run(mutation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+except Exception as e:
+    print(f"Mutasi FFmpeg gagal: {e}, menggunakan file mentah.")
     output_filename = raw_filename
 
 file_size = os.path.getsize(output_filename)
 
 def upload_to_single_page(page):
-    time.sleep(random.uniform(3.0, 7.0)) # Jeda acak lebih panjang untuk menghindari rate limit Meta
     page_token = page.get('token')
     page_id = page.get('id')
+    page_name = page.get('name', 'Unknown')
     
     if not page_token or not page_id:
+        print(f"Token atau ID untuk Fanpage {page_name} tidak valid.")
         return False
 
     spun_title = process_spintax(video_title)
@@ -154,21 +153,30 @@ def upload_to_single_page(page):
     
     video_graph_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
     try:
+        print(f"Memulai sesi upload ke Fanpage: {page_name} (ID: {page_id})")
         start_res = requests.post(video_graph_url, data={'access_token': page_token, 'upload_phase': 'start', 'file_size': file_size, 'media_type': 'REELS'}).json()
+        
         if 'upload_session_id' not in start_res:
-            print(f"Gagal inisialisasi upload untuk FP {page.get('name')}: {start_res}")
+            print(f"GAGAL START UPLOAD [{page_name}]: {json.dumps(start_res)}")
             return False
             
         upload_session_id = start_res['upload_session_id']
         start_offset = int(start_res.get('start_offset', 0))
         end_offset = int(start_res.get('end_offset', file_size))
         
+        print(f"Mentransfer chunk data video ke {page_name}...")
         with open(output_filename, 'rb') as video_file:
             video_file.seek(start_offset)
             chunk_data = video_file.read(end_offset - start_offset)
             
-        requests.post(video_graph_url, data={'access_token': page_token, 'upload_phase': 'transfer', 'upload_session_id': upload_session_id, 'start_offset': start_offset}, files={'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}).json()
+        transfer_res = requests.post(video_graph_url, data={
+            'access_token': page_token, 
+            'upload_phase': 'transfer', 
+            'upload_session_id': upload_session_id, 
+            'start_offset': start_offset
+        }, files={'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}).json()
         
+        print(f"Menyelesaikan sesi upload (finish) untuk {page_name}...")
         finish_res = requests.post(video_graph_url, data={
             'access_token': page_token, 
             'upload_phase': 'finish', 
@@ -178,28 +186,31 @@ def upload_to_single_page(page):
             'video_state': 'PUBLISHED'
         }).json()
         
+        print(f"Respon Finish [{page_name}]: {json.dumps(finish_res)}")
+        
         new_video_id = finish_res.get('id') or finish_res.get('video_id')
         if finish_res.get('success') or new_video_id:
-            if new_video_id:
+            if new_video_id and (spun_comment or video_link):
                 final_comment = spun_comment if spun_comment else ""
                 if video_link:
                     final_comment += f"\n{video_link}" if final_comment else video_link
-                if final_comment:
-                    try:
-                        time.sleep(2)
-                        requests.post(f"https://graph.facebook.com/v26.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment})
-                    except:
-                        pass
+                try:
+                    time.sleep(2)
+                    comm_res = requests.post(f"https://graph.facebook.com/v26.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment}).json()
+                    print(f"Komentar pancingan terkirim: {comm_res}")
+                except Exception as ce:
+                    print(f"Gagal kirim komentar: {ce}")
+            print(f"BERHASIL UPLOAD KE: {page_name}")
             return True
         else:
-            print(f"Meta menolak unggahan untuk FP {page.get('name')}: {finish_res}")
+            print(f"META MENOLAK UPLOAD [{page_name}]: {json.dumps(finish_res)}")
+            return False
     except Exception as e:
-        print(f"Exception saat upload ke FP {page.get('name')}: {e}")
-    return False
+        print(f"EXCEPTION SAAT UPLOAD KE {page_name}: {e}")
+        return False
 
 success_upload_count = 0
-# Batasi workers menjadi 1 atau 2 agar pengiriman tidak terlalu padat secara bersamaan
-with ThreadPoolExecutor(max_workers=2) as executor:
+with ThreadPoolExecutor(max_workers=1) as executor:
     futures = {executor.submit(upload_to_single_page, page): page for page in pages_data}
     for future in as_completed(futures):
         if future.result():
@@ -208,8 +219,8 @@ with ThreadPoolExecutor(max_workers=2) as executor:
 if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
     cleaned_videos = []
-    completed_videos = [v for v in videos if v.get('status') == 'completed']
-    pending_videos = [v for v in videos if v.get('status') == 'pending']
+    completed_videos = [v for v in videos if v.get('status'] == 'completed']
+    pending_videos = [v for v in videos if v.get('status'] == 'pending']
     if completed_videos:
         cleaned_videos.append(completed_videos[-1])
     cleaned_videos.extend(pending_videos)
@@ -223,4 +234,4 @@ for f_name in [raw_filename, output_filename]:
     if os.path.exists(f_name):
         os.remove(f_name)
 
-print("Proses selesai.")
+print("Proses skrip upload selesai.")
