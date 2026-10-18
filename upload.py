@@ -219,8 +219,8 @@ with ThreadPoolExecutor(max_workers=1) as executor:
 if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
     cleaned_videos = []
-    completed_videos = [v for v in videos if v.get('status'] == 'completed']
-    pending_videos = [v for v in videos if v.get('status'] == 'pending']
+    completed_videos = [v for v in videos if v.get('status') == 'completed']
+    pending_videos = [v for v in videos if v.get('status') == 'pending']
     if completed_videos:
         cleaned_videos.append(completed_videos[-1])
     cleaned_videos.extend(pending_videos)
