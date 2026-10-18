@@ -81,6 +81,10 @@
         .bg-blue { background: #3b82f6; }
         .bg-purple { background: #8b5cf6; }
         .bg-red { background: var(--danger); }
+        
+        .token-status { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+        .token-ok { background: #d1fae5; color: #065f46; }
+        .token-err { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -89,7 +93,10 @@
     <div class="header">
         <div class="brand-area">
             <h1>🚀 FB Auto Uploader <span style="font-size: 11px; background: #e0e7ff; color: var(--primary); padding: 3px 8px; border-radius: 20px;">PRO Edition</span></h1>
-            <button class="btn btn-secondary" style="flex: unset; padding: 6px 10px; font-size: 11px;" onclick="openSettingsModal()">⚙️ Pengaturan Token</button>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="tokenStatusBadge" class="token-status token-err">⚠️ Belum Diset</span>
+                <button class="btn btn-secondary" style="flex: unset; padding: 6px 10px; font-size: 11px;" onclick="openSettingsModal()">⚙️ Pengaturan Token</button>
+            </div>
         </div>
         <div class="top-actions">
             <button class="btn btn-success" onclick="triggerTelegramSync()">🔄 Tarik Video Telegram</button>
@@ -130,7 +137,7 @@
         </div>
         <div class="form-group">
             <label>Repository Owner (Username GitHub):</label>
-            <input type="text" id="settingOwner" placeholder="contoh: namanda">
+            <input type="text" id="settingOwner" placeholder="contoh: part-selanjutnya">
         </div>
         <div class="form-group">
             <label>Nama Repository:</label>
@@ -231,7 +238,6 @@
 </div>
 
 <script>
-    // Konfigurasi dinamis yang diambil dari LocalStorage atau default
     function getConfig() {
         return {
             owner: localStorage.getItem('repo_owner') || 'part-selanjutnya',
@@ -246,9 +252,21 @@
     window.currentUploadVideoId = null;
     window.currentEditingVideoId = null;
 
-    async function loadVideos() {
-        const tbody = document.getElementById('video-list');
+    function updateTokenBadge() {
         const cfg = getConfig();
+        const badge = document.getElementById('tokenStatusBadge');
+        if (cfg.token && cfg.token.startsWith('ghp_')) {
+            badge.className = 'token-status token-ok';
+            badge.innerHTML = '✅ Terhubung';
+        } else {
+            badge.className = 'token-status token-err';
+            badge.innerHTML = '⚠️ Belum Diset';
+        }
+    }
+
+    async function loadVideos() {
+        updateTokenBadge();
+        const tbody = document.getElementById('video-list');
         try {
             const cacheBuster = new Date().getTime();
             const [vidRes, pageRes] = await Promise.all([
@@ -264,7 +282,7 @@
             }
             renderTable();
         } catch (error) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">Gagal memuat data. Periksa koneksi atau file JSON.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger); padding:20px;">Gagal memuat data. Periksa file videos.json</td></tr>';
         }
     }
 
@@ -295,7 +313,7 @@
             const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
             const link = video.redirect_link ? video.redirect_link.replace(/'/g, "&#39;").replace(/"/g, "&quot;") : '';
 
-            let actionHtml = '<span style="color:#64748b; font-size:11px;">Arsip</span>';
+            let actionHtml = '<span style="color:#64748b; font-size:11px;">Arsip Selesai</span>';
             if (isPending) {
                 actionHtml = `<div class="action-buttons">
                              <button class="action-btn bg-blue" onclick="openEditModal(${video.id}, '${desc}', '${comment}', '${link}')">Edit</button>
@@ -309,7 +327,7 @@
                 const schDate = new Date(video.scheduled_time);
                 scheduleDisplay = `<br><span style="color:#8b5cf6; font-weight:600; font-size:11px;">🕒 ${schDate.toLocaleString('id-ID')}</span>`;
             } else if (!isPending) {
-                scheduleDisplay = '<br><span style="color:#10b981; font-weight:600; font-size:11px;">✅ Terunggah</span>';
+                scheduleDisplay = '<br><span style="color:#10b981; font-weight:600; font-size:11px;">✅ Terunggah ke Facebook</span>';
             }
 
             let descPreview = video.description ? `<div class="meta-text"><b>📝</b> ${escapeHtml(video.description)}</div>` : '';
@@ -341,7 +359,7 @@
     function checkToken() {
         const cfg = getConfig();
         if (!cfg.token) {
-            alert("⚠️ Harap masukkan GitHub Personal Access Token (PAT) terlebih dahulu melalui menu 'Pengaturan Token' di pojok kanan atas.");
+            alert("⚠️ Harap masukkan GitHub Personal Access Token (PAT) terlebih dahulu melalui tombol 'Pengaturan Token'.");
             openSettingsModal();
             return null;
         }
@@ -382,7 +400,7 @@
             headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
             body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'sync_only' } })
         }).then(res => {
-            if(res.ok) alert('✅ Perintah sinkronisasi terkirim! Cek antrean beberapa saat lagi.');
+            if(res.ok) alert('✅ Perintah sinkronisasi terkirim! Silakan tunggu 30 detik lalu refresh halaman.');
             else alert('❌ Gagal mengirim perintah. Periksa token Anda.');
         });
     };
@@ -553,4 +571,4 @@
     window.addEventListener('DOMContentLoaded', loadVideos);
 </script>
 </body>
-</html>
+    </html>
