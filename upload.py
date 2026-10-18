@@ -138,10 +138,12 @@ for page in pages_data:
     video_graph_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
     
     try:
+        # 1. Fase Start (Meminta Session ID khusus Reels)
         start_res = requests.post(video_graph_url, data={
             'access_token': page_token,
             'upload_phase': 'start',
-            'file_size': file_size
+            'file_size': file_size,
+            'media_type': 'REELS'
         }).json()
         
         if 'upload_session_id' not in start_res:
@@ -156,6 +158,7 @@ for page in pages_data:
             video_file.seek(start_offset)
             chunk_data = video_file.read(end_offset - start_offset)
             
+        # 2. Fase Transfer (Mengirim data biner chunk video)
         transfer_res = requests.post(video_graph_url, data={
             'access_token': page_token,
             'upload_phase': 'transfer',
@@ -163,18 +166,20 @@ for page in pages_data:
             'start_offset': start_offset
         }, files={'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}).json()
         
+        # 3. Fase Finish (Memaksa publikasi instan sebagai Reels)
         finish_res = requests.post(video_graph_url, data={
             'access_token': page_token,
             'upload_phase': 'finish',
             'upload_session_id': upload_session_id,
             'description': f"{video_title}\n\n{video_desc}",
-            'publishing_phase': 'post'
+            'media_type': 'REELS',
+            'video_state': 'PUBLISHED'
         }).json()
         
         new_video_id = finish_res.get('id') or finish_res.get('video_id')
         
         if finish_res.get('success') or new_video_id:
-            print(f"-> ✅ Sukses terunggah sebagai Reels ke {page_name} (ID: {new_video_id})!")
+            print(f"-> ✅ Sukses terunggah & dipublikasikan sebagai Reels ke {page_name} (ID: {new_video_id})!")
             success_upload_count += 1
             
             if new_video_id:
@@ -208,7 +213,6 @@ if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
     
     cleaned_videos = []
-    # PERBAIKAN DI SINI (mengubah kurung siku menjadi kurung siku yang valid)
     completed_videos = [v for v in videos if v.get('status') == 'completed']
     pending_videos = [v for v in videos if v.get('status') == 'pending']
     
