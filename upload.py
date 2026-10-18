@@ -41,7 +41,15 @@ if event_path and os.path.exists(event_path):
     try:
         with open(event_path, 'r') as f:
             event_data = json.load(f)
-            target_pages_input = event_data.get('client_payload', {}).get('target_pages', [])
+            payload = event_data.get('client_payload', {})
+            
+            # --- 1. REM DARURAT ---
+            # Jika perintah dari web adalah sync_only, batalkan proses upload!
+            if payload.get('command') == 'sync_only':
+                print("Mode Tarik Data Aktif: Skrip upload dihentikan agar video masuk antrean (Pending).")
+                exit(0)
+            
+            target_pages_input = payload.get('target_pages', [])
             if target_pages_input:
                 is_instant_upload = True
     except Exception as e:
@@ -70,6 +78,8 @@ video_id_db = target_video.get('id')
 video_url = target_video.get('url')
 video_title = target_video.get('title', 'Video Reels')
 video_desc = target_video.get('description', '')
+video_comment = target_video.get('comment_text', '') # Ambil komentar dari Web
+video_link = target_video.get('redirect_link', '')   # Ambil link afiliasi dari Web
 video_targets = target_video.get('target_pages', ["Semua"])
 
 print(f"Memproses video ID: {video_id_db} - {video_title}")
@@ -138,7 +148,6 @@ for page in pages_data:
     video_graph_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
     
     try:
-        # 1. Fase Start (Meminta Session ID khusus Reels)
         start_res = requests.post(video_graph_url, data={
             'access_token': page_token,
             'upload_phase': 'start',
@@ -158,7 +167,6 @@ for page in pages_data:
             video_file.seek(start_offset)
             chunk_data = video_file.read(end_offset - start_offset)
             
-        # 2. Fase Transfer (Mengirim data biner chunk video)
         transfer_res = requests.post(video_graph_url, data={
             'access_token': page_token,
             'upload_phase': 'transfer',
@@ -166,7 +174,6 @@ for page in pages_data:
             'start_offset': start_offset
         }, files={'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}).json()
         
-        # 3. Fase Finish (Memaksa publikasi instan sebagai Reels)
         finish_res = requests.post(video_graph_url, data={
             'access_token': page_token,
             'upload_phase': 'finish',
@@ -182,30 +189,37 @@ for page in pages_data:
             print(f"-> ✅ Sukses terunggah & dipublikasikan sebagai Reels ke {page_name} (ID: {new_video_id})!")
             success_upload_count += 1
             
+            # --- 3. POSTING KOMENTAR AFILIASI TERINTEGRASI WEB ---
             if new_video_id:
-                first_line_link = video_desc.splitlines()[0] if video_desc else ""
-                comment_variations = [
-                    f"👇 Tonton kelanjutannya di sini:\n{first_line_link}",
-                    f"🔥 Cek link kelanjutan part-nya:\n{first_line_link}",
-                    f"✨ Selengkapnya di tautan ini ya:\n{first_line_link}"
-                ]
-                selected_comment = random.choice(comment_variations)
-                
-                comment_url = f"https://graph.facebook.com/v26.0/{new_video_id}/comments"
-                try:
-                    requests.post(comment_url, data={
-                        'access_token': page_token,
-                        'message': selected_comment
-                    })
-                except:
-                    pass
+                final_comment = ""
+                # Gabungkan teks komentar dan link dari Web
+                if video_comment:
+                    final_comment = video_comment
+                    if video_link:
+                        final_comment += f"\n{video_link}"
+                else:
+                    # Alternatif jika belum sempat diedit di web
+                    first_line_link = video_desc.splitlines()[0] if video_desc else ""
+                    if first_line_link.startswith('http'):
+                        final_comment = f"👇 Lanjutannya dan barang yang dipakai di video ada di link ini ya:\n{first_line_link}"
+
+                if final_comment:
+                    comment_url = f"https://graph.facebook.com/v26.0/{new_video_id}/comments"
+                    try:
+                        requests.post(comment_url, data={
+                            'access_token': page_token,
+                            'message': final_comment
+                        })
+                        print(f"   -> 💬 Komentar link afiliasi berhasil disematkan!")
+                    except Exception as e:
+                        pass
         else:
             print(f"-> ❌ Gagal di Tahap Finish untuk {page_name}: {finish_res}")
             
     except Exception as e:
         print(f"-> ❌ Terjadi error exception saat mengunggah ke {page_name}: {e}")
 
-    # PERCEPATAN PROSES ADA DI SINI (Dari 15-30 detik menjadi 3-7 detik)
+    # --- 2. KECEPATAN TINGGI ---
     delay_time = random.randint(3, 7)
     print(f"⏳ Jeda organik pemulihan algoritma selama {delay_time} detik...")
     time.sleep(delay_time)
