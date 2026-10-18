@@ -29,12 +29,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests gdown
 
-      - name: Sync Video from Telegram to Queue
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        run: python telegram_sync.py
+      - name: Run Telegram Sync (Hanya jika bukan perintah Upload Instan)
+        run: |
+          python -c "
+          import os, json
+          event_path = os.environ.get('GITHUB_EVENT_PATH', '')
+          is_upload_now = False
+          if event_path and os.path.exists(event_path):
+              with open(event_path, 'r') as f:
+                  data = json.load(f)
+                  if data.get('client_payload', {}).get('command') == 'upload_now':
+                      is_upload_now = True
+          if not is_upload_now:
+              import subprocess
+              subprocess.run(['python', 'telegram_sync.py'])
+          else:
+              print('Mode Upload Sekarang Aktif: Sinkronisasi Telegram dilewati agar antrean aman.')
+          "
 
-      - name: Run Upload Script if Scheduled or Triggered
+      - name: Run Upload Script
         run: python upload.py
 
       - name: Commit and Push changes safely
