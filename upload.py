@@ -121,9 +121,16 @@ gdown.download(video_url, raw_filename, quiet=False)
 if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) == 0:
     exit(1)
 
-print("🤖 Menjalankan Mutasi Digital Video...")
+print("🤖 Menjalankan Mutasi Digital Video Tingkat Lanjut...")
 try:
-    mutation_cmd = ['ffmpeg', '-i', raw_filename, '-ss', '0.3', '-c:v', 'libx264', '-crf', '23', '-c:a', 'aac', '-b:a', '128k', output_filename, '-y']
+    # Mutasi mendalam: mengubah sedikit skala piksel, filter noise mikro, dan re-encode agar hash unik
+    mutation_cmd = [
+        'ffmpeg', '-i', raw_filename, 
+        '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,eq=brightness=0.01:contrast=1.02', 
+        '-c:v', 'libx264', '-crf', '24', '-preset', 'medium', 
+        '-c:a', 'aac', '-b:a', '128k', 
+        output_filename, '-y'
+    ]
     subprocess.run(mutation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except:
     output_filename = raw_filename
@@ -134,7 +141,7 @@ if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
 file_size = os.path.getsize(output_filename)
 
 def upload_to_single_page(page):
-    time.sleep(random.uniform(1.0, 3.0)) # Jeda berundak acak agar aman dari spam Meta
+    time.sleep(random.uniform(3.0, 7.0)) # Jeda acak lebih panjang untuk menghindari rate limit Meta
     page_token = page.get('token')
     page_id = page.get('id')
     
@@ -149,6 +156,7 @@ def upload_to_single_page(page):
     try:
         start_res = requests.post(video_graph_url, data={'access_token': page_token, 'upload_phase': 'start', 'file_size': file_size, 'media_type': 'REELS'}).json()
         if 'upload_session_id' not in start_res:
+            print(f"Gagal inisialisasi upload untuk FP {page.get('name')}: {start_res}")
             return False
             
         upload_session_id = start_res['upload_session_id']
@@ -178,16 +186,20 @@ def upload_to_single_page(page):
                     final_comment += f"\n{video_link}" if final_comment else video_link
                 if final_comment:
                     try:
+                        time.sleep(2)
                         requests.post(f"https://graph.facebook.com/v26.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment})
                     except:
                         pass
             return True
-    except:
-        pass
+        else:
+            print(f"Meta menolak unggahan untuk FP {page.get('name')}: {finish_res}")
+    except Exception as e:
+        print(f"Exception saat upload ke FP {page.get('name')}: {e}")
     return False
 
 success_upload_count = 0
-with ThreadPoolExecutor(max_workers=4) as executor:
+# Batasi workers menjadi 1 atau 2 agar pengiriman tidak terlalu padat secara bersamaan
+with ThreadPoolExecutor(max_workers=2) as executor:
     futures = {executor.submit(upload_to_single_page, page): page for page in pages_data}
     for future in as_completed(futures):
         if future.result():
