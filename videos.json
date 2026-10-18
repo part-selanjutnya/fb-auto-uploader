@@ -11,5 +11,18 @@
         "target_pages": [
             "Semua"
         ]
+    },
+    {
+        "id": 2,
+        "title": "Video Alur Cerita Afiliasi",
+        "description": "Video Alur Cerita Afiliasi",
+        "comment_text": "",
+        "redirect_link": "",
+        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_2.mp4",
+        "thumbnail": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/thumbnails/file_4.jpg",
+        "status": "pending",
+        "target_pages": [
+            "Semua"
+        ]
     }
 ]
