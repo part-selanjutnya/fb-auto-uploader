@@ -1,101 +1,80 @@
 import os
-import json
 import requests
-import random
+import json
 
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
-VIDEOS_FILE = 'videos.json'
+TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+if not TOKEN:
+    print("Error: TELEGRAM_BOT_TOKEN tidak ditemukan di environment secrets.")
+    exit(1)
 
-def get_latest_telegram_video():
-    if not TELEGRAM_BOT_TOKEN:
-        print("Telegram Bot Token belum diatur.")
-        return None
-        
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
+url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
+response = requests.get(url).json()
+
+if not response.get('ok'):
+    print(f"Gagal terhubung ke Telegram API: {response}")
+    exit(1)
+
+updates = response.get('result', [])
+if not updates:
+    print("Tidak ada pesan baru di bot Telegram.")
+    exit(0)
+
+videos_file = 'videos.json'
+existing_videos = []
+if os.path.exists(videos_file):
     try:
-        res = requests.get(url).json()
-        if not res.get('ok'):
-            print(f"Gagal mengambil update dari Telegram: {res}")
-            return None
+        with open(videos_file, 'r') as f:
+            existing_videos = json.load(f)
+    except:
+        existing_videos = []
+
+new_videos_added = 0
+
+# Telusuri pesan dari yang terbaru
+for update in reversed(updates):
+    message = update.get('message', {})
+    video_obj = message.get('video')
+    
+    if video_obj:
+        file_id = video_obj.get('file_id')
+        caption = message.get('caption', 'Video Alur Cerita Afiliasi')
+        
+        # Ambil link download file dari Telegram
+        file_info_url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={file_id}"
+        file_info_res = requests.get(file_info_url).json()
+        
+        if file_info_res.get('ok'):
+            file_path = file_info_res['result']['file_path']
+            download_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
             
-        updates = res.get('result', [])
-        for update in reversed(updates):
-            message = update.get('message', {})
-            video = message.get('video') or message.get('document')
-            if video:
-                file_id = video.get('file_id')
-                file_name = video.get('file_name', 'Video Alur Cerita')
-                caption = message.get('caption', '')
+            # Cek apakah video ini sudah ada di antrean berdasarkan URL-nya
+            exists = any(v.get('url') == download_url for v in existing_videos)
+            if not exists:
+                new_id = len(existing_videos) + 1
+                lines = caption.splitlines()
+                title = lines[0] if lines else "Video Reels Afiliasi"
                 
-                file_path_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getFile?file_id={file_id}"
-                file_res = requests.get(file_path_url).json()
-                if file_res.get('ok'):
-                    file_path = file_res['result']['file_path']
-                    download_url = f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}"
-                    return {
-                        "url": download_url,
-                        "title": file_name.rsplit('.', 1)[0],
-                        "caption": caption
-                    }
+                new_entry = {
+                    "id": new_id,
+                    "title": title,
+                    "description": caption,
+                    "url": download_url,
+                    "status": "pending",
+                    "target_pages": ["Semua"]
+                }
+                
+                existing_videos.append(new_entry)
+                new_videos_added += 1
+                print(f"-> Berhasil menambahkan video baru dari Telegram ke antrean: {title}")
+                # Ambil 1 video teratas saja per sinkronisasi agar antrean terkelola rapi
+                break
+
+if new_videos_added > 0:
+    try:
+        with open(videos_file, 'w') as f:
+            json.dump(existing_videos, f, indent=4)
+        print("File videos.json berhasil diperbarui dengan antrean baru.")
     except Exception as e:
-        print(f"Error saat membaca Telegram API: {e}")
-    return None
-
-def main():
-    new_video = get_latest_telegram_video()
-    if not new_video:
-        print("Tidak ada video baru di Telegram.")
-        return
-        
-    print(f"Menemukan video baru dari Telegram: {new_video['title']}")
-    
-    if os.path.exists(VIDEOS_FILE):
-        try:
-            with open(VIDEOS_FILE, 'r') as f:
-                videos = json.load(f)
-        except:
-            videos = []
-    else:
-        videos = []
-        
-    # Cek apakah URL video sudah ada di antrean agar tidak duplikat
-    existing_urls = [v.get('url') for v in videos]
-    if new_video['url'] in existing_urls:
-        print("Video ini sudah ada di dalam antrean sebelumnya.")
-        return
-
-    max_id = max([v.get('id', 0) for v in videos], default=0)
-    new_id = max_id + 1
-    
-    base_link = "https://part-selanjutnya.github.io/Klik-disini/"
-    hooks = [
-        "Merinding banget endingnya! Wajib tonton sampai habis 👇",
-        "Gila sih plot twist film ini di luar nurul! Cek kelanjutannya ☝️",
-        "Nyesel banget baru tahu film seru ini sekarang. Tonton part selanjutnya di sini:",
-        "Adegan paling bikin emosi ada di sini. Selengkapnya 👇"
-    ]
-    selected_hook = random.choice(hooks)
-    
-    default_desc = f"{base_link}\n{selected_hook}\n#AlurCeritaFilm #ShortMovie #FilmPendek #CeritaSeru #DramaReels #CuplikanFilm #SinopsisFilm #RekomendasiFilm #FacebookReels #ReelsViral #FYPReels #ReelsIndonesia #VideoViral #TrendingReels"
-    final_desc = new_video['caption'] if new_video['caption'] else default_desc
-
-    # Murni memasukkan ke antrean dengan status 'pending'
-    video_entry = {
-        "id": new_id,
-        "url": new_video['url'],
-        "title": f"Part {new_id} - {new_video['title']}",
-        "description": final_desc,
-        "target_pages": ["Semua"],
-        "schedule_hours": [12, 17, 20],
-        "status": "pending"
-    }
-    
-    videos.append(video_entry)
-    
-    with open(VIDEOS_FILE, 'w') as f:
-        json.dump(videos, f, indent=4)
-        
-    print(f"Berhasil! Video Part {new_id} masuk ke antrean (Pending) dan siap dikelola dari Dasbor Web.")
-
-if __name__ == '__main__':
-    main()
+        print(f"Gagal menyimpan videos.json: {e}")
+else:
+    print("Tidak ada video baru yang perlu disinkronkan (sudah ada di antrean).")
