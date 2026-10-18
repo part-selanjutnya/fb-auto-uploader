@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 def process_spintax(text):
     if not text:
         return text
-    pattern = re.compile(r'\{([^{}]*)\}')
+    pattern = re.compile(r'\{([^^{}]*)\}')
     while True:
         match = pattern.search(text)
         if not match:
@@ -26,7 +26,6 @@ if event_name == 'push':
     print("Aktivitas Edit/Hapus dari Web terdeteksi. Skrip Upload DIBEKUKAN.")
     exit(0)
 
-# Cek apakah ini murni perintah sync dari web (Jangan matikan skrip, biarkan lolos jika telegram_sync yang harus jalan)
 event_path = os.environ.get('GITHUB_EVENT_PATH')
 is_sync_only = False
 is_instant_upload = False
@@ -46,13 +45,9 @@ if event_path and os.path.exists(event_path):
     except:
         pass
 
-# Jika murni perintah tarik data, hentikan skrip upload di sini (biarkan telegram_sync yang bekerja di workflow)
 if is_sync_only:
     print("Mode Tarik Data Selesai. Skrip upload dilewati.")
     exit(0)
-
-current_hour = (datetime.datetime.utcnow() + datetime.timedelta(hours=7)).hour
-print(f"Jam sistem saat ini (WIB): {current_hour}:00")
 
 pages_file = 'pages.json'
 all_pages = []
@@ -106,7 +101,7 @@ video_title = target_video.get('title', 'Video Reels')
 video_desc_template = target_video.get('description', '')
 video_comment_template = target_video.get('comment_text', '') 
 video_link = target_video.get('redirect_link', '')   
-video_targets = target_video.get('target_pages', ["Semua"])
+video_targets = target_video.get('target_pages', [])
 
 if video_targets and "Semua" not in video_targets:
     pages_data = [p for p in all_pages if p.get('name') in video_targets]
@@ -139,9 +134,9 @@ if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
 file_size = os.path.getsize(output_filename)
 
 def upload_to_single_page(page):
+    time.sleep(random.uniform(1.0, 3.0)) # Jeda berundak acak agar aman dari spam Meta
     page_token = page.get('token')
     page_id = page.get('id')
-    page_name = page.get('name')
     
     if not page_token or not page_id:
         return False
@@ -192,7 +187,7 @@ def upload_to_single_page(page):
     return False
 
 success_upload_count = 0
-with ThreadPoolExecutor(max_workers=6) as executor:
+with ThreadPoolExecutor(max_workers=4) as executor:
     futures = {executor.submit(upload_to_single_page, page): page for page in pages_data}
     for future in as_completed(futures):
         if future.result():
