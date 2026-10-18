@@ -22,18 +22,15 @@
         @media(min-width: 600px) { .btn-sync { width: auto; } }
         .btn-sync:hover { background: #219150; }
         
-        /* Navigasi Tab Menu (Diberi z-index & pointer-events agar pasti bisa dipencet) */
         .tab-container { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; position: relative; z-index: 10; }
         .tab-btn { flex: 1; background: #bdc3c7; color: #2c3e50; border: none; padding: 12px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 14px; text-align: center; -webkit-tap-highlight-color: transparent; }
         .tab-btn.active { background: #2c3e50; color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
-        /* Tombol Aksi Tabel */
         .action-buttons { display: flex; flex-direction: column; gap: 5px; width: 100%; }
         .btn-edit { background: #3498db; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-upload { background: #9b59b6; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
         
-        /* Perbaikan agar tabel tidak terpotong di Android */
         .table-responsive { width: 100%; background: #fff; border-radius: 10px; overflow-x: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 320px; table-layout: auto; }
         th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: top; font-size: 12px; }
@@ -55,13 +52,19 @@
         .btn-cancel { background: #95a5a6; color: #fff; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; margin-top: 5px;}
         
-        .video-thumbnail { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-right: 8px; flex-shrink: 0; }
+        .video-thumbnail { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-right: 8px; flex-shrink: 0; cursor: pointer; }
         @media(min-width: 600px) { .video-thumbnail { width: 65px; height: 65px; margin-right: 12px; } }
         
         .content-flex { display: flex; align-items: flex-start; }
         .meta-text { font-size: 11px; color: #555; margin-top: 3px; word-break: break-all; }
         @media(min-width: 600px) { .meta-text { font-size: 13px; } }
         .link-text { color: #2980b9; font-weight: 500; }
+        .clickable-title { cursor: pointer; color: #2980b9; }
+        .clickable-title:hover { text-decoration: underline; }
+
+        /* Styling Modal Detail Preview */
+        .preview-thumb { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .preview-box { background: #f8f9fa; border: 1px solid #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 13px; word-break: break-word; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -76,7 +79,6 @@
         </div>
     </div>
 
-    <!-- MENU TAB NAVIGASI -->
     <div class="tab-container">
         <button id="tabPendingBtn" class="tab-btn active" type="button" onclick="switchTab('pending')">📋 Antrean (<span id="countPending">0</span>)</button>
         <button id="tabCompletedBtn" class="tab-btn" type="button" onclick="switchTab('completed')">✅ Selesai (<span id="countCompleted">0</span>)</button>
@@ -96,6 +98,30 @@
                 <tr><td colspan="4" style="text-align:center; padding: 20px;">Memuat data...</td></tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- MODAL DETAIL PREVIEW KONTEN -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <h3 id="previewTitle">Detail Video</h3>
+            <div id="previewThumbContainer"></div>
+            
+            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Status:</div>
+            <div id="previewStatus" class="preview-box" style="font-weight: bold;"></div>
+
+            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Deskripsi / Caption Facebook:</div>
+            <div id="previewDesc" class="preview-box"></div>
+
+            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Komentar Pancingan:</div>
+            <div id="previewComment" class="preview-box"></div>
+
+            <div style="font-size: 12px; font-weight: bold; margin-bottom: 3px; color: #555;">Link Afiliasi:</div>
+            <div id="previewLink" class="preview-box"></div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDetailModal()" type="button" style="width: 100%;">Tutup Pratinjau</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL EDIT AFILIASI -->
@@ -166,88 +192,125 @@
                 const response = await fetch('videos.json?t=' + cacheBuster);
                 if (!response.ok) throw new Error('Gagal memuat JSON');
                 window.allVideos = await response.json();
-                
-                if (!Array.isArray(window.allVideos)) window.allVideos = [];
-
-                const pendingList = window.allVideos.filter(v => v.status === 'pending');
-                const completedList = window.allVideos.filter(v => v.status === 'completed');
-                
-                document.getElementById('countPending').innerText = pendingList.length;
-                document.getElementById('countCompleted').innerText = completedList.length;
-
-                const activeData = window.currentTab === 'pending' ? pendingList : completedList;
-
-                if (activeData.length === 0) {
-                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 25px; color:#7f8c8d;">Tidak ada data pada menu ini.</td></tr>';
-                     return;
-                }
-
-                tbody.innerHTML = '';
-                activeData.forEach(function(video) {
-                    const isPending = video.status === 'pending';
-                    const statusClass = isPending ? 'status-pending' : 'status-completed';
-                    let statusText = isPending ? 'Pending' : 'Selesai';
-                    
-                    const desc = video.description ? video.description.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
-                    const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
-                    const link = video.redirect_link ? video.redirect_link.replace(/'/g, "&#39;").replace(/"/g, "&quot;") : '';
-
-                    let actionHtml = '<span style="color:#999; font-size:11px;">Arsip</span>';
-                    if (isPending) {
-                        actionHtml = '<div class="action-buttons">' +
-                                     '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')" type="button">✏️ Edit</button>' +
-                                     '<button class="btn-upload" onclick="openUploadModal(' + video.id + ')" type="button">🚀 Upload</button>' +
-                                     '<button class="btn-delete" onclick="deleteVideo(' + video.id + ')" type="button">🗑️ Hapus</button>' +
-                                     '</div>';
-                    }
-
-                    let scheduleDisplay = '<br><span style="color:#e67e22; font-size:11px;">⏰ Status: Otomatis</span>';
-                    if (video.scheduled_time && isPending) {
-                        const schDate = new Date(video.scheduled_time);
-                        scheduleDisplay = '<br><span style="color:#8e44ad; font-weight:bold; font-size:11px;">🕒 ' + schDate.toLocaleString('id-ID') + '</span>';
-                    } else if (!isPending) {
-                        scheduleDisplay = '<br><span style="color:#27ae60; font-weight:bold; font-size:11px;">✅ Terunggah</span>';
-                    }
-
-                    let descPreview = video.description ? '<div class="meta-text"><b>📝</b> ' + escapeHtml(video.description) + '</div>' : '';
-                    let commentPreview = video.comment_text ? '<div class="meta-text"><b>💬</b> ' + escapeHtml(video.comment_text) + '</div>' : '';
-                    let linkPreview = video.redirect_link ? '<div class="meta-text"><b>🔗</b> <a href="' + video.redirect_link + '" target="_blank" class="link-text">Link Afiliasi</a></div>' : '';
-
-                    let thumbHtml = '';
-                    if (video.thumbnail) {
-                        thumbHtml = '<img src="' + video.thumbnail + '" class="video-thumbnail" alt="Thumb">';
-                    } else {
-                        thumbHtml = '<div class="video-thumbnail" style="background:#eee; display:flex; align-items:center; justify-content:center; font-size:9px; color:#999; border: 1px dashed #ccc;">No Cover</div>';
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = '<td style="font-weight:bold;">#' + video.id + '</td>' +
-                                   '<td>' +
-                                       '<div class="content-flex">' +
-                                           thumbHtml +
-                                           '<div style="flex:1; min-width: 0;">' +
-                                               '<span style="font-weight:700; font-size:12px; color:#2c3e50; display:block; word-break: break-word;">' + (video.title || 'Tanpa Judul') + '</span>' +
-                                               scheduleDisplay +
-                                               descPreview +
-                                               commentPreview +
-                                               linkPreview +
-                                           '</div>' +
-                                       '</div>' +
-                                   '</td>' +
-                                   '<td class="' + statusClass + '" style="font-size:11px;">' + statusText + '</td>' +
-                                   '<td>' + actionHtml + '</td>';
-                    tbody.appendChild(tr);
-                });
+                renderTable();
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat daftar video.</td></tr>';
             }
         }
 
+        function renderTable() {
+            const tbody = document.getElementById('video-list');
+            if (!Array.isArray(window.allVideos)) window.allVideos = [];
+
+            const pendingList = window.allVideos.filter(v => v.status === 'pending');
+            const completedList = window.allVideos.filter(v => v.status === 'completed');
+            
+            document.getElementById('countPending').innerText = pendingList.length;
+            document.getElementById('countCompleted').innerText = completedList.length;
+
+            const activeData = window.currentTab === 'pending' ? pendingList : completedList;
+
+            if (activeData.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 25px; color:#7f8c8d;">Tidak ada data pada menu ini.</td></tr>';
+                 return;
+            }
+
+            tbody.innerHTML = '';
+            activeData.forEach(function(video) {
+                const isPending = video.status === 'pending';
+                const statusClass = isPending ? 'status-pending' : 'status-completed';
+                let statusText = isPending ? 'Pending' : 'Selesai';
+                
+                const desc = video.description ? video.description.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
+                const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
+                const link = video.redirect_link ? video.redirect_link.replace(/'/g, "&#39;").replace(/"/g, "&quot;") : '';
+
+                let actionHtml = '<span style="color:#999; font-size:11px;">Arsip</span>';
+                if (isPending) {
+                    actionHtml = '<div class="action-buttons">' +
+                                 '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')" type="button">✏️ Edit</button>' +
+                                 '<button class="btn-upload" onclick="openUploadModal(' + video.id + ')" type="button">🚀 Upload</button>' +
+                                 '<button class="btn-delete" onclick="deleteVideo(' + video.id + ')" type="button">🗑️ Hapus</button>' +
+                                 '</div>';
+                }
+
+                let scheduleDisplay = '<br><span style="color:#e67e22; font-size:11px;">⏰ Status: Otomatis</span>';
+                if (video.scheduled_time && isPending) {
+                    const schDate = new Date(video.scheduled_time);
+                    scheduleDisplay = '<br><span style="color:#8e44ad; font-weight:bold; font-size:11px;">🕒 ' + schDate.toLocaleString('id-ID') + '</span>';
+                } else if (!isPending) {
+                    scheduleDisplay = '<br><span style="color:#27ae60; font-weight:bold; font-size:11px;">✅ Terunggah</span>';
+                }
+
+                let descPreview = video.description ? '<div class="meta-text"><b>📝</b> ' + escapeHtml(video.description) + '</div>' : '';
+                let commentPreview = video.comment_text ? '<div class="meta-text"><b>💬</b> ' + escapeHtml(video.comment_text) + '</div>' : '';
+                let linkPreview = video.redirect_link ? '<div class="meta-text"><b>🔗</b> <a href="' + video.redirect_link + '" target="_blank" class="link-text">Link Afiliasi</a></div>' : '';
+
+                let thumbHtml = '';
+                if (video.thumbnail) {
+                    thumbHtml = '<img src="' + video.thumbnail + '" class="video-thumbnail" alt="Thumb" onclick="openDetailModal(' + video.id + ')">';
+                } else {
+                    thumbHtml = '<div class="video-thumbnail" style="background:#eee; display:flex; align-items:center; justify-content:center; font-size:9px; color:#999; border: 1px dashed #ccc;" onclick="openDetailModal(' + video.id + ')">No Cover</div>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td style="font-weight:bold;">#' + video.id + '</td>' +
+                               '<td>' +
+                                   '<div class="content-flex">' +
+                                       thumbHtml +
+                                       '<div style="flex:1; min-width: 0;">' +
+                                           '<span class="clickable-title" onclick="openDetailModal(' + video.id + ')"><b>' + (video.title || 'Tanpa Judul') + '</b></span>' +
+                                           scheduleDisplay +
+                                           descPreview +
+                                           commentPreview +
+                                           linkPreview +
+                                       '</div>' +
+                                   '</div>' +
+                               '</td>' +
+                               '<td class="' + statusClass + '" style="font-size:11px;">' + statusText + '</td>' +
+                               '<td>' + actionHtml + '</td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- FUNGSI MODAL DETAIL PREVIEW ---
+        window.openDetailModal = function(id) {
+            const video = window.allVideos.find(v => v.id === id);
+            if (!video) return;
+
+            document.getElementById('previewTitle').innerText = video.title || 'Detail Video #' + video.id;
+            
+            const thumbContainer = document.getElementById('previewThumbContainer');
+            if (video.thumbnail) {
+                thumbContainer.innerHTML = '<img src="' + video.thumbnail + '" class="preview-thumb" alt="Thumbnail">';
+            } else {
+                thumbContainer.innerHTML = '<div style="background:#eee; height:120px; display:flex; align-items:center; justify-content:center; border-radius:8px; margin-bottom:12px; color:#777;">Tidak ada Thumbnail</div>';
+            }
+
+            document.getElementById('previewStatus').innerText = video.status === 'pending' ? '⏳ Menunggu Antrean (Pending)' : '✅ Selesai Terunggah';
+            document.getElementById('previewDesc').innerText = video.description || '-';
+            document.getElementById('previewComment').innerText = video.comment_text || '-';
+            
+            const linkBox = document.getElementById('previewLink');
+            if (video.redirect_link) {
+                linkBox.innerHTML = '<a href="' + video.redirect_link + '" target="_blank" style="color:#2980b9;">' + video.redirect_link + '</a>';
+            } else {
+                linkBox.innerText = '-';
+            }
+
+            document.getElementById('detailModal').style.display = 'flex';
+        };
+
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').style.display = 'none';
+        };
+        // -----------------------------------
+
         window.switchTab = function(tabName) {
             window.currentTab = tabName;
             document.getElementById('tabPendingBtn').className = tabName === 'pending' ? 'tab-btn active' : 'tab-btn';
             document.getElementById('tabCompletedBtn').className = tabName === 'completed' ? 'tab-btn active' : 'tab-btn';
-            loadVideos();
+            renderTable();
         };
 
         function escapeHtml(text) {
@@ -321,13 +384,12 @@
             if(!dt) return alert('Pilih tanggal dan jam terlebih dahulu!');
             
             window.closeUploadModal();
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan jadwal...</td></tr>';
-            
             const vIndex = window.allVideos.findIndex(v => v.id === window.currentUploadVideoId);
             if (vIndex !== -1) {
                 window.allVideos[vIndex].scheduled_time = dt;
+                renderTable();
                 const success = await updateVideosFile(window.allVideos, "Atur jadwal upload ID #" + window.currentUploadVideoId);
-                if(success) { alert('✅ Jadwal disimpan!'); setTimeout(loadVideos, 2000); } else { alert('❌ Gagal.'); loadVideos(); }
+                if(success) alert('✅ Jadwal disimpan & disinkronkan ke server!'); else alert('❌ Gagal sinkronisasi.');
             }
         };
 
@@ -349,10 +411,10 @@
 
         window.deleteVideo = async function(id) {
             if(!confirm("Hapus video ID #" + id + "?")) return;
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menghapus...</td></tr>';
             const updatedVideos = window.allVideos.filter(v => v.id !== id);
-            const success = await updateVideosFile(updatedVideos, "Menghapus video ID #" + id);
-            if(success) setTimeout(loadVideos, 2000); else loadVideos();
+            window.allVideos = updatedVideos;
+            renderTable();
+            await updateVideosFile(updatedVideos, "Menghapus video ID #" + id);
         };
 
         window.openEditModal = function(id, desc, comment, link) {
@@ -384,14 +446,14 @@
 
         window.saveVideoEdit = async function() {
             window.closeModal();
-            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan...</td></tr>';
             const vIndex = window.allVideos.findIndex(v => v.id === window.currentEditingVideoId);
             if (vIndex !== -1) {
                 window.allVideos[vIndex].description = document.getElementById('modalDesc').value;
                 window.allVideos[vIndex].comment_text = document.getElementById('modalComment').value;
                 window.allVideos[vIndex].redirect_link = document.getElementById('modalLink').value;
-                const success = updateVideosFile(window.allVideos, "Update metadata ID #" + window.currentEditingVideoId);
-                if(success) setTimeout(loadVideos, 2000); else loadVideos();
+                renderTable();
+                const success = await updateVideosFile(window.allVideos, "Update metadata ID #" + window.currentEditingVideoId);
+                if(!success) alert('❌ Gagal menyimpan ke server GitHub.');
             }
         };
 
@@ -399,4 +461,4 @@
         window.addEventListener('DOMContentLoaded', loadVideos);
     </script>
 </body>
-</html>
+    </html>
