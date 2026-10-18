@@ -205,7 +205,8 @@ for page in pages_data:
     except Exception as e:
         print(f"-> ❌ Terjadi error exception saat mengunggah ke {page_name}: {e}")
 
-    delay_time = random.randint(15, 30)
+    # PERCEPATAN PROSES ADA DI SINI (Dari 15-30 detik menjadi 3-7 detik)
+    delay_time = random.randint(3, 7)
     print(f"⏳ Jeda organik pemulihan algoritma selama {delay_time} detik...")
     time.sleep(delay_time)
 
@@ -230,4 +231,4 @@ for f_name in [raw_filename, output_filename]:
     if os.path.exists(f_name):
         os.remove(f_name)
 
-print("Proses otonom mutasi & upload selesai.")
+print("Proses otonom mutasi & upload selesai dengan cepat.")
