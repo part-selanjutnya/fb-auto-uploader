@@ -30,6 +30,8 @@ jobs:
           pip install requests gdown
 
       - name: Run Telegram Sync (Hanya jika bukan perintah Upload Instan)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           python -c "
           import os, json
