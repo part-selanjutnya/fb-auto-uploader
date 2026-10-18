@@ -11,6 +11,7 @@
         .btn-sync { background: #27ae60; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-sync:hover { background: #219150; }
         .btn-edit { background: #3498db; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-delete { background: #e74c3c; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px; }
         table { width: 100%; background: #fff; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background: #2c3e50; color: #fff; }
@@ -30,7 +31,6 @@
         .btn-cancel { background: #95a5a6; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
         .btn-reset { background: #e74c3c; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-top: 5px;}
         
-        /* Thumbnail Style */
         .video-thumbnail { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin-right: 15px; flex-shrink: 0; }
         .title-container { display: flex; align-items: center; }
     </style>
@@ -42,7 +42,9 @@
             <h1>🚀 Dasbor Antrean Video Afiliasi</h1>
             <button class="btn-reset" onclick="resetToken()">Reset Token Akses</button>
         </div>
-        <button class="btn-sync" onclick="triggerTelegramSync()">🔄 Tarik Video dari Telegram Sekarang</button>
+        <div>
+            <button class="btn-sync" onclick="triggerTelegramSync()">🔄 Tarik Video Telegram (Tanpa Upload)</button>
+        </div>
     </div>
 
     <div style="overflow-x: auto;">
@@ -88,7 +90,7 @@
 
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal()">Batal</button>
-                <button class="btn-save" onclick="saveVideoEdit()">💾 Simpan & Update</button>
+                <button class="btn-save" onclick="saveVideoEdit()">💾 Simpan Ke Server</button>
             </div>
         </div>
     </div>
@@ -96,23 +98,23 @@
     <script>
         const REPO_OWNER = 'part-selanjutnya'; 
         const REPO_NAME = 'fb-auto-uploader';
+        window.allVideos = [];
 
         async function loadVideos() {
             const tbody = document.getElementById('video-list');
             try {
                 const cacheBuster = new Date().getTime();
                 const response = await fetch('videos.json?t=' + cacheBuster);
-                
                 if (!response.ok) throw new Error('Gagal memuat JSON');
-                const videos = await response.json();
+                window.allVideos = await response.json();
                 
-                if (!Array.isArray(videos) || videos.length === 0) {
+                if (!Array.isArray(window.allVideos) || window.allVideos.length === 0) {
                      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada antrean video</td></tr>';
                      return;
                 }
 
                 tbody.innerHTML = '';
-                videos.forEach(function(video) {
+                window.allVideos.forEach(function(video) {
                     const isPending = video.status === 'pending';
                     const statusClass = isPending ? 'status-pending' : 'status-completed';
                     const statusText = isPending ? 'Menunggu Antrean (Pending)' : 'Selesai Terunggah';
@@ -123,10 +125,10 @@
 
                     let actionHtml = '<span>-</span>';
                     if (isPending) {
-                        actionHtml = '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')">✏️ Edit Afiliasi</button>';
+                        actionHtml = '<button class="btn-edit" onclick="openEditModal(' + video.id + ', \'' + desc + '\', \'' + comment + '\', \'' + link + '\')">✏️ Edit</button>' +
+                                     '<button class="btn-delete" onclick="deleteVideo(' + video.id + ')">🗑️ Hapus</button>';
                     }
 
-                    // Logika Thumbnail Gambar
                     let thumbHtml = '';
                     if (video.thumbnail) {
                         thumbHtml = '<img src="' + video.thumbnail + '" class="video-thumbnail" alt="Thumb">';
@@ -146,37 +148,88 @@
             }
         }
 
-        window.triggerTelegramSync = function() {
+        function checkToken() {
             let token = localStorage.getItem('github_pat');
             if (!token) {
                 token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\\n(Token harus berawalan ghp_...)");
-                if (!token) return;
-                localStorage.setItem('github_pat', token);
+                if (token) localStorage.setItem('github_pat', token);
             }
+            return token;
+        }
 
-            if(!confirm("Tarik video terbaru dari Telegram sekarang?")) return;
+        // ================= FITUR CMS API LANGSUNG =================
+        async function updateVideosFile(newJsonData, commitMessage) {
+            const token = checkToken();
+            if(!token) return false;
+            
+            try {
+                const getRes = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/videos.json?t=' + new Date().getTime(), {
+                    headers: { 'Authorization': 'token ' + token }
+                });
+                const getJson = await getRes.json();
+                const sha = getJson.sha;
+
+                // Encode to Base64 (Aman untuk karakter unicode/emoji)
+                const jsonStr = JSON.stringify(newJsonData, null, 4);
+                const base64Content = btoa(unescape(encodeURIComponent(jsonStr)));
+
+                const putRes = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/videos.json', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'token ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: commitMessage,
+                        content: base64Content,
+                        sha: sha
+                    })
+                });
+
+                if (putRes.ok) return true;
+                else throw new Error("Gagal menyimpan ke repositori.");
+            } catch (error) {
+                console.error(error);
+                return false;
+            }
+        }
+        // ==========================================================
+
+        window.triggerTelegramSync = function() {
+            const token = checkToken();
+            if(!token) return;
+            if(!confirm("Tarik video dari Telegram ke antrean (Tanpa di-upload)?")) return;
             
             fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
                 method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': 'token ' + token
-                },
-                body: JSON.stringify({ event_type: 'instant_upload' })
+                headers: { 'Accept': 'application/vnd.github.v3+json', 'Authorization': 'token ' + token },
+                // MENGIRIM PAYLOAD KHUSUS AGAR TIDAK LANGSUNG UPLOAD
+                body: JSON.stringify({ event_type: 'instant_upload', client_payload: { command: 'sync_only' } })
             })
-            .then(function(res) {
-                if(res.ok) alert('✅ Sukses! Perintah ditarik. Tunggu 1 menit lalu refresh halaman ini.');
-                else alert('❌ Gagal. Pastikan Token benar dan belum kadaluarsa.');
-            })
-            .catch(function(err) { alert('❌ Terjadi kesalahan jaringan.'); });
+            .then(res => {
+                if(res.ok) alert('✅ Perintah ditarik! Video akan masuk ke antrean pending dalam 1 menit. Silakan refresh halaman nanti.');
+                else alert('❌ Gagal. Token mungkin salah.');
+            });
         };
 
-        window.resetToken = function() {
-            localStorage.removeItem('github_pat');
-            alert("Token dihapus! Klik tombol hijau untuk memasukkan token baru.");
+        window.deleteVideo = async function(id) {
+            if(!confirm("Yakin ingin MENGHAPUS video ID #" + id + " secara permanen dari antrean?")) return;
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menghapus data di server... Mohon tunggu.</td></tr>';
+            
+            const updatedVideos = window.allVideos.filter(v => v.id !== id);
+            const success = await updateVideosFile(updatedVideos, "Menghapus video ID #" + id + " dari antrean Web");
+            
+            if(success) {
+                alert('✅ Video berhasil dihapus!');
+                setTimeout(loadVideos, 2000);
+            } else {
+                alert('❌ Gagal menghapus video.');
+                loadVideos();
+            }
         };
 
         window.openEditModal = function(id, desc, comment, link) {
+            window.currentEditingVideoId = id;
             document.getElementById('editModal').style.display = 'flex';
             document.getElementById('modeManual').checked = true;
             document.getElementById('modalDesc').value = (desc !== 'undefined') ? desc.replace(/\\n/g, '\n') : '';
@@ -198,18 +251,42 @@
                 descField.readOnly = true;
                 commentField.readOnly = true;
                 descField.style.background = "#f0f0f0";
-                commentField.style.background = "#f0f0f0";
             } else {
                 descField.readOnly = false;
                 commentField.readOnly = false;
                 descField.style.background = "#fff";
-                commentField.style.background = "#fff";
             }
         };
 
-        window.saveVideoEdit = function() {
-            alert("⚠️ Catatan: Mode web statis.");
+        window.saveVideoEdit = async function() {
+            const newDesc = document.getElementById('modalDesc').value;
+            const newComment = document.getElementById('modalComment').value;
+            const newLink = document.getElementById('modalLink').value;
+            
             window.closeModal();
+            document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center;">Menyimpan perubahan ke server... Mohon tunggu.</td></tr>';
+            
+            const vIndex = window.allVideos.findIndex(v => v.id === window.currentEditingVideoId);
+            if (vIndex !== -1) {
+                window.allVideos[vIndex].description = newDesc;
+                window.allVideos[vIndex].comment_text = newComment;
+                window.allVideos[vIndex].redirect_link = newLink;
+                
+                const success = await updateVideosFile(window.allVideos, "Update metadata link video ID #" + window.currentEditingVideoId);
+                
+                if(success) {
+                    alert('✅ Perubahan berhasil disimpan ke sistem!');
+                    setTimeout(loadVideos, 2000);
+                } else {
+                    alert('❌ Gagal menyimpan.');
+                    loadVideos();
+                }
+            }
+        };
+
+        window.resetToken = function() {
+            localStorage.removeItem('github_pat');
+            alert("Token dihapus!");
         };
 
         window.addEventListener('DOMContentLoaded', loadVideos);
