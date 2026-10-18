@@ -6,7 +6,7 @@
     <title>Dasbor FB Auto Uploader - CEO Panel</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         h1 { margin: 0; font-size: 24px; color: #2c3e50; }
         .btn-sync { background: #27ae60; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-sync:hover { background: #219150; }
@@ -42,19 +42,21 @@
         <button class="btn-sync" onclick="triggerTelegramSync()">🔄 Tarik Video dari Telegram Sekarang</button>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Judul Video</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="video-list">
-            <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
-        </tbody>
-    </table>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Judul Video</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="video-list">
+                <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
     <!-- OVERLAY BOX (MODAL) -->
     <div id="editModal" class="modal">
@@ -89,104 +91,123 @@
     </div>
 
     <script>
-        let currentEditingVideoId = null;
-        
-        // KONFIGURASI REPOSITORI
+        // Variabel global agar bisa diakses semua fungsi
+        window.currentEditingVideoId = null;
         const REPO_OWNER = 'part-selanjutnya'; 
         const REPO_NAME = 'fb-auto-uploader';
 
-        // Fungsi Memuat Data videos.json
+        // Fungsi Memuat Data
         async function loadVideos() {
+            const tbody = document.getElementById('video-list');
             try {
-                const response = await fetch(`videos.json?t=${new Date().getTime()}`);
+                // Gunakan URL mentah jika file berada di root (tambahkan random untuk menghindari cache)
+                const cacheBuster = new Date().getTime();
+                const response = await fetch('videos.json?t=' + cacheBuster);
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
                 const videos = await response.json();
-                const tbody = document.getElementById('video-list');
-                tbody.innerHTML = '';
+                
+                if (!Array.isArray(videos) || videos.length === 0) {
+                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada video di antrean</td></tr>';
+                     return;
+                }
 
+                tbody.innerHTML = '';
                 videos.forEach(video => {
                     const statusClass = video.status === 'pending' ? 'status-pending' : 'status-completed';
                     const statusText = video.status === 'pending' ? 'Menunggu Antrean (Pending)' : 'Selesai Terunggah';
                     
+                    const desc = video.description ? video.description.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
+                    const comment = video.comment_text ? video.comment_text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n") : '';
+                    const link = video.redirect_link ? video.redirect_link.replace(/'/g, "&#39;").replace(/"/g, "&quot;") : '';
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>#${video.id}</td>
-                        <td>${video.title}</td>
+                        <td>${video.title || 'Tanpa Judul'}</td>
                         <td class="${statusClass}">${statusText}</td>
                         <td>
                             ${video.status === 'pending' 
-                                ? `<button class="btn-edit" onclick="openEditModal(${video.id}, '${escapeHtml(video.description)}', '${escapeHtml(video.comment_text \vert{}\vert{} '')}', '${escapeHtml(video.redirect_link || '')}')">✏️ Edit Afiliasi</button>` 
-                                : `<span>-</span>`}
+                                ? \`<button class="btn-edit" onclick="openEditModal(\${video.id}, '\${desc}', '\${comment}', '\${link}')">✏️ Edit Afiliasi</button>\` 
+                                : '<span>-</span>'}
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (error) {
-                document.getElementById('video-list').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Belum ada video atau gagal memuat data</td></tr>';
+                console.error("Fetch error:", error);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat videos.json (Pastikan file tidak kosong dan berformat JSON valid)</td></tr>';
             }
         }
 
-        // Fungsi Menarik Video dari Telegram (Trigger GitHub Actions secara Aman)
-        function triggerTelegramSync() {
+        // Fungsi Tombol Sinkronisasi
+        window.triggerTelegramSync = function() {
             let token = localStorage.getItem('github_pat');
             if (!token) {
-                token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\n(Format biasanya diawali ghp_...) \nToken hanya disimpan di browser Anda, tidak ke internet.");
+                token = prompt("🔒 Masukkan GitHub Personal Access Token (PAT) Anda:\\n(Harus berawalan ghp_...)");
                 if (!token) return;
                 localStorage.setItem('github_pat', token);
             }
 
-            if(!confirm("Yakin ingin menarik video terbaru dari Telegram sekarang?")) return;
+            if(!confirm("Tarik video terbaru dari Telegram sekarang?")) return;
             
-            fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
+            fetch(\`https://api.github.com/repos/\${REPO_OWNER}/\${REPO_NAME}/dispatches\`, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `token ${token}`
+                    'Authorization': \`token \${token}\`
                 },
                 body: JSON.stringify({ event_type: 'instant_upload' })
             })
             .then(res => {
                 if(res.ok) {
-                    alert('✅ Perintah terkirim! Sistem sedang menyedot video dari Telegram. Tunggu 1-2 menit lalu refresh halaman ini.');
+                    alert('✅ Sukses! Perintah ditarik. Tunggu 1 menit lalu refresh halaman.');
                 } else {
                     if (res.status === 401 || res.status === 403) {
-                        alert('❌ Gagal! Token Anda salah atau kadaluarsa. Silakan klik "Reset Token Akses" dan masukkan token yang benar (pastikan diawali ghp_ huruf kecil).');
+                        alert('❌ Token salah atau kadaluarsa. Silakan Reset Token.');
                         localStorage.removeItem('github_pat');
                     } else {
-                        alert('❌ Gagal mengirim perintah.');
+                        alert('❌ Gagal. Status: ' + res.status);
                     }
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('❌ Terjadi kesalahan jaringan.');
             });
-        }
+        };
 
-        // Fungsi mereset token jika salah ketik
-        function resetToken() {
+        // Fungsi Modal & Form
+        window.resetToken = function() {
             localStorage.removeItem('github_pat');
-            alert("Token berhasil dihapus dari browser. Klik tombol Tarik Video untuk memasukkan token baru.");
-        }
+            alert("Token dihapus. Klik tombol Tarik Video untuk memasukkan token baru.");
+        };
 
-        // Fungsi Modal Overlay
-        function openEditModal(id, desc, comment, link) {
-            currentEditingVideoId = id;
+        window.openEditModal = function(id, desc, comment, link) {
+            window.currentEditingVideoId = id;
             document.getElementById('editModal').style.display = 'flex';
             document.getElementById('modeManual').checked = true;
-            document.getElementById('modalDesc').value = desc || '';
-            document.getElementById('modalComment').value = comment || '';
-            document.getElementById('modalLink').value = link || '';
-            toggleMode();
-        }
+            document.getElementById('modalDesc').value = (desc !== 'undefined') ? desc.replace(/\\n/g, '\\n') : '';
+            document.getElementById('modalComment').value = (comment !== 'undefined') ? comment.replace(/\\n/g, '\\n') : '';
+            document.getElementById('modalLink').value = (link !== 'undefined') ? link : '';
+            window.toggleMode();
+        };
 
-        function closeModal() {
+        window.closeModal = function() {
             document.getElementById('editModal').style.display = 'none';
-        }
+        };
 
-        function toggleMode() {
+        window.toggleMode = function() {
             const isAuto = document.getElementById('modeOtomatis').checked;
             const descField = document.getElementById('modalDesc');
             const commentField = document.getElementById('modalComment');
             
             if (isAuto) {
-                descField.value = "🔥 Part terbaru nih guys! Makin seru aja ceritanya. Tonton sampai habis ya!\n\n#alurcerita #filmseru #reelsindo";
-                commentField.value = "👇 Lanjutannya dan barang yang dipakai di video ada di link ini ya guys:";
+                descField.value = "🔥 Part terbaru nih guys! Makin seru aja ceritanya.\\n\\n#alurcerita #filmseru";
+                commentField.value = "👇 Lanjutannya dan barang di video ada di link ini ya:";
                 descField.readOnly = true;
                 commentField.readOnly = true;
                 descField.style.background = "#f0f0f0";
@@ -197,19 +218,15 @@
                 descField.style.background = "#fff";
                 commentField.style.background = "#fff";
             }
-        }
+        };
 
-        function saveVideoEdit() {
-            alert("⚠️ Sistem web statis siap! Untuk fungsi simpan permanen edit ke file GitHub, diperlukan workflow khusus update metadata.");
-            closeModal();
-        }
+        window.saveVideoEdit = function() {
+            alert("Catatan: Mode web statis. Perlu konfigurasi Actions lebih lanjut untuk menyimpan perubahan permanen ke GitHub.");
+            window.closeModal();
+        };
 
-        function escapeHtml(text) {
-            if(!text) return "";
-            return text.replace(/'/g, "&#39;").replace(/"/g, "&quot;").replace(/\n/g, "\\n");
-        }
-
-        window.onload = loadVideos;
+        // Mulai memuat data saat halaman siap
+        window.addEventListener('DOMContentLoaded', loadVideos);
     </script>
 </body>
 </html>
