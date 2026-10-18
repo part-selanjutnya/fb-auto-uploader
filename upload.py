@@ -7,6 +7,14 @@ import random
 import subprocess
 import gdown
 
+# --- 1. SISTEM REM DARURAT TINGKAT DEWA ---
+event_name = os.environ.get('GITHUB_EVENT_NAME', '')
+
+# A. Jika workflow nyala karena ada file yang di-save/hapus dari Web (Event: Push)
+if event_name == 'push':
+    print("Aktivitas Edit/Hapus dari Web terdeteksi. Skrip Upload DIBEKUKAN agar video tetap aman di antrean.")
+    exit(0)
+
 current_hour = (datetime.datetime.utcnow() + datetime.timedelta(hours=7)).hour
 print(f"Jam sistem saat ini (WIB): {current_hour}:00")
 
@@ -43,8 +51,7 @@ if event_path and os.path.exists(event_path):
             event_data = json.load(f)
             payload = event_data.get('client_payload', {})
             
-            # --- 1. REM DARURAT ---
-            # Jika perintah dari web adalah sync_only, batalkan proses upload!
+            # B. Jika perintah dari tombol Tarik Data Web (Event: sync_only)
             if payload.get('command') == 'sync_only':
                 print("Mode Tarik Data Aktif: Skrip upload dihentikan agar video masuk antrean (Pending).")
                 exit(0)
@@ -78,8 +85,8 @@ video_id_db = target_video.get('id')
 video_url = target_video.get('url')
 video_title = target_video.get('title', 'Video Reels')
 video_desc = target_video.get('description', '')
-video_comment = target_video.get('comment_text', '') # Ambil komentar dari Web
-video_link = target_video.get('redirect_link', '')   # Ambil link afiliasi dari Web
+video_comment = target_video.get('comment_text', '') 
+video_link = target_video.get('redirect_link', '')   
 video_targets = target_video.get('target_pages', ["Semua"])
 
 print(f"Memproses video ID: {video_id_db} - {video_title}")
@@ -112,7 +119,6 @@ if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) == 0:
     print("Gagal: File video kosong atau tidak berhasil diunduh.")
     exit(1)
 
-# --- MODUL KECERDASAN: Mutasi Digital Hash Video via FFmpeg ---
 print("🤖 Menjalankan Mutasi Digital Video (Anti-Duplicate Hash)...")
 try:
     mutation_cmd = [
@@ -124,7 +130,7 @@ try:
     ]
     subprocess.run(mutation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except Exception as e:
-    print(f"Mutasi FFmpeg dilewati, menggunakan video mentah: {e}")
+    print(f"Mutasi FFmpeg dilewati: {e}")
     output_filename = raw_filename
 
 if not os.path.exists(output_filename) or os.path.getsize(output_filename) == 0:
@@ -141,7 +147,6 @@ for page in pages_data:
     page_name = page.get('name')
     
     if not page_token or not page_id:
-        print(f"-> Token atau ID kosong untuk halaman {page_name}")
         continue
         
     print(f"Mengunggah Reels otonom ke halaman: {page_name}...")
@@ -156,7 +161,6 @@ for page in pages_data:
         }).json()
         
         if 'upload_session_id' not in start_res:
-            print(f"-> ❌ Gagal di Tahap Start untuk {page_name}: {start_res}")
             continue
             
         upload_session_id = start_res['upload_session_id']
@@ -186,42 +190,30 @@ for page in pages_data:
         new_video_id = finish_res.get('id') or finish_res.get('video_id')
         
         if finish_res.get('success') or new_video_id:
-            print(f"-> ✅ Sukses terunggah & dipublikasikan sebagai Reels ke {page_name} (ID: {new_video_id})!")
+            print(f"-> ✅ Sukses terunggah ke {page_name} (ID: {new_video_id})!")
             success_upload_count += 1
             
-            # --- 3. POSTING KOMENTAR AFILIASI TERINTEGRASI WEB ---
             if new_video_id:
                 final_comment = ""
-                # Gabungkan teks komentar dan link dari Web
                 if video_comment:
                     final_comment = video_comment
                     if video_link:
                         final_comment += f"\n{video_link}"
                 else:
-                    # Alternatif jika belum sempat diedit di web
                     first_line_link = video_desc.splitlines()[0] if video_desc else ""
                     if first_line_link.startswith('http'):
-                        final_comment = f"👇 Lanjutannya dan barang yang dipakai di video ada di link ini ya:\n{first_line_link}"
+                        final_comment = f"👇 Lanjutannya ada di link ini ya:\n{first_line_link}"
 
                 if final_comment:
                     comment_url = f"https://graph.facebook.com/v26.0/{new_video_id}/comments"
                     try:
-                        requests.post(comment_url, data={
-                            'access_token': page_token,
-                            'message': final_comment
-                        })
-                        print(f"   -> 💬 Komentar link afiliasi berhasil disematkan!")
-                    except Exception as e:
+                        requests.post(comment_url, data={'access_token': page_token, 'message': final_comment})
+                    except:
                         pass
-        else:
-            print(f"-> ❌ Gagal di Tahap Finish untuk {page_name}: {finish_res}")
-            
     except Exception as e:
-        print(f"-> ❌ Terjadi error exception saat mengunggah ke {page_name}: {e}")
+        pass
 
-    # --- 2. KECEPATAN TINGGI ---
     delay_time = random.randint(3, 7)
-    print(f"⏳ Jeda organik pemulihan algoritma selama {delay_time} detik...")
     time.sleep(delay_time)
 
 if success_upload_count > 0:
@@ -245,4 +237,4 @@ for f_name in [raw_filename, output_filename]:
     if os.path.exists(f_name):
         os.remove(f_name)
 
-print("Proses otonom mutasi & upload selesai dengan cepat.")
+print("Proses selesai.")
