@@ -1,0 +1,39 @@
+name: Video Upload Worker
+
+on:
+  repository_dispatch:
+    types: [upload_now]
+
+permissions:
+  contents: write
+
+jobs:
+  upload-video:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install FFmpeg & Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install requests gdown
+
+      - name: Run Upload & Mutation Script
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: python upload.py
+
+      - name: Commit and Push Completed Status
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add videos.json
+          git commit -m "Auto-update: Mengubah status video menjadi Completed" || echo "Tidak ada perubahan."
+          git push
