@@ -70,7 +70,6 @@ except:
     print("Gagal membaca file videos.json.")
     exit(0)
 
-# Penyaringan ketat: HANYA ambil video dengan status 'pending' murni
 target_video = None
 target_index = -1
 for index, video in enumerate(videos):
@@ -95,7 +94,7 @@ for index, video in enumerate(videos):
             break
 
 if not target_video:
-    print("Tidak ada video dengan status 'pending' untuk di-upload.")
+    print("Tidak ada video pending/terjadwal untuk di-upload.")
     exit(0)
 
 video_id_db = target_video.get('id')
@@ -118,26 +117,41 @@ for f_name in [raw_filename, output_filename]:
     if os.path.exists(f_name):
         os.remove(f_name)
 
-print("Mengunduh file video...")
+print(f"Mengunduh video ID {video_id_db}...")
 gdown.download(video_url, raw_filename, quiet=False)
 
-if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) == 0:
-    print("Gagal mengunduh video dari sumber.")
+if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) < 1000:
+    print("Gagal mengunduh video atau file korup.")
     exit(1)
 
-print("🤖 Menjalankan Mutasi Digital Video Tingkat Lanjut...")
+# BERI JEDA AMAN SEBELUM PROSES FFMPEG
+time.sleep(2) 
+
+print("🤖 Menjalankan Mutasi & Standardisasi Format Meta Reels...")
 try:
+    # 🔴 PERBAIKAN KRUSIAL FFMPEG: 
+    # 1. Pastikan warna/format pixel sangat standar (yuv420p) agar tidak ditolak Meta
+    # 2. Hapus filter scale ganjil yang bikin error, ganti dengan pad/scale standar vertikal
+    # 3. Audio diset ke stereo standar (ac 2)
+    # 4. Beri jeda/metadata yang bersih (-map_metadata -1)
+    
     mutation_cmd = [
         'ffmpeg', '-i', raw_filename, 
-        '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,eq=brightness=0.01:contrast=1.02', 
-        '-c:v', 'libx264', '-crf', '24', '-preset', 'medium', 
-        '-c:a', 'aac', '-b:a', '128k', 
+        '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,eq=brightness=0.01', 
+        '-pix_fmt', 'yuv420p', # Format warna wajib untuk Facebook
+        '-c:v', 'libx264', '-profile:v', 'main', '-crf', '26', '-preset', 'fast', 
+        '-c:a', 'aac', '-b:a', '128k', '-ac', '2',
+        '-map_metadata', '-1', # Hapus metadata asli
+        '-movflags', '+faststart', # Wajib agar video bisa langsung diputar di FB
         output_filename, '-y'
     ]
     subprocess.run(mutation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 except Exception as e:
-    print(f"Mutasi FFmpeg gagal: {e}, menggunakan file mentah.")
+    print(f"Mutasi FFmpeg gagal: {e}. Mencoba mengembalikan ke file mentah...")
     output_filename = raw_filename
+
+# BERI JEDA AMAN SEBELUM UPLOAD
+time.sleep(2)
 
 file_size = os.path.getsize(output_filename)
 
@@ -147,27 +161,25 @@ def upload_to_single_page(page):
     page_name = page.get('name', 'Unknown')
     
     if not page_token or not page_id:
-        print(f"Token atau ID untuk Fanpage {page_name} tidak valid.")
         return False
 
     spun_title = process_spintax(video_title)
     spun_desc = process_spintax(video_desc_template)
     spun_comment = process_spintax(video_comment_template)
     
-    video_graph_url = f"https://graph-video.facebook.com/v26.0/{page_id}/videos"
+    video_graph_url = f"https://graph-video.facebook.com/v19.0/{page_id}/videos"
     try:
-        print(f"Memulai sesi upload ke Fanpage: {page_name} (ID: {page_id})")
+        print(f"START upload ke: {page_name}...")
         start_res = requests.post(video_graph_url, data={'access_token': page_token, 'upload_phase': 'start', 'file_size': file_size, 'media_type': 'REELS'}).json()
         
         if 'upload_session_id' not in start_res:
-            print(f"GAGAL START UPLOAD [{page_name}]: {json.dumps(start_res)}")
+            print(f"GAGAL START [{page_name}]: {start_res}")
             return False
             
         upload_session_id = start_res['upload_session_id']
         start_offset = int(start_res.get('start_offset', 0))
         end_offset = int(start_res.get('end_offset', file_size))
         
-        print(f"Mentransfer chunk data video ke {page_name}...")
         with open(output_filename, 'rb') as video_file:
             video_file.seek(start_offset)
             chunk_data = video_file.read(end_offset - start_offset)
@@ -177,39 +189,39 @@ def upload_to_single_page(page):
             'upload_phase': 'transfer', 
             'upload_session_id': upload_session_id, 
             'start_offset': start_offset
-        }, files={'video_file_chunk': ('chunk.mp4', chunk_data, 'video/mp4')}).json()
+        }, files={'video_file_chunk': ('video.mp4', chunk_data, 'video/mp4')}).json()
         
-        print(f"Menyelesaikan sesi upload (finish) untuk {page_name}...")
-        finish_res = requests.post(video_graph_url, data={
+        print(f"FINISH sesi upload untuk {page_name}...")
+        # Tambahkan publish_time jika ingin menjadwalkan
+        finish_data = {
             'access_token': page_token, 
             'upload_phase': 'finish', 
             'upload_session_id': upload_session_id, 
             'description': f"{spun_title}\n\n{spun_desc}", 
             'media_type': 'REELS', 
             'video_state': 'PUBLISHED'
-        }).json()
+        }
         
-        print(f"Respon Finish [{page_name}]: {json.dumps(finish_res)}")
+        finish_res = requests.post(video_graph_url, data=finish_data).json()
+        print(f"Respon Finish [{page_name}]: {finish_res}")
         
         new_video_id = finish_res.get('id') or finish_res.get('video_id')
         if finish_res.get('success') or new_video_id:
+            # Kirim komentar pancingan afiliasi
             if new_video_id and (spun_comment or video_link):
                 final_comment = spun_comment if spun_comment else ""
                 if video_link:
                     final_comment += f"\n{video_link}" if final_comment else video_link
                 try:
-                    time.sleep(2)
-                    comm_res = requests.post(f"https://graph.facebook.com/v26.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment}).json()
-                    print(f"Komentar pancingan terkirim: {comm_res}")
-                except Exception as ce:
-                    print(f"Gagal kirim komentar: {ce}")
-            print(f"BERHASIL UPLOAD KE: {page_name}")
+                    time.sleep(5) # Jeda ekstra agar video benar-benar tayang sebelum dikomentari
+                    requests.post(f"https://graph.facebook.com/v19.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment})
+                except:
+                    pass
             return True
         else:
-            print(f"META MENOLAK UPLOAD [{page_name}]: {json.dumps(finish_res)}")
             return False
     except Exception as e:
-        print(f"EXCEPTION SAAT UPLOAD KE {page_name}: {e}")
+        print(f"EXCEPTION UPLOAD {page_name}: {e}")
         return False
 
 success_upload_count = 0
@@ -219,20 +231,18 @@ with ThreadPoolExecutor(max_workers=1) as executor:
         if future.result():
             success_upload_count += 1
 
-# Jika berhasil terunggah, ubah status video ini menjadi 'completed' secara permanen
 if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
-    
-    # Simpan kembali daftar video dengan pemisahan yang bersih
     try:
         with open(videos_file, 'w') as f:
             json.dump(videos, f, indent=4)
-        print("Status video di videos.json berhasil diperbarui menjadi 'completed'.")
+        print("Status video diperbarui menjadi completed.")
     except Exception as e:
-        print(f"Gagal memperbarui file videos.json: {e}")
+        print(f"Gagal simpan json: {e}")
 
+# Bersihkan sisa file
 for f_name in [raw_filename, output_filename]:
     if os.path.exists(f_name):
         os.remove(f_name)
 
-print("Proses skrip upload selesai.")
+print("Selesai.")
