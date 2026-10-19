@@ -60,20 +60,23 @@ if os.path.exists(pages_file):
 
 videos_file = 'videos.json'
 if not os.path.exists(videos_file):
+    print("File videos.json tidak ditemukan.")
     exit(0)
 
 try:
     with open(videos_file, 'r') as f:
         videos = json.load(f)
 except:
+    print("Gagal membaca file videos.json.")
     exit(0)
 
+# Penyaringan ketat: HANYA ambil video dengan status 'pending' murni
 target_video = None
 target_index = -1
 for index, video in enumerate(videos):
     if video.get('status') == 'pending':
         if is_instant_upload and target_video_id_inst is not None:
-            if video.get('id') == target_video_id_inst:
+            if str(video.get('id')) == str(target_video_id_inst):
                 target_video = video
                 target_index = index
                 break
@@ -92,7 +95,7 @@ for index, video in enumerate(videos):
             break
 
 if not target_video:
-    print("Tidak ada video pending untuk di-upload.")
+    print("Tidak ada video dengan status 'pending' untuk di-upload.")
     exit(0)
 
 video_id_db = target_video.get('id')
@@ -119,7 +122,7 @@ print("Mengunduh file video...")
 gdown.download(video_url, raw_filename, quiet=False)
 
 if not os.path.exists(raw_filename) or os.path.getsize(raw_filename) == 0:
-    print("Gagal mengunduh video dari Telegram.")
+    print("Gagal mengunduh video dari sumber.")
     exit(1)
 
 print("🤖 Menjalankan Mutasi Digital Video Tingkat Lanjut...")
@@ -216,19 +219,17 @@ with ThreadPoolExecutor(max_workers=1) as executor:
         if future.result():
             success_upload_count += 1
 
+# Jika berhasil terunggah, ubah status video ini menjadi 'completed' secara permanen
 if success_upload_count > 0:
     videos[target_index]['status'] = 'completed'
-    cleaned_videos = []
-    completed_videos = [v for v in videos if v.get('status') == 'completed']
-    pending_videos = [v for v in videos if v.get('status') == 'pending']
-    if completed_videos:
-        cleaned_videos.append(completed_videos[-1])
-    cleaned_videos.extend(pending_videos)
+    
+    # Simpan kembali daftar video dengan pemisahan yang bersih
     try:
         with open(videos_file, 'w') as f:
-            json.dump(cleaned_videos, f, indent=4)
-    except:
-        pass
+            json.dump(videos, f, indent=4)
+        print("Status video di videos.json berhasil diperbarui menjadi 'completed'.")
+    except Exception as e:
+        print(f"Gagal memperbarui file videos.json: {e}")
 
 for f_name in [raw_filename, output_filename]:
     if os.path.exists(f_name):
