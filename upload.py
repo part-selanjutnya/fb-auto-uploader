@@ -200,12 +200,11 @@ def upload_to_single_page(page):
         end_offset = int(start_res.get('end_offset', file_size))
         
         print(f"🔄 Mentransfer video ke Meta secara bertahap (Chunking)...")
-        # ==== PERBAIKAN: LOOPING CHUNK TRANSFER SAMPAI SELESAI ====
         with open(output_filename, 'rb') as video_file:
             while start_offset < file_size:
                 chunk_size = end_offset - start_offset
                 if chunk_size <= 0:
-                    chunk_size = 2 * 1024 * 1024 # Jika Meta tidak memberi batas, kita paksa kirim per 2MB
+                    chunk_size = 2 * 1024 * 1024 
                 
                 video_file.seek(start_offset)
                 chunk_data = video_file.read(chunk_size)
@@ -221,15 +220,11 @@ def upload_to_single_page(page):
                     print(f"❌ Error saat transfer potongan video: {transfer_res}")
                     return False
                     
-                # Perbarui offset untuk potongan berikutnya
                 start_offset = int(transfer_res.get('start_offset', start_offset + chunk_size))
                 end_offset = int(transfer_res.get('end_offset', start_offset + chunk_size))
-                
                 print(f"   -> Progress: {start_offset} / {file_size} bytes")
-                
                 if start_offset == end_offset or start_offset >= file_size:
-                    break # Keluar dari loop jika 100% selesai
-        # ==========================================================
+                    break 
         
         print(f"✅ Upload 100% selesai, memicu FINISH untuk {page_name}...")
         finish_data = {
@@ -242,17 +237,25 @@ def upload_to_single_page(page):
         }
         
         finish_res = requests.post(video_graph_url, data=finish_data).json()
-        
         new_video_id = finish_res.get('id') or finish_res.get('video_id')
+        
         if finish_res.get('success') or new_video_id:
+            # ==== PERBAIKAN LOGIKA KOMENTAR ====
             if new_video_id and (spun_comment or video_link):
                 final_comment = spun_comment if spun_comment else video_link
+                
+                print("⏳ Menunggu 20 detik agar Meta memproses video sebelum mengirim komentar...")
+                time.sleep(20) # Jeda diperpanjang agar Meta tidak menolak komentar
+                
                 try:
-                    time.sleep(5)
-                    requests.post(f"https://graph.facebook.com/v19.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment})
-                    print("✅ Komentar Pancingan Afiliasi Berhasil Dikirim!")
+                    comm_res = requests.post(f"https://graph.facebook.com/v19.0/{new_video_id}/comments", data={'access_token': page_token, 'message': final_comment}).json()
+                    if comm_res.get('id'):
+                        print(f"✅ Komentar Pancingan Berhasil Dikirim! ID: {comm_res['id']}")
+                    else:
+                        print(f"❌ Gagal kirim komentar. Respon Meta: {comm_res}")
                 except Exception as ce:
-                    pass
+                    print(f"❌ Error sistem saat kirim komentar: {ce}")
+            # ====================================
             return True
         else:
             return False
