@@ -43,5 +43,20 @@
         "target_pages": [
             "Kopi Nusantara"
         ]
+    },
+    {
+        "id": 13,
+        "file_id": "BAACAgUAAxkBAAMNateLLapZptkkpTDD14hZBn55Y34AArAmAAJdu7hWj7vAmcv-uIU9BA",
+        "title": "Rahasia di balik kota terpencil",
+        "url": "https://api.telegram.org/file/bot8411215034:AAHgevenhexAfKeRE9URTSvxtnBzghiACVc/videos/file_8.mp4",
+        "thumbnail": "",
+        "description": "Rahasia di balik kota terpencil",
+        "comment_text": "\ud83d\udc47 Lanjutannya dan barang di video ada di link ini:",
+        "redirect_link": "",
+        "status": "pending",
+        "scheduled_time": null,
+        "target_pages": [
+            "Semua"
+        ]
     }
 ]
